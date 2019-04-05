@@ -4,7 +4,9 @@ const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcrypt');
 
 passport.use(new LocalStrategy((username, password, next) => {
+
     User.findOne({username})
+    .populate('loans')
     .then( user =>{
         if (!user) throw new Error("Incorrect Username");
         if (!bcrypt.compareSync(password, user.password)) throw new Error("Incorrect Password");

@@ -36,7 +36,8 @@ const borrowerSchema = new Schema({
   businessEmail: String,
   monthlyIncome: Number,
   otherIncome: Number,
-  loans: [{ type: Schema.ObjectId, ref: 'Loan' }]
+  loans: [{ type: Schema.ObjectId, ref: 'Loan' }],
+  borrowerStatus: {type: Boolean, default: false}
 }, {
   timestamps: {
     createdAt: 'created_at',

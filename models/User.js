@@ -13,7 +13,7 @@ const userSchema = new Schema({
   password: String,
   superAdmin: {type: Boolean, default: false},
   admin: {type: Boolean, default: false},
-  borrower: {type: Boolean, default: false},
+  borrower: {type: Boolean, default: true},
   investor: {type: Boolean, default: false},
   gender: String,
   civilStatus: String,
@@ -52,6 +52,8 @@ const userSchema = new Schema({
     updatedAt: 'updated_at'
   }
 });
+
+
 
 const User = mongoose.model('User', userSchema);
 module.exports = User;
