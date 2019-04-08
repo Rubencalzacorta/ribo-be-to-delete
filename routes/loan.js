@@ -15,12 +15,11 @@ const { linearLoan, lumpSumLoan } = require('./helpers/loanSchedule')
 
 
 router.post('/create',(req,res,next) => {
-    console.log(req.body)
     let notUsedPaths = ['_id','updated_at','created_at','__v'];
     let paths = Object.keys(Loan.schema.paths).filter(e => !notUsedPaths.includes(e));
     
     const loanDetails = _.pickBy(req.body, (e,k) => paths.includes(k));
-    let { _borrower, interest, duration, capital, loanType, startDate, toInvest} = req.body 
+    let { _borrower, period, interest, duration, capital, loanType, startDate, toInvest} = req.body 
     Loan.create(req.body)
         .then( obj => {
             
@@ -28,11 +27,9 @@ router.post('/create',(req,res,next) => {
             let schedule
 
             if (loanType === 'linear'){
-                schedule = linearLoan(loanId, duration, interest, capital, startDate)
+                schedule = linearLoan(loanId, period, duration, interest, capital, startDate)
             } else {
-                console.log("aqui")
-                
-                schedule = lumpSumLoan(loanId, duration, interest, capital, startDate)
+                schedule = lumpSumLoan(loanId, period, duration, interest, capital, startDate)
             }
             schedule.forEach( e => {
                 LoanSchedule.create(e)
@@ -71,7 +68,7 @@ router.post('/create',(req,res,next) => {
             pendingTransactions = []
             investments.forEach( e => { 
                 let credit = e.amount
-                console.log(credit)
+
                 let transaction = {
                     _loan: e._loan,
                     _investor: mongoose.Types.ObjectId(e._investor),
@@ -82,7 +79,6 @@ router.post('/create',(req,res,next) => {
                 }
                 pendingTransactions.push(transaction)
             })
-            console.log(pendingTransactions)
             Transaction.insertMany(pendingTransactions)
             return obj
         })
@@ -97,7 +93,7 @@ router.patch('/installmentpmt/:id',(req,res,next) => {
     let paths = Object.keys(LoanSchedule.schema.paths).filter(e => !notUsedPaths.includes(e));
     
     const {id} = req.params;
-    console.log(req.body.payment)
+
     const { cashAccount, fee, interest_pmt, principal_pmt, date_pmt } = req.body.payment
     const object = _.pickBy(req.body.payment, (e,k) => paths.includes(k));
     const updates = _.pickBy(object, _.identity);

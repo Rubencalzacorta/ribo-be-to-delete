@@ -10,6 +10,7 @@ const loanSchema = new Schema({
   collateralType: String,
   collateralValue: Number, 
   collateralDescription: String,
+  period: String,
   totalPaid: { type: Number, default: 0},
   capitalRemaining: Number, 
   interest: Number,
