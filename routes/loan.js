@@ -257,34 +257,40 @@ router.get('/schedule/:startDate/:endDate/:country', (req,res,next) => {
 })
 
 router.patch('/joincollections', (req, res, next) => {
+    console.log('aqui')
 
-    
-    update1 = {$set: {investor: true}}
-    query = {}
-    var bulk = Investor.collection.initializeOrderedBulkOp();
-    bulk.find(query).update(update1);
-    bulk.execute(function (error) {
-        console.log(error)                  
-    })
+    User.updateMany({}, {$rename:{name:"firstName"}}, { multi: true }, function(err, blocks) {
+        if(err) { throw err; }
+        console.log('done!');
+      });
     
     
+    // update1 = {$set: {investor: true}}
+    // query = {}
+    // var bulk = Investor.collection.initializeOrderedBulkOp();
+    // bulk.find(query).update(update1);
+    // bulk.execute(function (error) {
+    //     console.log(error)                  
+    // })
     
-    Investor.find({}).then( obj => obj.forEach(function(e){ 
-        User.collection.insert(e) 
-    }));
     
     
-    update2 = {$set: {borrower: true}}
-    query = {}
-    var bulk = Borrower.collection.initializeOrderedBulkOp();
-    bulk.find(query).update(update2);
-    bulk.execute(function (error) {
-        console.log(error)                  
-    })
+    // Investor.find({}).then( obj => obj.forEach(function(e){ 
+    //     User.collection.insert(e) 
+    // }));
     
-    Borrower.find({}).then( obj => obj.forEach(function(e){ 
-        User.collection.insertOne(e) 
-    }));
+    
+    // update2 = {$set: {borrower: true}}
+    // query = {}
+    // var bulk = Borrower.collection.initializeOrderedBulkOp();
+    // bulk.find(query).update(update2);
+    // bulk.execute(function (error) {
+    //     console.log(error)                  
+    // })
+    
+    // Borrower.find({}).then( obj => obj.forEach(function(e){ 
+    //     User.collection.insertOne(e) 
+    // }));
     
     
     // Investor.collection.drop()
