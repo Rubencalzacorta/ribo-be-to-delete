@@ -11,7 +11,7 @@ const Investment = require("../models/Investment")
 const _ = require('lodash');
 const moment = require('moment')
 const transactionPlacer = require('./helpers/transactionPlacer')
-const { linearLoan, lumpSumLoan } = require('./helpers/loanSchedule')
+const { linearLoan, lumpSumLoan, payDayLoan } = require('./helpers/loanSchedule')
 
 
 router.post('/create',(req,res,next) => {
@@ -28,8 +28,10 @@ router.post('/create',(req,res,next) => {
 
             if (loanType === 'linear'){
                 schedule = linearLoan(loanId, period, duration, interest, capital, startDate)
-            } else {
+            } else if (loanType === 'lumpSum') {
                 schedule = lumpSumLoan(loanId, period, duration, interest, capital, startDate)
+            } else {
+                schedule = payDayLoan(loanId, period, duration, interest, capital, startDate)
             }
             schedule.forEach( e => {
                 LoanSchedule.create(e)

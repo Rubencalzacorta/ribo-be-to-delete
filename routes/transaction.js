@@ -143,7 +143,7 @@ router.get('/loaninvestordetails/:id',(req,res,next) => {
         if (!_loan){
           return c
         } else  {
-        c[_loan._id] = c[_loan._id] || {loan: _loan._id, amount: _loan.capital, name: _loan._borrower.fullName ,feeIncome: 0, feeExpense: 0, interest: 0, capital: 0, investment: 0, ownership: 0};
+        c[_loan._id] = c[_loan._id] || {loan: _loan._id, amount: _loan.capital, name: _loan._borrower.firstName+" "+_loan._borrower.lastName ,feeIncome: 0, feeExpense: 0, interest: 0, capital: 0, investment: 0, ownership: 0};
         if (concept == 'FEE' && debit > 0){
           c[_loan._id].feeIncome += debit;
         } else if (concept == 'FEE' && credit > 0) {

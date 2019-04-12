@@ -6,10 +6,10 @@ const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_
     pendingTransactions = []
 
     if ((investors.length === 2) &&
-        (investors[0]._investor.name === "Gabriel" || investors[1]._investor.name === "Gabriel") &&
-        (investors[0]._investor.name === "Patricia" || investors[1]._investor.name === "Patricia")) {
+        (investors[0]._investor.firstName === "Gabriel" || investors[1]._investor.firstName === "Gabriel") &&
+        (investors[0]._investor.firstName === "Patricia" || investors[1]._investor.firstName === "Patricia")) {
         let investorf = investors.filter(e => {
-            return e._investor.name === "Gabriel"
+            return e._investor.firstName === "Gabriel"
         })
 
         investorf.forEach(e => {
@@ -61,10 +61,10 @@ const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_
     })
 
     if ((investors.length === 2) &&
-        (investors[0]._investor.name === "Gabriel" || investors[1]._investor.name === "Gabriel") &&
-        (investors[0]._investor.name === "Patricia" || investors[1]._investor.name === "Patricia")) {
+        (investors[0]._investor.firstName === "Gabriel" || investors[1]._investor.firstName === "Gabriel") &&
+        (investors[0]._investor.firstName === "Patricia" || investors[1]._investor.firstName === "Patricia")) {
         let investorf = investors.filter(e => {
-            return e._investor.name === "Gabriel"
+            return e._investor.firstName === "Gabriel"
         })
 
         investorf.forEach(e => {

@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Schema   = mongoose.Schema;
 const LoanSchedule = require('./LoanSchedule')
 const Investment = require('./Investment')
+const User = require('./User')
 
 const loanSchema = new Schema({
   _borrower: { type: Schema.ObjectId, ref: 'User' },
@@ -40,14 +41,14 @@ loanSchema
   .pre('findByIdAndUpdate', autoPopulateLoan);
 
 loanSchema.pre('remove', function(next) {
-
+  const User = require('./User')
     LoanSchedule.deleteMany({ _loan: this._id })
     .then( e => {
       Investment.deleteMany({ _loan: this._id }, next)
     })
-    .then(
+    .then( e => {
       User.updateOne({_loan: this._loan}, 
-      {$pull:{'loans':this._id}}, next))
+      {$pull:{'loans':this._id}}, next)})
     .catch(err => console.log(err))
 }); 
 
