@@ -33,16 +33,21 @@ const simpleCrud = (Model, extensionFn) => {
         let { query, country } = req.params
         console.log(query, country)
         querym = (country === 'WORLD') 
-                ? {"$or": [
-                    { 'name': { '$regex': query, '$options': 'i' } },
-                    { 'firstName': { '$regex': query, '$options': 'i' } },
-                    { 'lastName': { '$regex': query, '$options': 'i' } },
-                    { 'email': { '$regex': query, '$options': 'i' } },
-                    { 'fullName': { '$regex': query, '$options': 'i' } },
+                ? 
+                { '$and': [
+                    { 'borrower': true },
+                    {"$or": [
+                        { 'name': { '$regex': query, '$options': 'i' } },
+                        { 'firstName': { '$regex': query, '$options': 'i' } },
+                        { 'lastName': { '$regex': query, '$options': 'i' } },
+                        { 'email': { '$regex': query, '$options': 'i' } },
+                        { 'fullName': { '$regex': query, '$options': 'i' } },
+                    ]
+                    }
                 ]
                 }
                 : { '$and': [
-                    { 'country': country },
+                    { 'borrower': true },
                     {"$or": [
                         { 'name': { '$regex': query, '$options': 'i' } },
                         { 'firstName': { '$regex': query, '$options': 'i' } },
