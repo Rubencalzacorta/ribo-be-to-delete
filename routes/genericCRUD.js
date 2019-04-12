@@ -29,15 +29,38 @@ const simpleCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
     
-    router.get('/all-clients/:country/:firstName',(req,res,next) => {
-        let { firstName, country } = req.params
-
-        let query = (req.params.country === 'WORLD') ? {'firstName': {'$regex': firstName, '$options': 'i'}} : {'country': country, 'firstName': {'$regex': firstName, '$options': 'i'}} 
+    router.get('/all-clients/:country/:query',(req,res,next) => {
+        let { query, country } = req.params
+        console.log(query, country)
+        querym = (country === 'WORLD') 
+                ? {"$or": [
+                    { 'name': { '$regex': query, '$options': 'i' } },
+                    { 'firstName': { '$regex': query, '$options': 'i' } },
+                    { 'lastName': { '$regex': query, '$options': 'i' } },
+                    { 'email': { '$regex': query, '$options': 'i' } },
+                    { 'fullName': { '$regex': query, '$options': 'i' } },
+                ]
+                }
+                : { '$and': [
+                    { 'country': country },
+                    {"$or": [
+                        { 'name': { '$regex': query, '$options': 'i' } },
+                        { 'firstName': { '$regex': query, '$options': 'i' } },
+                        { 'lastName': { '$regex': query, '$options': 'i' } },
+                        { 'email': { '$regex': query, '$options': 'i' } },
+                        { 'fullName': { '$regex': query, '$options': 'i' } },
+                    ]
+                    }
+                ] 
+                }
         
-        Model.find(query)
+        Model.find(querym)
             .populate({path: 'loans'})
             .then( objList => res.status(200).json(objList))
             .catch(e => console.log(e))
+    
+
+
     })
 
     router.get('/investments/:id',(req,res,next) => {
