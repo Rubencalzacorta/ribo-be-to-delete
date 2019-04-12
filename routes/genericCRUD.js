@@ -29,10 +29,10 @@ const simpleCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
     
-    router.get('/all-clients/:country/:fullName',(req,res,next) => {
-        let { fullName, country } = req.params
+    router.get('/all-clients/:country/:firstName',(req,res,next) => {
+        let { firstName, country } = req.params
 
-        let query = (req.params.country === 'WORLD') ? {'fullName': {'$regex': fullName, '$options': 'i'}} : {'country': country, 'fullName': {'$regex': fullName, '$options': 'i'}} 
+        let query = (req.params.country === 'WORLD') ? {'firstName': {'$regex': firstName, '$options': 'i'}} : {'country': country, 'firstName': {'$regex': firstName, '$options': 'i'}} 
         
         Model.find(query)
             .populate({path: 'loans'})
