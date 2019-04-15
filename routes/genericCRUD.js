@@ -63,9 +63,16 @@ const simpleCrud = (Model, extensionFn) => {
             .populate({path: 'loans'})
             .then( objList => res.status(200).json(objList))
             .catch(e => console.log(e))
-    
-
     })
+
+    router.get('/all-clients-name/:country',(req,res,next) => {
+        
+        Model.find({borrower: true, country: req.params.country}, null, {sort: {lastName: 1}}).select({'firstName':1, 'lastName': 1})
+            .then( objList => res.status(200).json(objList))
+            .catch(e => console.log(e))
+    })
+
+
 
     router.get('/investments/:id',(req,res,next) => {
         Investment.find({_investor: req.params.id})
