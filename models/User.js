@@ -37,6 +37,7 @@ const userSchema = new Schema({
   country: {type: String, enum: ['PERU', 'VENEZUELA', 'DOMINICAN_REPUBLIC']},
   cellphoneNumber: String,
   email: String,
+  zipCode: String,
   employmentStatus: String,
   businessName: String,
   businessAddress: String,
