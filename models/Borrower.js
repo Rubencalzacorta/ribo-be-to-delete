@@ -24,7 +24,7 @@ const borrowerSchema = new Schema({
   residenceName: String,
   residenceNumber: String,
   city: String,
-  country: {type: String, enum: ['PERU', 'VENEZUELA']},
+  country: {type: String, enum: ['PERU', 'VENEZUELA', 'DOMINICAN_REPUBLIC']},
   cellphoneNumber: String,
   email: String,
   employmentStatus: String,

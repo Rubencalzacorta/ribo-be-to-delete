@@ -4,7 +4,7 @@ const Schema   = mongoose.Schema;
 const investorSchema = new Schema({
   name: String,
   lastName: String,
-  location: {type: String, enum:['PERU', 'VENEZUELA']},
+  location: {type: String, enum:['PERU', 'VENEZUELA', 'DOMINICAN_REPUBLIC']},
   investments: [{ type: Schema.ObjectId, ref: 'Investment' }],
   investor: {type: Boolean, default: true},
 }, {
