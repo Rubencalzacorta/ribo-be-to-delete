@@ -258,22 +258,63 @@ router.get('/schedule/:startDate/:endDate/:country', (req,res,next) => {
 
 })
 
-router.patch('/joincollections', (req, res, next) => {
+router.patch('/update-investor', (req, res, next) => {
     console.log('aqui')
 
-    User.updateMany({}, {$rename:{name:"firstName"}}, { multi: true }, function(err, blocks) {
-        if(err) { throw err; }
-        console.log('done!');
-      });
+    // User.updateMany({}, {$rename:{name:"firstName"}}, { multi: true }, function(err, blocks) {
+    //     if(err) { throw err; }
+    //     console.log('done!');
+    //   });
+
+    // let idJulieta = mongoose.Types.ObjectId("5cb6cad93472683c4543c22a")
+    // let idFernandez = "5c8103dfcf81366c6c0f133a"
+    // let idCastillo = "5c8103cdcf81366c6c0f1338"
+
     
+    // update1 = { $set: {_investor: idJulieta} }
+    // query = {cashAccount: 'REMPERU', _investor: idFernandez} 
     
-    // update1 = {$set: {investor: true}}
-    // query = {}
-    // var bulk = Investor.collection.initializeOrderedBulkOp();
+    // Transaction.updateMany(query, update1).then( objList => res.status(200).json(objList))
+    
+    // Transaction.aggregate([
+    //     {
+    //       '$match': {
+    //         'concept': 'INVESTMENT', 
+    //         'cashAccount': 'REMPERU', 
+    //         '_investor': mongoose.Types.ObjectId('5cb6cad93472683c4543c22a')
+    //       }
+    //     }, {
+    //       '$group': {
+    //         '_id': '$_loan', 
+    //         'firstLoan': {
+    //           '$first': '$_loan'
+    //         }
+    //       }
+    //     }, {'$project': {
+    //         '_id': 0
+    //         }
+    //     }
+    //   ]
+    //  ).then( objList => {
+    //      return objList.map( e => {return e.firstLoan})
+    //  }).then( objList => {
+        //  console.log(objList)
+    //      return Investment.updateMany( {_loan: {$in: objList}, _investor: idFernandez}, update1 )
+    //  }).then( objList => res.status(200).json(objList))
+    
+        
+        // res.status(200).json(objList))
+
+    // var bulk = Transaction.collection.initializeOrderedBulkOp();
     // bulk.find(query).update(update1);
-    // bulk.execute(function (error) {
-    //     console.log(error)                  
+    // bulk.execute(function (error, results) {
+    //     if (error) {
+    //         res.status(500).json({error: error})
+    //     } 
+    //     res.status(200).json(results)   
     // })
+
+
     
     
     
