@@ -11,8 +11,9 @@ router.get('/totals/:country', async (req,res,next) => {
     if (req.params.country === "WORLD") {
       let generalTotals = await LoanTotals()
       let peruTotals =  await CountryLoanTotals('PERU')
+      let dominicanTotals =  await CountryLoanTotals('DOMINICAN_REPUBLIC')
       let venTotals =  await CountryLoanTotals('VENEZUELA')
-      Promise.all([generalTotals, peruTotals, venTotals])
+      Promise.all([generalTotals, peruTotals, venTotals, dominicanTotals])
         .then( obj => {res.status(200).json(obj)})
         .catch(e => next(e))
     } else if ( req.params.country.toUpperCase() === "PERU" ) {

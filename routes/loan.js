@@ -1,15 +1,15 @@
 const express = require('express');
 const router  = express.Router();
-const Transaction = require("../models/Transaction")
 const mongoose   = require('mongoose')
-const Loan = require("../models/Loan")
-const Investor = require("../models/Investor")
-const Borrower = require("../models/Borrower")
-const User = require("../models/User")
-const LoanSchedule = require("../models/LoanSchedule")
-const Investment = require("../models/Investment")
 const _ = require('lodash');
 const moment = require('moment')
+
+const LoanSchedule = require("../models/LoanSchedule")
+const Transaction = require("../models/Transaction")
+const Investment = require("../models/Investment")
+const Loan = require("../models/Loan")
+const User = require("../models/User")
+
 const transactionPlacer = require('./helpers/transactionPlacer')
 const { linearLoan, lumpSumLoan, payDayLoan } = require('./helpers/loanSchedule')
 
@@ -26,7 +26,7 @@ router.post('/create',(req,res,next) => {
             let loanId = obj._id
             let schedule
 
-            if (loanType === 'linear'){
+            if (loanType === 'linear') {
                 schedule = linearLoan(loanId, period, duration, interest, capital, startDate)
             } else if (loanType === 'lumpSum') {
                 schedule = lumpSumLoan(loanId, period, duration, interest, capital, startDate)
@@ -38,8 +38,8 @@ router.post('/create',(req,res,next) => {
                 .then( (schedule_t) => {
                     Loan.findByIdAndUpdate(loanId,
                         {$push: {loanSchedule: schedule_t._id}},
-                        {safe: true, upsert: true})
-                    .then()
+                        {safe: true, upsert: true}).exec()
+                 
                 })
             })
             return obj;
@@ -52,6 +52,9 @@ router.post('/create',(req,res,next) => {
                 .then( (investment_x) => {
                     Loan.findByIdAndUpdate(loanId,
                         {$push: {investors: investment_x._id}},
+                        {safe: true, upsert: true}).exec()
+                    User.findByIdAndUpdate(e._investor,
+                        {$push: {investments: investment_x._id}},
                         {safe: true, upsert: true}).exec()
                 })
             })
@@ -70,7 +73,6 @@ router.post('/create',(req,res,next) => {
             pendingTransactions = []
             investments.forEach( e => { 
                 let credit = e.amount
-
                 let transaction = {
                     _loan: e._loan,
                     _investor: mongoose.Types.ObjectId(e._investor),
@@ -140,7 +142,8 @@ router.get('/open',(req,res,next) => {
         .catch(e => next(e))
 })
 
-router.delete('/:id',(req,res,next) => {
+
+router.delete('/:id', (req,res,next) => {
     Loan.findOne({_id: req.params.id})
         .then( obj => obj.remove() )
         .then( res.status(200).json({status: "success", comment:"Removed from db"}))

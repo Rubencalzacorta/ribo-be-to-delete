@@ -11,16 +11,8 @@ const path = require('path');
 const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
 const cors = require('cors');
+require('./db')
 
-const { DBURL } = process.env;
-mongoose.Promise = Promise;
-mongoose
-  .connect(DBURL, { useNewUrlParser: true })
-  .then(() => {
-    console.log(`Connected to Mongo on ${DBURL}`)
-  }).catch(err => {
-    console.error('Error connecting to mongo', err)
-  });
 
 const app_name = require('./package.json').name;
 const debug = require('debug')(`${app_name}:${path.basename(__filename).split('.')[0]}`);

@@ -41,15 +41,18 @@ loanSchema
   .pre('findByIdAndUpdate', autoPopulateLoan);
 
 loanSchema.pre('remove', function(next) {
+  
   const User = require('./User')
-    LoanSchedule.deleteMany({ _loan: this._id })
-    .then( e => {
-      Investment.deleteMany({ _loan: this._id }, next)
-    })
-    .then( e => {
-      User.updateOne({_loan: this._loan}, 
-      {$pull:{'loans':this._id}}, next)})
-    .catch(err => console.log(err))
+  const LoanSchedule = require('./LoanSchedule')
+  const Investment  = require('./Investment')
+  const Transaction  = require('./Transaction')
+
+  LoanSchedule.deleteMany({ _loan: this._id })
+    .then( e => { Investment.deleteMany({ _loan: this._id }, next)})
+    .then( e => { Transaction.deleteMany({_loan: this._id }, next)})
+    .then( e => { User.updateOne({_loan: this._loan}, {$pull:{'loans':this._id}}, next)})
+    .catch( err => next(new Error('Failed to execute "pre" remove hook')))
+
 }); 
 
 loanSchema.pre('save', function (next) {
