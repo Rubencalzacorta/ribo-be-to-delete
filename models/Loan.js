@@ -20,7 +20,7 @@ const loanSchema = new Schema({
   startDate: Date,
   loanType: String,
   useOfFunds: String,
-  status: {type: String, default: "open"},
+  status: {type: String, default: "OPEN", enum: ['OPEN', 'CLOSED']},
 }, {
   timestamps: {
     createdAt: 'created_at',

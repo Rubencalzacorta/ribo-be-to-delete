@@ -8,9 +8,10 @@ const loanScheduleSchema = new Schema({
   principal: Number,
   payment: Number,
   balance: Number,
+  status: {type: String, enum: ['DISBURSTMENT' ,'PENDING', 'DUE', 'OVERDUE', 'PAID', 'OUTSTANDING', 'CLOSED']},
   tracking: String,
-  interest_pmt: Number,
-  principal_pmt: Number,
+  interest_pmt: {type: Number, default: 0},
+  principal_pmt: {type: Number, default: 0},
   date_pmt: Date,
 
 }, {
@@ -26,17 +27,17 @@ loanScheduleSchema.post('findOneAndUpdate', function(result) {
 
   Loan.findById({_id: result._loan})
     .then( (obj) => {
-
       Loan.findByIdAndUpdate(result._loan, statusUpdater(obj), {safe: true, upsert: true, new: true}).exec()    
     })
+    
 })
 
 loanScheduleSchema.post('findByIdAndUpdate', function(result) {
   const statusUpdater = require('./helper')
   const Loan = require('./Loan')
+
   Loan.findById({_id: result._loan})
     .then( (obj) => {
-
       Loan.findByIdAndUpdate(result._loan, statusUpdater(obj), {safe: true, upsert: true, new: true}).exec()    
     })
 });

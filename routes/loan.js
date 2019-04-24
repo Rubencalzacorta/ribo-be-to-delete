@@ -12,6 +12,16 @@ const User = require("../models/User")
 
 const transactionPlacer = require('./helpers/transactionPlacer')
 const { linearLoan, lumpSumLoan, payDayLoan } = require('./helpers/loanSchedule')
+const {
+    countryPaidQuery,
+    countryAllLoansQuery,
+    countryDueQuery,
+    countryOverdueQuery,
+    allLoansQuery,
+    paidQuery,
+    dueQuery,
+    overdueQuery
+} = require('./helpers/aggregates')
 
 
 router.post('/create',(req,res,next) => {
@@ -119,12 +129,29 @@ router.delete('/deletepmt/:id',(req,res,next) => {
         
     const {id} = req.params;
 
-    updates = {
-        interest_pmt: 0,
-        principal_pmt: 0,
-    }
-
-    LoanSchedule.findByIdAndUpdate(id, updates, {new:true})
+    LoanSchedule.findById(id).select({"date": 1})
+    .then( resp => 
+        {
+        if (moment(resp.date) > moment()) {
+            return {
+                interest_pmt: 0,
+                principal_pmt: 0,
+                status: 'PENDING'
+            }
+        } else if (moment(resp.date) <= moment() && moment(resp.date) > moment().subtract(7, 'd')) {
+            return {
+                interest_pmt: 0,
+                principal_pmt: 0,
+                status: 'DUE'
+            }
+        } else {
+            return {
+                interest_pmt: 0,
+                principal_pmt: 0,
+                status: 'OVERDUE'
+            }
+        }})
+    .then( (updates) => { LoanSchedule.findByIdAndUpdate(id, updates, {new:true}).exec()})
     .then( () => {Transaction.find({_loanSchedule: mongoose.Types.ObjectId(id)}).remove().exec()})
     .then( () => res.status(200).json({status: "Success", message: "Removed Successfully"}))
     .catch(e => next(e))
@@ -261,23 +288,160 @@ router.get('/schedule/:startDate/:endDate/:country', (req,res,next) => {
 
 })
 
-router.patch('/update-investor', (req, res, next) => {
+router.get('/portfolio-status/:country/:fromDate/:toDate', async (req, res, next) => {
+    
+    let { country, fromDate, toDate} = req.params
+    let allLoansSearch, paidQuerySearch, dueQuerySearch, overdueQuerySearch
+
+    if (country === 'WORLD') {
+        allLoansSearch = await LoanSchedule.aggregate(allLoansQuery(fromDate, toDate))
+        paidQuerySearch = await LoanSchedule.aggregate(paidQuery(fromDate, toDate))
+        dueQuerySearch = await LoanSchedule.aggregate(dueQuery(fromDate, toDate))
+        overdueQuerySearch = await LoanSchedule.aggregate(overdueQuery())
+    } else {
+        allLoansSearch = await LoanSchedule.aggregate(countryAllLoansQuery(country, fromDate, toDate))
+        paidQuerySearch = await LoanSchedule.aggregate(countryPaidQuery(country, fromDate, toDate))
+        dueQuerySearch = await LoanSchedule.aggregate(countryDueQuery(country,fromDate, toDate))
+        overdueQuerySearch = await LoanSchedule.aggregate(countryOverdueQuery(country))
+    }
+    
+    Promise.all([allLoansSearch, paidQuerySearch, dueQuerySearch, overdueQuerySearch])
+        .then( objList => {
+
+            let periodDetails = {
+                portfolio: {  
+                    interest: objList[0].reduce( (acc, e) =>  {return acc + e.interest},0),
+                    principal: objList[0].reduce( (acc, e) =>  {return acc + e.principal},0),
+                    interest_pmt: objList[0].reduce( (acc, e) =>  {return acc + e.interest_pmt},0),
+                    principal_pmt: objList[0].reduce( (acc, e) =>  {return acc + (e.principal_pmt ? e.principal_pmt : 0 )},0),
+                    numberOfInstallments: objList[0].length,
+                    installments: objList[0]
+                  
+                },
+                paid: {
+                    interest: objList[1].reduce( (acc, e) =>  {return acc + e.interest},0),
+                    principal: objList[1].reduce( (acc, e) =>  {return acc + e.principal},0),
+                    interest_pmt: objList[1].reduce( (acc, e) =>  {return acc + e.interest_pmt},0),
+                    principal_pmt: objList[1].reduce( (acc, e) =>  {return acc + (e.principal_pmt ? e.principal_pmt : 0 )},0),
+                    numberOfInstallments: objList[1].length,
+                    installments: objList[1]
+                }, 
+                due: {
+                    interest: objList[2].reduce( (acc, e) =>  {return acc + e.interest},0),
+                    principal: objList[2].reduce( (acc, e) =>  {return acc + e.principal},0),
+                    interest_pmt: objList[2].reduce( (acc, e) =>  {return acc + e.interest_pmt},0),
+                    principal_pmt: objList[2].reduce( (acc, e) =>  {return acc + (e.principal_pmt ? e.principal_pmt : 0 )},0),
+                    numberOfInstallments: objList[2].length,
+                    installments: objList[2]
+                }, 
+                overdue: {
+                    interest: objList[3].reduce( (acc, e) =>  {return acc + e.interest},0),
+                    principal: objList[3].reduce( (acc, e) =>  {return acc + e.principal},0),
+                    interest_pmt: objList[3].reduce( (acc, e) =>  {return acc + e.interest_pmt},0),
+                    principal_pmt: objList[3].reduce( (acc, e) =>  {return acc + (e.principal_pmt ? e.principal_pmt : 0 )},0),
+                    numberOfInstallments: objList[3].length,
+                    installments: objList[3]
+                }
+            }
+            return periodDetails
+
+        }).then( periodDetails => res.status(200).json(periodDetails))
+})
+
+router.patch('/update-database', async (req, res, next) => {
     console.log('aqui')
 
-    // User.updateMany({}, {$rename:{name:"firstName"}}, { multi: true }, function(err, blocks) {
-    //     if(err) { throw err; }
-    //     console.log('done!');
-    //   });
+    LoanSchedule.updateMany({}, { $rename: { tracking: "status" } }, { multi: true }, function(err, blocks) {
+        if(err) { throw err; }
+        console.log('done!');
+    })
+    .then( async () => {
+        update1 = { $set: {interest_pmt: 0, principal_pmt: 0} }
+        query = {interest_pmt: null, principal_pmt: null}
+        await LoanSchedule.updateMany(query, update1).then( resp => console.log({updated1: resp}))  
+    })
+    .then( async () => {
+        query = {status: 'closed'}
+        update1 = { $set: {status: 'CLOSED'} }
+        await Loan.updateMany(query, update1).then( resp => console.log({updated2: resp}))
+
+    })
+    .then( async () => {
+        update1 = { $set: {status: 'PENDING'} }
+        query = {date: {$gte: new Date('2019-05-01')}, status: {$ne: 'DISBURSTMENT'}}
+        await LoanSchedule.updateMany(query, update1).then( resp => console.log({updated30: resp}))
+    })
+    .then( async () => {
+        update1 = { $set: {status: 'DUE'} }
+        query = {date: {$lte: new Date('2019-04-30'), $gte: new Date('2019-04-01')}, status: {$ne: 'DISBURSTMENT'}}
+        await LoanSchedule.updateMany(query, update1).then( resp => console.log({updated31: resp}))
+    })
+    .then( async () => {
+        let newdate = new Date()
+        let overdueDate = newdate.setDate(newdate.getDate() - (7));   
+        query = {date: {$lte: new Date(overdueDate)}, status: 'DUE'}
+        update1 = { $set: {status: 'OVERDUE'} }
+        await LoanSchedule.updateMany(query, update1).then( resp => console.log({updated4: resp}))
+    })
+    .then( async () => {
+        query = {status: 'CLOSED'}
+        update1 = { $set: {status: 'CLOSED'} }
+        await Loan.find(query).select({ "status": 1, "_id": 1, '_borrower': 0, 'loanSchedule': 0, 'investors': 0})
+            .then( resp => {
+                return resp = resp.map( e => {return e._id})    
+            })
+            .then( resp => LoanSchedule.updateMany({_loan: {$in: resp}}, update1)).then( resp => console.log({updated5: resp}))
+    })
+    .then( async () => {
+        update1 = { $set: {status: 'PAID'} }
+        query = {interest_pmt: {$gt: 0}, status: {$ne: 'PAID'}} 
+        await LoanSchedule.updateMany(query, update1).then( resp => console.log({updated6: resp}))
+
+    })
+    .then( async () => {
+        update1 = { $set: {status: 'PAID'} }
+        query = {principal_pmt: {$gt: 0}, status: {$ne: 'PAID'}} 
+        await LoanSchedule.updateMany(query, update1).then( resp => console.log({updated7: resp}))
+
+    })
+    .then( async () => {
+        update1 = { $set: {status: 'DISBURSTMENT'} }
+        query = {interest: 0, principal: 0, payment: 0}
+        await LoanSchedule.updateMany(query, update1).then( resp => console.log({updated8: resp}))
+    })
+    .then( async () => {
+          
+        update1 = { $set: {status: 'PAID'} }
+        query = {interest_pmt: {$gt: 0}, principal_pmt: {$gt: 0}, status: {$ne: 'PAID'}} 
+        await LoanSchedule.updateMany(query, update1).then( resp => console.log({updated9: resp}))
+        console.log('ALL DONE!')
+
+    })
+
+
+    
+    
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+    //AGREGAR 
 
     // let idJulieta = mongoose.Types.ObjectId("5cb6cad93472683c4543c22a")
     // let idFernandez = "5c8103dfcf81366c6c0f133a"
     // let idCastillo = "5c8103cdcf81366c6c0f1338"
 
-    
-    // update1 = { $set: {_investor: idJulieta} }
-    // query = {cashAccount: 'REMPERU', _investor: idFernandez} 
-    
-    // Transaction.updateMany(query, update1).then( objList => res.status(200).json(objList))
     
     // Transaction.aggregate([
     //     {

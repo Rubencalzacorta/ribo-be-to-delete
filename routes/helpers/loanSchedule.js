@@ -15,7 +15,6 @@ const interestPortionCalc = (date) => {
   }
 }
 
-
 const getStartDate = (date) => {
 
   let day = moment(date).date()
@@ -55,63 +54,63 @@ const payDayLoan = (loan, period, duration, interestRate, capital, date) => {
   }
 
 
-    let dDate = moment(date, 'YYYY-MM-DD').format('YYYY-MM-DD')
-    let sDate = moment(date, 'YYYY-MM-DD')
-    let iDate = moment(date, 'YYYY-MM-DD')
-    let startDate = getStartDate(sDate)
-    let firstInterestPaymentPortion = interestPortionCalc(iDate)
-    let times = frequencyStructure[period].everyOther
-    let amount = frequencyStructure[period].amount
-    let periodicity = frequencyStructure[period].periodicity
-    let interest = ((interestRate*times) / 100) * capital
-    let amountOfPayments = duration*(1/times)
-    let principal = capital / amountOfPayments
-    let payment = interest + principal
+  let dDate = moment(date, 'YYYY-MM-DD').format('YYYY-MM-DD')
+  let sDate = moment(date, 'YYYY-MM-DD')
+  let iDate = moment(date, 'YYYY-MM-DD')
+  let startDate = getStartDate(sDate)
+  let firstInterestPaymentPortion = interestPortionCalc(iDate)
+  let times = frequencyStructure[period].everyOther
+  let amount = frequencyStructure[period].amount
+  let periodicity = frequencyStructure[period].periodicity
+  let interest = ((interestRate*times) / 100) * capital
+  let amountOfPayments = duration*(1/times)
+  let principal = capital / amountOfPayments
+  let payment = interest + principal
 
-    let schedule = [{
-      _loan: loan,
-      date: dDate,
-      payment: 0,
-      interest: 0,
-      principal: 0,
-      balance: capital,
-      tracking: "disburstment"
-    }]
+  let schedule = [{
+    _loan: loan,
+    date: dDate,
+    payment: 0,
+    interest: 0,
+    principal: 0,
+    balance: capital,
+    status: "DISBURSTMENT"
+  }]
 
 
-    for (let i = 1; i <= amountOfPayments; i++) {
-      if (i < 2) {
-          let amortization_pmt = {
-            _loan: loan,
-            date: startDate,
-            payment: interest*firstInterestPaymentPortion,
-            interest: interest*firstInterestPaymentPortion,
-            principal: principal,
-            balance: capital,
-            tracking: "payment due"
-          }
-          schedule.push(amortization_pmt)
-
-      } else {
-        if (moment(startDate).add((i-1)*amount, periodicity).date() < 16) {
-          date = moment(startDate).add((i-1)*amount, periodicity).set({date: 15})
-        } else {
-          let lastDay = moment(startDate).add((i-1)*amount, periodicity).endOf('month').date()
-          date = moment(startDate).add((i-1)*amount, periodicity).set({date: lastDay})
-        }
+  for (let i = 1; i <= amountOfPayments; i++) {
+    if (i < 2) {
         let amortization_pmt = {
           _loan: loan,
-          date: date.format('YYYY-MM-DD'),
-          payment: payment,
-          interest: interest,
+          date: startDate,
+          payment: interest*firstInterestPaymentPortion,
+          interest: interest*firstInterestPaymentPortion,
           principal: principal,
-          balance: capital - ((i)*principal),
-          tracking: "payment due"
+          balance: capital,
+          status: "DUE"
         }
         schedule.push(amortization_pmt)
 
-    }}
-    return schedule
+    } else {
+      if (moment(startDate).add((i-1)*amount, periodicity).date() < 16) {
+        date = moment(startDate).add((i-1)*amount, periodicity).set({date: 15})
+      } else {
+        let lastDay = moment(startDate).add((i-1)*amount, periodicity).endOf('month').date()
+        date = moment(startDate).add((i-1)*amount, periodicity).set({date: lastDay})
+      }
+      let amortization_pmt = {
+        _loan: loan,
+        date: date.format('YYYY-MM-DD'),
+        payment: payment,
+        interest: interest,
+        principal: principal,
+        balance: capital - ((i)*principal),
+        status: "PENDING"
+      }
+      schedule.push(amortization_pmt)
+
+  }}
+  return schedule
 }
 
 
@@ -136,86 +135,98 @@ const linearLoan = (loan, period, duration, interest, capital, date) => {
   }
 
 
-    var times = frequencyStructure[period].everyOther
-    var amount = frequencyStructure[period].amount
-    var periodicity = frequencyStructure[period].periodicity
-    var interestPmt = ((interest*times) / 100) * capital
-    var numberOfPayments = duration*(1/times)
-    var principal = capital / numberOfPayments
-    var payment = interest + principal
-    
+  let times = frequencyStructure[period].everyOther
+  let amount = frequencyStructure[period].amount
+  let periodicity = frequencyStructure[period].periodicity
+  let interestPmt = ((interest*times) / 100) * capital
+  let numberOfPayments = duration*(1/times)
+  let principal = capital / numberOfPayments
+  let payment = interest + principal
+  
 
-    let schedule = [{
+  let schedule = [{
+    _loan: loan,
+    date: date,
+    payment: 0,
+    interest: 0,
+    principal: 0,
+    balance: capital,
+    status: "DISBURSTMENT"
+  }]
+
+  let t1 = moment(date)
+
+  for (let i = 1; i <= numberOfPayments; i++) {
+
+    let t2 = moment(date).add(i, "M");
+    let days = t2.diff(t1, 'days')
+    
+    let amortization_pmt = {
+      _loan: loan,
+      date: moment(date).add(i*amount, periodicity).format('YYYY-MM-DD'),
+      payment: payment,
+      interest: interestPmt,
+      principal: principal,
+      balance: capital - (i*principal),
+      status: days > 31 ? 'PENDING' : 'DUE'
+    }
+    schedule.push(amortization_pmt)
+  }
+
+  return schedule
+}
+
+function lumpSumLoan(loan, frequency, duration, interest, capital, date) {
+
+  let interestPmt = (interest / 100) * capital
+  let principal = capital
+  let payment = interestPmt
+  let finalPayment = interestPmt + principal
+
+  let schedule = [{
       _loan: loan,
       date: date,
       payment: 0,
       interest: 0,
       principal: 0,
       balance: capital,
-      tracking: "disburstment"
-    }]
+      status: "DISBURSTMENT"
+  }]
 
-    for (let i = 1; i <= numberOfPayments; i++) {
-      
+
+  let t1 = moment(date)
+
+  for (let i = 1; i <= duration; i++) {
+    
+    let t2 = moment(date).add(i, "M");
+    let days = t2.diff(t1, 'days')
+
+    if ( i < duration ) {
       let amortization_pmt = {
-        _loan: loan,
-        date: moment(date).add(i*amount, periodicity).format('YYYY-MM-DD'),
-        payment: payment,
-        interest: interestPmt,
-        principal: principal,
-        balance: capital - (i*principal),
-        tracking: "payment due"
+          _loan: loan,
+          date: moment(date).add(i, "M").format('YYYY-MM-DD'),
+          payment: payment,
+          interest: interestPmt,
+          principal: 0,
+          balance: principal,
+          status: days > 31 ? 'PENDING' : 'DUE'
+      }
+      schedule.push(amortization_pmt)
+    } else {
+      let amortization_pmt = {
+          _loan: loan,
+          date: moment(date).add(i, "M").format('YYYY-MM-DD'),
+          payment: finalPayment,
+          interest: interestPmt,
+          principal: principal,
+          balance: 0,
+          status: days > 31 ? 'PENDING' : 'DUE'
       }
       schedule.push(amortization_pmt)
     }
+  }
 
-    return schedule
-}
-
-function lumpSumLoan(loan, frequency, duration, interest, capital, date) {
-
-    var interestPmt = (interest / 100) * capital
-    var principal = capital
-    var payment = interestPmt
-    var finalPayment = interestPmt + principal
-
-    let schedule = [{
-        _loan: loan,
-        date: date,
-        payment: 0,
-        interest: 0,
-        principal: 0,
-        balance: capital,
-        tracking: "disburstment"
-    }]
-
-    for (let i = 1; i <= duration; i++) {
-      if ( i < duration ) {
-        let amortization_pmt = {
-            _loan: loan,
-            date: moment(date).add(i, "M").format('YYYY-MM-DD'),
-            payment: payment,
-            interest: interestPmt,
-            principal: 0,
-            balance: principal,
-            tracking: "payment due"
-        }
-        schedule.push(amortization_pmt)
-      } else {
-        let amortization_pmt = {
-            _loan: loan,
-            date: moment(date).add(i, "M").format('YYYY-MM-DD'),
-            payment: finalPayment,
-            interest: interestPmt,
-            principal: principal,
-            balance: 0,
-            tracking: "payment due"
-        }
-        schedule.push(amortization_pmt)
-      }
-    }
-
-    return schedule
+  return schedule
 
 }
 

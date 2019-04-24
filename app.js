@@ -11,13 +11,18 @@ const path = require('path');
 const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
 const cors = require('cors');
-require('./db')
-
 
 const app_name = require('./package.json').name;
 const debug = require('debug')(`${app_name}:${path.basename(__filename).split('.')[0]}`);
 
 const app = express();
+
+// DB start
+require('./db')
+
+//start cron jobs
+
+require('./cron/loanScheduleCron')
 
 // Middleware Setup
 var whitelist = [
@@ -27,8 +32,8 @@ var whitelist = [
   'https://ribo-cap.herokuapp.com',
   'http://ribo-cap.herokuapp.com',
   'http://www.ribocapital.com'
-  
 ];
+
 var corsOptions = {
   origin: function(origin, callback){
       var originIsWhitelisted = whitelist.indexOf(origin) !== -1;
@@ -65,6 +70,7 @@ app.use(session({
   },
   store: new MongoStore({ mongooseConnection: mongoose.connection })
 }));
+
 require('./passport')(app);
 
 
