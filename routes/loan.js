@@ -3,15 +3,16 @@ const router  = express.Router();
 const mongoose   = require('mongoose')
 const _ = require('lodash');
 const moment = require('moment')
-
 const LoanSchedule = require("../models/LoanSchedule")
 const Transaction = require("../models/Transaction")
 const Investment = require("../models/Investment")
 const Loan = require("../models/Loan")
 const User = require("../models/User")
-
 const transactionPlacer = require('./helpers/transactionPlacer')
-const { linearLoan, lumpSumLoan, payDayLoan } = require('./helpers/loanSchedule')
+const { linearLoan, 
+        lumpSumLoan, 
+        linearLoanIntFirst, 
+        payDayLoan } = require('./helpers/loanSchedule')
 const {
     countryPaidQuery,
     countryAllLoansQuery,
@@ -29,10 +30,10 @@ router.post('/create',(req,res,next) => {
     let paths = Object.keys(Loan.schema.paths).filter(e => !notUsedPaths.includes(e));
     
     const loanDetails = _.pickBy(req.body, (e,k) => paths.includes(k));
-    let { _borrower, period, interest, duration, capital, loanType, startDate, toInvest} = req.body 
+    let { _borrower, period, interest, duration, capital, loanType, startDate, paymentDate, toInvest} = req.body 
+    console.log(req.body)
     Loan.create(req.body)
         .then( obj => {
-            
             let loanId = obj._id
             let schedule
 
@@ -40,16 +41,18 @@ router.post('/create',(req,res,next) => {
                 schedule = linearLoan(loanId, period, duration, interest, capital, startDate)
             } else if (loanType === 'lumpSum') {
                 schedule = lumpSumLoan(loanId, period, duration, interest, capital, startDate)
+            } else if (loanType === 'linearIntFirst') {
+                schedule = linearLoanIntFirst(loanId, period, duration, interest, capital, startDate, paymentDate)
             } else {
                 schedule = payDayLoan(loanId, period, duration, interest, capital, startDate)
             }
+            console.log(schedule)
             schedule.forEach( e => {
                 LoanSchedule.create(e)
                 .then( (schedule_t) => {
                     Loan.findByIdAndUpdate(loanId,
                         {$push: {loanSchedule: schedule_t._id}},
                         {safe: true, upsert: true}).exec()
-                 
                 })
             })
             return obj;
@@ -283,9 +286,6 @@ router.get('/schedule/:startDate/:endDate/:country', (req,res,next) => {
           .then( objList => res.status(200).json(objList))
           .catch( error => next(error))
     }
-    
-    
-
 })
 
 router.get('/portfolio-status/:country/:fromDate/:toDate', async (req, res, next) => {
@@ -390,7 +390,7 @@ router.patch('/update-database', async (req, res, next) => {
             .then( resp => {
                 return resp = resp.map( e => {return e._id})    
             })
-            .then( resp => LoanSchedule.updateMany({_loan: {$in: resp}}, update1)).then( resp => console.log({updated5: resp}))
+            .then( resp => LoanSchedule.updateMany({_loan: {$in: resp}, status: 'PENDING'}, update1)).then( resp => console.log({updated5: resp}))
     })
     .then( async () => {
         update1 = { $set: {status: 'PAID'} }
@@ -416,7 +416,7 @@ router.patch('/update-database', async (req, res, next) => {
         await LoanSchedule.updateMany(query, update1).then( resp => console.log({updated9: resp}))
         console.log('ALL DONE!')
 
-    })
+})
 
 
     

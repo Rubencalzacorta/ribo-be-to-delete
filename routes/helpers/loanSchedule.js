@@ -225,14 +225,101 @@ function lumpSumLoan(loan, frequency, duration, interest, capital, date) {
       schedule.push(amortization_pmt)
     }
   }
+  return schedule
+}
+
+
+
+const linearLoanIntFirst = (loan, period, duration, interest, capital, date, paymentDate) => {
+
+  const frequencyStructure = {
+    'biWeekly': {
+      everyOther: 0.5,
+      periodicity: 'd',
+      amount: 15
+    },
+    'payDay': {
+      everyOther: 0.5,
+      periodicity: 'd',
+      amount: 15,
+    },
+    'monthly': {
+      everyOther: 1,
+      periodicity: 'M',
+      amount: 1
+    }
+  }
+
+
+  let times = frequencyStructure[period].everyOther
+  let amount = frequencyStructure[period].amount
+  let periodicity = frequencyStructure[period].periodicity
+  let interestPmt = ((interest*times) / 100) * capital
+  let numberOfPayments = duration*(1/times)
+  let principal = capital / numberOfPayments
+  let payment = interest + principal
+  
+
+  let schedule = [{
+    _loan: loan,
+    date: date,
+    payment: 0,
+    interest: 0,
+    principal: 0,
+    balance: capital,
+    status: "DISBURSTMENT"
+  }]
+
+  let t1 = moment(date)
+
+  for (let i = 1; i <= numberOfPayments+1; i++) {
+
+    let t2 = moment(date).add(i, "M");
+    let days = t2.diff(t1, 'days')
+    if (i > 1) {
+
+      let amortization_pmt = {
+        _loan: loan,
+        date: moment(paymentDate).add((i-1)*amount, periodicity).format('YYYY-MM-DD'),
+        payment: payment,
+        interest: interestPmt,
+        principal: principal,
+        balance: capital - ((i-1)*principal),
+        status: days > 31 ? 'PENDING' : 'DUE'
+      }
+      schedule.push(amortization_pmt)
+
+    } else {
+
+      let amortization_pmt = {
+        _loan: loan,
+        date: moment(paymentDate).format('YYYY-MM-DD'),
+        payment: daysDiff(date, paymentDate)*(-interestPmt/30),
+        interest: daysDiff(date, paymentDate)*(-interestPmt/30),
+        principal: 0,
+        balance: capital,
+        status: days > 31 ? 'PENDING' : 'DUE'
+      }
+      schedule.push(amortization_pmt)
+    }
+  }
 
   return schedule
-
 }
+
+const daysDiff = (initialDate, lastDate) => {
+  var now = moment(initialDate); //todays date
+  var end = moment(lastDate); // another date
+  var duration = moment.duration(now.diff(end));
+  var days = duration.asDays();
+  return days 
+}
+
 
 module.exports = {
   payDayLoan,
   linearLoan,
+  linearLoanIntFirst,
   lumpSumLoan
 }
 

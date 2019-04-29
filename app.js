@@ -20,9 +20,6 @@ const app = express();
 // DB start
 require('./db')
 
-//start cron jobs
-
-require('./cron/loanScheduleCron')
 
 // Middleware Setup
 var whitelist = [
