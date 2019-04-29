@@ -1,5 +1,14 @@
+const moment = require('moment')
+const round = require('mongo-round')
+
 portfolioAggregates = () => {
-    return [
+  let startDate = new Date()
+  let endDate = new Date()
+  startDate = startDate.setMonth(startDate.getMonth() - 5)
+  endDate = endDate.setMonth(endDate.getMonth() + 1 )
+
+
+  return [
         {
         '$match': {
             'status': {
@@ -73,11 +82,15 @@ portfolioAggregates = () => {
                 'month': '$_id.month'
               }
             }, 
-            'InterestProjectedIncome': 1, 
-            'InterestActualIncome': 1, 
-            'PrincipalActualRepayment': 1, 
-            'PrincipalProjectedRepayment': 1, 
-            'PrincipalProjectedOutstanding': 1
+            'InterestProjectedIncome': round('$InterestProjectedIncome', 2), 
+            'InterestActualIncome': round('$InterestActualIncome', 2), 
+            'PrincipalActualRepayment': round('$PrincipalActualRepayment', 2), 
+            'PrincipalProjectedRepayment': round('$PrincipalProjectedRepayment', 2), 
+            'PrincipalProjectedOutstanding': round('$PrincipalProjectedOutstanding', 2)
+          }
+        },{
+          '$match': {
+          'date': {'$lte': new Date(endDate), '$gte': new Date(startDate)},
           }
         }, {
           '$sort': {

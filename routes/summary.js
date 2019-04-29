@@ -68,12 +68,12 @@ router.get('/portfolioAggregates', (req, res, next) => {
 
             return { 
             dates: {text: 'Fechas', values: obj.map( e => { return moment(e.date).format('MM-YY') })},
-            InterestProjectedIncome: {text: 'Intereses Projectados', color: 'green', values: obj.map( e => { return e.InterestProjectedIncome })},
-            InterestActualIncome: {text: 'Intereses Recibidos', color: 'red', values: obj.map( e => { return e.InterestActualIncome })},
-            cumulativeActualIncome: {text: 'Ingreso por Intereses Acumulado', color: 'green', values: runningActualInterest},
-            cumulativeProjectedIncome: {text: 'Interes Acumulado Projectado', color: 'orange', values: runningProjectedInterest},
-            PrincipalActualRepayment: {text: 'Capital Repagado', color: 'orange', values: obj.map( e => { return e.PrincipalActualRepayment })},
-            PrincipalProjectedRepayment: {text: 'Repago de Capital Proyectado', color: 'blue', values: obj.map( e => { return e.PrincipalProjectedRepayment })},
+            InterestProjectedIncome: {text: 'Intereses Projectados', color: '#FF6384', values: obj.map( e => { return e.InterestProjectedIncome })},
+            InterestActualIncome: {text: 'Intereses Recibidos', color: '#36A2EB', values: obj.map( e => { return e.InterestActualIncome })},
+            cumulativeActualIncome: {text: 'Ingreso x Intereses Acumulado', color: '#FF6384', values: runningActualInterest},
+            cumulativeProjectedIncome: {text: 'Interes Acumulado Projectado', color: '#36A2EB', values: runningProjectedInterest},
+            PrincipalActualRepayment: {text: 'Capital Repagado', color: '#36A2EB', values: obj.map( e => { return e.PrincipalActualRepayment })},
+            PrincipalProjectedRepayment: {text: 'Repago de Capital Proyectado', color: '#FFCE56', values: obj.map( e => { return e.PrincipalProjectedRepayment })},
             PrincipalProjectedOutstanding: {text: 'Capital Colocado', color: 'black', values: obj.map( e => { return e.PrincipalProjectedOutstanding })},
     }})
         .then( obj => res.status(200).json(obj))
