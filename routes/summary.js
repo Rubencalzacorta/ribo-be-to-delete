@@ -3,34 +3,34 @@ const router  = express.Router();
 const LoanSchedule = require("../models/LoanSchedule")
 const { portfolioAggregates } = require('./helpers/portfolioAggregates')
 const { conceptAggregates } = require('./helpers/investorAggregates')
-const Loan = require("../models/Loan")
+const Borrower = require("../models/Borrower")
 const Transaction = require("../models/Transaction")
 var ObjectID = require('mongodb').ObjectID
 const { LoanTotals , CountryLoanTotals} = require('./helpers/totals')
 const moment = require('moment')
 
 router.get('/totals/:country', async (req,res,next) => {
-    
     if (req.params.country === "WORLD") {
-      let generalTotals = await LoanTotals()
-      let peruTotals =  await CountryLoanTotals('PERU')
-      let dominicanTotals =  await CountryLoanTotals('DOMINICAN_REPUBLIC')
-      let venTotals =  await CountryLoanTotals('VENEZUELA')
-      Promise.all([generalTotals, peruTotals, venTotals, dominicanTotals])
-        .then( obj => {res.status(200).json(obj)})
+      let cTotals = []
+      let countries = Borrower.schema.path('country').enumValues;
+      generalTotals = cTotals.push(LoanTotals())
+      countries.forEach( e => cTotals.push(CountryLoanTotals(e)))
+      Promise.all(cTotals) 
+        .then( obj => {
+            obj = obj.filter( e =>  e.length !== 0)
+            res.status(200).json(obj)
+        })
         .catch(e => next(e))
-    } else if ( req.params.country.toUpperCase() === "PERU" ) {
-      let peruTotals =  await CountryLoanTotals('PERU')
-      Promise.all([peruTotals])
+    } else {
+      let countryTotals =  await CountryLoanTotals(req.params.country)
+      Promise.all([countryTotals])
         .then( obj => {res.status(200).json(obj)})
         .catch(e => next(e))
     }
-
 })
 
 router.get('/list/:id',(req,res,next) => {
     let { id } = req.params
-    // console.log(id)
     Transaction.find({'_investor': new ObjectID(id)}, null, {sort: {date: 1}})
         .populate({path: '_loan', populate: {path: '_borrower'}})
         .populate({path: '_investor'})
