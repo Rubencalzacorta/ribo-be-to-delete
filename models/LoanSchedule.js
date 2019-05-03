@@ -22,7 +22,7 @@ const loanScheduleSchema = new Schema({
 });
 
 loanScheduleSchema.post('findOneAndUpdate', function(result) {
-  const statusUpdater = require('./helper')
+  const statusUpdater = require('./statusUpdater')
   const Loan = require('./Loan')
 
   Loan.findById({_id: result._loan})
@@ -33,7 +33,7 @@ loanScheduleSchema.post('findOneAndUpdate', function(result) {
 })
 
 loanScheduleSchema.post('findByIdAndUpdate', function(result) {
-  const statusUpdater = require('./helper')
+  const statusUpdater = require('./statusUpdater')
   const Loan = require('./Loan')
 
   Loan.findById({_id: result._loan})

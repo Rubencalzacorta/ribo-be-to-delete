@@ -13,15 +13,5 @@ const investmentSchema = new Schema({
   }
 });
 
-// var autoPopulateInvestment = function(next) {
-//   this.populate('_investor');
-//   next();
-// };
-
-// investmentSchema
-//   .pre('findOne', autoPopulateInvestment)
-//   .pre('find', autoPopulateInvestment)
-//   .pre('findByIdAndUpdate', autoPopulateInvestment);
-
 const Investment = mongoose.model('Investment', investmentSchema);
 module.exports = Investment;

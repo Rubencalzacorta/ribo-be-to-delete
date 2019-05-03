@@ -228,8 +228,6 @@ function lumpSumLoan(loan, frequency, duration, interest, capital, date) {
   return schedule
 }
 
-
-
 const linearLoanIntFirst = (loan, period, duration, interest, capital, date, paymentDate) => {
 
   const frequencyStructure = {
@@ -314,7 +312,6 @@ const daysDiff = (initialDate, lastDate) => {
   var days = duration.asDays();
   return days 
 }
-
 
 module.exports = {
   payDayLoan,

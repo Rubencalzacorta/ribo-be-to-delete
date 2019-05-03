@@ -34,9 +34,10 @@ router.post('/create',(req,res,next) => {
     console.log(req.body)
     Loan.create(req.body)
         .then( obj => {
+
             let loanId = obj._id
             let schedule
-
+            
             if (loanType === 'linear') {
                 schedule = linearLoan(loanId, period, duration, interest, capital, startDate)
             } else if (loanType === 'lumpSum') {
@@ -46,6 +47,7 @@ router.post('/create',(req,res,next) => {
             } else {
                 schedule = payDayLoan(loanId, period, duration, interest, capital, startDate)
             }
+            
             console.log(schedule)
             schedule.forEach( e => {
                 LoanSchedule.create(e)

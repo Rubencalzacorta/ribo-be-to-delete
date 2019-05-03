@@ -3,7 +3,7 @@ const router  = express.Router();
 const LoanSchedule = require("../models/LoanSchedule")
 const { portfolioAggregates } = require('./helpers/portfolioAggregates')
 const { conceptAggregates } = require('./helpers/investorAggregates')
-const Borrower = require("../models/Borrower")
+const User = require("../models/User")
 const Transaction = require("../models/Transaction")
 var ObjectID = require('mongodb').ObjectID
 const { LoanTotals , CountryLoanTotals} = require('./helpers/totals')
@@ -12,7 +12,7 @@ const moment = require('moment')
 router.get('/totals/:country', async (req,res,next) => {
     if (req.params.country === "WORLD") {
       let cTotals = []
-      let countries = Borrower.schema.path('country').enumValues;
+      let countries = User.schema.path('country').enumValues;
       generalTotals = cTotals.push(LoanTotals())
       countries.forEach( e => cTotals.push(CountryLoanTotals(e)))
       Promise.all(cTotals) 

@@ -9,12 +9,12 @@ const statusUpdater = (loan) => {
     }, 0)
     
 
-    let status = "open"
+    let status = "OPEN"
 
     if ( totalPaid >= loan.capital) {
-      status = "closed";
+      status = "CLOSED";
     } else if ( loan.capital - totalPaid < 1 ) {
-      status = "closed"
+      status = "CLOSED"
     } 
 
     update = {
