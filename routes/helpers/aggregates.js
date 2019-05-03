@@ -300,7 +300,11 @@ const allLoansQuery = (fromDate, toDate) => {
         '$gte': new Date(fromDate), 
         '$lte': new Date(toDate)
       }, 
-      'status': {'$ne': 'DISBURSTMENT'},
+      'status': {
+        '$nin': [
+          'DISBURSTMENT', 'CLOSED'
+        ]
+      }, 
     }
   },{
     '$project': {

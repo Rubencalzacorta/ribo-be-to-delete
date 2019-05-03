@@ -310,6 +310,16 @@ router.get('/portfolio-status/:country/:fromDate/:toDate', async (req, res, next
     Promise.all([allLoansSearch, paidQuerySearch, dueQuerySearch, overdueQuerySearch])
         .then( objList => {
 
+            let unique1 = objList[0].map( e => {return (e._id).toString()})
+            let unique2 = objList[2].map( e => {return (e._id).toString()})
+            console.log(unique1.length, unique2.length)
+            unique12 = unique1.filter((o) => unique2.indexOf(o) === -1);
+            unique22 = unique2.filter((o) => unique1.indexOf(o) === -1);
+
+            const unique = unique12.concat(unique22);
+
+            console.log(unique);
+
             let periodDetails = {
                 portfolio: {  
                     interest: objList[0].reduce( (acc, e) =>  {return acc + e.interest},0),
@@ -348,6 +358,31 @@ router.get('/portfolio-status/:country/:fromDate/:toDate', async (req, res, next
             return periodDetails
 
         }).then( periodDetails => res.status(200).json(periodDetails))
+})
+
+router.patch('/update-due', (req, res, next) => {
+    console.log('aqui')
+    let begMonth = moment()
+    let endMonth = moment().add(30, 'd')
+    let queryPending = {date: {$lte: endMonth, $gte: begMonth}, status: 'PENDING'}
+    let updateToDue = { $set: {status: 'DUE'} }
+    let queryClosedLoans = {status: 'CLOSED'}
+    let updateToClosed = { $set: {status: 'CLOSED'} }
+
+    LoanSchedule.updateMany(queryPending, updateToDue)
+    .then( (e) => {
+        console.log('OVERDUE CRON SCHEDULED SUCCESSFULLY', e)
+        let overdueDate = moment().subtract(7, 'd');
+        let queryDue =  {date: {$lte: overdueDate}, status: 'DUE'}
+        let updateToOverdue = { $set: {status: 'OVERDUE'} }
+        LoanSchedule.updateMany(queryDue, updateToOverdue)}).then( resp => console.log({updated: resp}))    
+    .catch( e => console.log(e))
+
+    Loan.find(queryClosedLoans).select({ "status": 1, "_id": 1, '_borrower': 0, 'loanSchedule': 0, 'investors': 0})
+        .then( resp => { return resp = resp.map( e => {return e._id})})
+        .then( resp => LoanSchedule.updateMany({_loan: {$in: resp}}, updateToClosed))
+        .then( objList => console.log({Updated: objList}))
+        .catch( e => console.log(e))
 })
 
 router.patch('/update-database', async (req, res, next) => {
