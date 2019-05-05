@@ -387,6 +387,13 @@ router.patch('/update-due', (req, res, next) => {
         .catch( e => console.log(e))
 })
 
+router.patch('/update-status-database', async (req, res, next) => {
+    update1 = { $set: {status: 'OPEN'} }
+    query = {status: 'open'}
+    await LoanSchedule.updateMany(query, update1).then( resp => console.log({updated1: resp})) 
+})
+
+
 router.patch('/update-database', async (req, res, next) => {
     console.log('aqui')
 
