@@ -160,7 +160,7 @@ router.patch('/installmentpmt/:id',(req,res,next) => {
             Transaction.insertMany(pendingTransactions)
             return investors
         })
-        .then( investors => res.status(200).json(investors))
+        .then( () => res.status(200).json({status: 'success', message: 'Loan Payment Recorded Successfully'}))
         .catch(e => next(e))
 })
 
@@ -202,12 +202,11 @@ router.get('/',(req,res,next) => {
         .catch(e => next(e))
 })
 
-router.get('/open',(req,res,next) => {
-    Loan.find({status: "open"})
+router.get('/status/:status',(req,res,next) => {
+    Loan.find({status: req.params.status.toUpperCase()})
         .then( objList => res.status(200).json(objList))
         .catch(e => next(e))
 })
-
 
 router.delete('/:id', (req,res,next) => {
     Loan.findOne({_id: req.params.id})
