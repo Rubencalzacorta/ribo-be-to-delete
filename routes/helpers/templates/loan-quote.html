@@ -1,0 +1,196 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-size: 14px;
+            font-family: 'Lato', sans-serif;
+            font-weight: 400;
+            margin: 0;
+        }
+
+        .first-column {
+        width: 40%;
+        }
+        .q-column {
+        width: 20%;
+        }
+        .date-column {
+        width: 30%;
+        }
+
+        .subtitle {
+        font-weight: 600;
+        }
+
+        .title {
+        font-size: 1rem;
+        width: 40%;
+        font-weight: 600;
+        margin: 0 auto;
+        margin-top: 10px;
+        }
+        table {
+        width: 90%;
+        margin: 0 auto;
+        }
+
+        table,
+        td {
+        /* border: 1px solid lightgrey; */
+        border-collapse: collapse;
+        }
+
+        th,
+        td {
+        padding: 2px 4px;
+        }
+
+        .logo {
+            background-image: url('https://res.cloudinary.com/ribo/image/upload/v1556958263/5ca4310f6408d129be4221b1_Logo_RIBO-03.png');
+            background-size: 150px;
+            background-repeat: no-repeat;
+            background-position: center;
+            height: 100px;
+            margin-left: 5%;  
+            margin-top: 20px;
+            width: 150px;
+        }
+    </style>
+</head>
+<body>
+        <div class="logo">
+        </div>
+        <div class="title">
+        <p>COTIZACIÓN DE NUEVO CRÉDITO</p>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <td  colspan="2">
+                <p class="subtitle">DATOS DEL CLIENTE </p>
+              </td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="first-column">Nombre y Apellidos</td>
+              <td>{{options.client.firstName}} {{options.client.lastName}}</td>
+            </tr>
+            <tr>
+              <td class="first-column">Teléfono Celular</td>
+              <td>{{options.client.phoneNumber}}</td>
+            </tr>
+            <tr>
+              <td class="first-column">Correo Electrónico</td>
+              <td>{{options.client.email}}</td>
+            </tr>
+          </tbody>
+        </table>
+        <table>
+          <thead>
+            <tr>
+              <td  colspan="2">
+                <p class="subtitle">CARACTERISTICAS GENERALES</p>
+              </td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="first-column">Capital</td>
+              <td >{{options.loan.principal}}</td>
+            </tr>
+            <tr>
+              <td class="first-column">Tasa de Interes</td>
+              <td>{{options.loan.interest}}</td>
+            </tr>
+            <tr>
+              <td class="first-column">Cuotas</td>
+              <td>{{options.loan.duration}}</td>
+            </tr>
+            <tr>
+              <td class="first-column">Periodicidad</td>
+              <td>{{options.loan.periodicity}}</td>
+            </tr>
+            <tr>
+              <td class="first-column">Fecha de Liquidación</td>
+              <td>{{options.loan.startDate}}</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <table>
+          <thead>
+            <tr>
+              <td colspan="5"><p class="subtitle">CRONOGRAMA DE PAGO </p></td>
+            </tr>
+            <tr>
+            <!-- <td>Nro de Cuota</td> -->
+              <td>Fecha</td>
+              <td>Cuota</td>
+            </tr>
+          </thead>
+          <tbody>
+            {{#loanSchedule}}
+            <tr>
+                    <td class="q-column">{{@index}}</td>
+                    <td class="date-column">{{date}}</td>
+                    <td>{{payment}}</td>
+            </tr>
+            {{/loanSchedule}}
+          </tbody>
+        </table>
+          
+        </body>
+        
+    <!-- <body>
+        <h4>Datos del cliente: </h4>
+            <table>
+                <tbody>
+                {{#each options.client}}
+                    <tr>
+                        {{#each this}}
+                        <td>{{this}}</td>
+                    {{/each}}
+                    </tr>
+                {{/each}}
+            </tbody>
+        </table>
+        <h4>Detalles del credito: </h4>
+        <table>
+            <tbody>
+            {{#each options.loanDetails}}
+                <tr>
+                    {{#each this}}
+                    <td>{{this}}</td>
+                {{/each}}
+                </tr>
+            {{/each}}
+            </tbody>
+        </table>
+        <h4>Cronograma de Pagos: </h4>
+        <table>
+            <thead>
+            <tr>
+                {{#each options.loanScheduleTitles}}
+                <th>{{@keys}}</th>
+                {{/each}}
+            </tr>
+            </thead>
+            <tbody>
+            {{#each options.loanSchedule}}
+                <tr>
+                    {{#each this}}
+                    <td>{{this}}</td>
+                {{/each}}
+                </tr>
+            {{/each}}
+            </tbody>
+        </table>
+    </body> -->
+</html>

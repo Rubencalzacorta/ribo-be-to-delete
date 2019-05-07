@@ -313,7 +313,23 @@ const daysDiff = (initialDate, lastDate) => {
   return days 
 }
 
+
+const loanSelector = (loanId, loanType, period, duration, interest, capital, startDate, paymentDate) => {
+
+  if (loanType === 'linear') {
+    return linearLoan(loanId, period, duration, interest, capital, startDate)
+  } else if (loanType === 'lumpSum') {
+    return lumpSumLoan(loanId, period, duration, interest, capital, startDate)
+  } else if (loanType === 'linearIntFirst') {
+    return linearLoanIntFirst(loanId, period, duration, interest, capital, startDate, paymentDate)
+  } else {
+    return payDayLoan(loanId, period, duration, interest, capital, startDate)
+  }
+
+}
+
 module.exports = {
+  loanSelector,
   payDayLoan,
   linearLoan,
   linearLoanIntFirst,

@@ -2,17 +2,20 @@ const express = require('express');
 const router  = express.Router();
 const mongoose   = require('mongoose')
 const _ = require('lodash');
+const fs = require('fs');
+const pdf = require('dynamic-html-pdf');
 const moment = require('moment')
+const path = require('path');
+const template= path.join(__dirname, './helpers/templates/loan-quote.html');
+const loanTemplate = fs.readFileSync(template, 'utf8');
 const LoanSchedule = require("../models/LoanSchedule")
 const Transaction = require("../models/Transaction")
 const Investment = require("../models/Investment")
 const Loan = require("../models/Loan")
 const User = require("../models/User")
+const statusUpdater = require('../models/helpers/statusUpdater')
 const transactionPlacer = require('./helpers/transactionPlacer')
-const { linearLoan, 
-        lumpSumLoan, 
-        linearLoanIntFirst, 
-        payDayLoan } = require('./helpers/loanSchedule')
+const { loanSelector } = require('./helpers/loanSchedule')
 const {
     countryPaidQuery,
     countryAllLoansQuery,
@@ -25,30 +28,62 @@ const {
 } = require('./helpers/aggregates')
 
 
+// router.post('/get-loan-quote', async (req, res, next) => {
+//     let { _borrower, period, interest, duration, capital, loanType, startDate, paymentDate} = req.body 
+//     let schedule = loanSelector(1, loanType, period, duration, interest, capital, startDate, paymentDate)
+//     console.log(schedule)
+//     borrower = await User.findById(_borrower).select({"firstName": 1, "lastName": 1, "email": 1, "cellphoneNumber": 1})
+
+//     var options = {
+//         format: "A4",
+//         orientation: "portrait",
+//         border: "10mm"
+//     };
+//     var document = {
+//         // type: 'buffer',
+//         template: loanTemplate,
+//         context: {
+//             options: {
+//                 client: borrower,
+//                 loan: {
+//                     principal: capital || 0,
+//                     interest: interest || 0,
+//                     duration: duration || 0,
+//                     periodicity: period || 0,
+//                     startDate: startDate || 0,
+//                 },
+//                 loanSchedule: schedule
+//             }
+//         },
+//         path: './output.pdf'
+//     };
+
+//     await pdf.create(document, options);
+
+// 	fs.readFile(document.path, (err, data) => {
+//         res.contentType("application/pdf");
+//         res.responseType('blob'),
+//         res.send(data);
+//         if (err) {
+//             console.log(err)
+//         }
+// 	});
+// })
+
+
 router.post('/create',(req,res,next) => {
     let notUsedPaths = ['_id','updated_at','created_at','__v'];
     let paths = Object.keys(Loan.schema.paths).filter(e => !notUsedPaths.includes(e));
     
     const loanDetails = _.pickBy(req.body, (e,k) => paths.includes(k));
     let { _borrower, period, interest, duration, capital, loanType, startDate, paymentDate, toInvest} = req.body 
-    console.log(req.body)
+ 
     Loan.create(req.body)
         .then( obj => {
 
             let loanId = obj._id
-            let schedule
+            let schedule = loanSelector(loanId, loanType, period, duration, interest, capital, startDate, paymentDate)
             
-            if (loanType === 'linear') {
-                schedule = linearLoan(loanId, period, duration, interest, capital, startDate)
-            } else if (loanType === 'lumpSum') {
-                schedule = lumpSumLoan(loanId, period, duration, interest, capital, startDate)
-            } else if (loanType === 'linearIntFirst') {
-                schedule = linearLoanIntFirst(loanId, period, duration, interest, capital, startDate, paymentDate)
-            } else {
-                schedule = payDayLoan(loanId, period, duration, interest, capital, startDate)
-            }
-            
-            console.log(schedule)
             schedule.forEach( e => {
                 LoanSchedule.create(e)
                 .then( (schedule_t) => {
@@ -105,14 +140,13 @@ router.post('/create',(req,res,next) => {
         .catch(e => next(e))
 })
 
+
 router.patch('/installmentpmt/:id',(req,res,next) => {
         
-    
     let notUsedPaths = ['_id','updated_at','created_at','__v'];
     let paths = Object.keys(LoanSchedule.schema.paths).filter(e => !notUsedPaths.includes(e));
     
     const {id} = req.params;
-
     const { cashAccount, fee, interest_pmt, principal_pmt, date_pmt } = req.body.payment
     const object = _.pickBy(req.body.payment, (e,k) => paths.includes(k));
     const updates = _.pickBy(object, _.identity);
@@ -314,13 +348,12 @@ router.get('/portfolio-status/:country/:fromDate/:toDate', async (req, res, next
 
             let unique1 = objList[0].map( e => {return (e._id).toString()})
             let unique2 = objList[2].map( e => {return (e._id).toString()})
-            console.log(unique1.length, unique2.length)
+
             unique12 = unique1.filter((o) => unique2.indexOf(o) === -1);
             unique22 = unique2.filter((o) => unique1.indexOf(o) === -1);
 
             const unique = unique12.concat(unique22);
 
-            console.log(unique);
 
             let periodDetails = {
                 portfolio: {  
@@ -363,7 +396,7 @@ router.get('/portfolio-status/:country/:fromDate/:toDate', async (req, res, next
 })
 
 router.patch('/update-due', (req, res, next) => {
-    console.log('aqui')
+    
     let begMonth = moment()
     let endMonth = moment().add(30, 'd')
     let queryPending = {date: {$lte: endMonth, $gte: begMonth}, status: 'PENDING'}
@@ -395,7 +428,7 @@ router.patch('/update-status-database', async (req, res, next) => {
 
 
 router.patch('/update-database', async (req, res, next) => {
-    console.log('aqui')
+    
 
     LoanSchedule.updateMany({}, { $rename: { tracking: "status" } }, { multi: true }, function(err, blocks) {
         if(err) { throw err; }

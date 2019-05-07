@@ -17,13 +17,11 @@ const statusUpdater = (loan) => {
       status = "CLOSED"
     } 
 
-    update = {
+    return {
       totalPaid: totalPaid,
       status: status,
       capitalRemaining: loan.capital - totalPaid
     }
-  
-    return update 
 }
 
 module.exports = statusUpdater
