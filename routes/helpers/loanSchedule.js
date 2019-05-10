@@ -314,16 +314,19 @@ const daysDiff = (initialDate, lastDate) => {
 }
 
 
-const loanSelector = (loanId, loanType, period, duration, interest, capital, startDate, paymentDate) => {
+const loanSelector = (loanId, loanDetails) => {
 
-  if (loanType === 'linear') {
-    return linearLoan(loanId, period, duration, interest, capital, startDate)
-  } else if (loanType === 'lumpSum') {
-    return lumpSumLoan(loanId, period, duration, interest, capital, startDate)
-  } else if (loanType === 'linearIntFirst') {
-    return linearLoanIntFirst(loanId, period, duration, interest, capital, startDate, paymentDate)
-  } else {
-    return payDayLoan(loanId, period, duration, interest, capital, startDate)
+  const { loanType, period, duration, interest, capital, startDate, paymentDate } = loanDetails
+
+  switch (loanType) {
+    case 'linear': 
+      return linearLoan(loanId, period, duration, interest, capital, startDate)
+    case 'lumpSum': 
+      return lumpSumLoan(loanId, period, duration, interest, capital, startDate)
+    case 'linearIntFirst': 
+      return linearLoanIntFirst(loanId, period, duration, interest, capital, startDate, paymentDate)
+    case 'payDay':
+      return payDayLoan(loanId, period, duration, interest, capital, startDate)
   }
 
 }

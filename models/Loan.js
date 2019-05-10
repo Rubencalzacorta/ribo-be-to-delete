@@ -18,6 +18,7 @@ const loanSchema = new Schema({
   duration: Number, 
   capital: Number,
   startDate: Date,
+  paymentDate: Date,
   loanType: String,
   useOfFunds: String,
   status: {type: String, default: "OPEN", enum: ['OPEN', 'CLOSED']},

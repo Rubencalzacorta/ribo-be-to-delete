@@ -1,22 +1,14 @@
 const express = require('express');
-const writtenNumber = require('written-number');
 const router  = express.Router();
 const mongoose   = require('mongoose')
 const _ = require('lodash');
-const fs = require('fs');
-const PDFDocument = require('pdfkit');
 const moment = require('moment')
 const path = require('path');
-// const template= path.join(__dirname, './helpers/templates/loan-quote.html');
-// const pntTemplate= path.join(__dirname, './helpers/templates/pagare.html');
-// const loanTemplate = fs.readFileSync(template, 'utf8');
-// const promissoryNoteTemplate = fs.readFileSync(pntTemplate, 'utf8');
 const LoanSchedule = require("../models/LoanSchedule")
 const Transaction = require("../models/Transaction")
 const Investment = require("../models/Investment")
 const Loan = require("../models/Loan")
 const User = require("../models/User")
-const statusUpdater = require('../models/helpers/statusUpdater')
 const transactionPlacer = require('./helpers/transactionPlacer')
 const { loanSelector } = require('./helpers/loanSchedule')
 const {
@@ -34,110 +26,16 @@ const {
 
 
 
-const pdfMakePrinter = require('pdfmake/src/printer');
-
-const generatePdf = (docDefinition, callback) => {
-
-
-    try {
-        
-        var fontDescriptors = {
-            Roboto: {
-              normal: path.join(__dirname, '../public/fonts/Roboto-Regular.ttf'),
-              bold: path.join(__dirname, '../public/fonts/Roboto-Medium.ttf'),
-              italics: path.join(__dirname, '../public/fonts/Roboto-Italic.ttf'),
-              bolditalics: path.join(__dirname, '../public/fonts/Roboto-MediumItalic.ttf'),
-            }
-          };
-
-        const printer = new pdfMakePrinter(fontDescriptors);
-        const doc = printer.createPdfKitDocument(docDefinition);
-        
-        let chunks = [];
-
-        doc.on('data', (chunk) => {
-            chunks.push(chunk);
-        });
-
-        doc.on('end', () => {
-            const result = Buffer.concat(chunks);
-            callback('data:application/pdf;base64,' + result.toString('base64'));
-        });
-        
-        doc.end();
-        
-    } catch(err) {
-        throw(err);
-    }
-};
-
-router.post('/promissory-note', async (req, res, next) => {
-
-    const docDefinition = {
-        content: ['This will show up in the file created']
-      };
-      
-      generatePdf(docDefinition, (response) => {
-        res.send(response); // sends a base64 encoded string to client
-      });
-})
-
-// router.post('/get-loan-quote', async (req, res, next) => {
-//     let { _borrower, period, interest, duration, capital, loanType, startDate, paymentDate} = req.body 
-//     let schedule = loanSelector(1, loanType, period, duration, interest, capital, startDate, paymentDate)
-//     console.log(schedule)
-//     borrower = await User.findById(_borrower).select({"firstName": 1, "lastName": 1, "email": 1, "cellphoneNumber": 1})
-
-//     var options = {
-//         format: "A4",
-//         orientation: "portrait",
-//         border: "10mm"
-//     };
-//     var document = {
-//         // type: 'buffer',
-//         template: loanTemplate,
-//         context: {
-//             options: {
-//                 client: borrower,
-//                 loan: {
-//                     principal: capital || 0,
-//                     interest: interest || 0,
-//                     duration: duration || 0,
-//                     periodicity: period || 0,
-//                     startDate: startDate || 0,
-//                 },
-//                 loanSchedule: schedule
-//             }
-//         },
-//         path: './output.pdf'
-//     };
-
-//     await pdf.create(document, options);
-
-// 	fs.readFile(document.path, (err, data) => {
-//         res.contentType("application/pdf");
-//         res.responseType('blob'),
-//         res.send(data);
-//         if (err) {
-//             console.log(err)
-//         }
-// 	});
-// })
-
 
 router.post('/create',(req,res,next) => {
     let notUsedPaths = ['_id','updated_at','created_at','__v'];
     let paths = Object.keys(Loan.schema.paths).filter(e => !notUsedPaths.includes(e));
-    
-    const loanDetails = _.pickBy(req.body, (e,k) => paths.includes(k));
-    let { _borrower, period, interest, duration, capital, loanType, startDate, paymentDate, toInvest} = req.body 
- 
-    Loan.create(req.body)
+    const loanInitDetails = _.pickBy(req.body, (e,k) => paths.includes(k));
+    let { _borrower, loanDetails, toInvest} = req.body 
+    Loan.create({...loanInitDetails, ...loanDetails})
         .then( obj => {
-
             let loanId = obj._id
-            let schedule = loanSelector(loanId, loanType, period, duration, interest, capital, startDate, paymentDate)
-            
+            let schedule = loanSelector(loanId, loanDetails)
             schedule.forEach( e => {
                 LoanSchedule.create(e)
                 .then( (schedule_t) => {
@@ -145,6 +43,7 @@ router.post('/create',(req,res,next) => {
                         {$push: {loanSchedule: schedule_t._id}},
                         {safe: true, upsert: true}).exec()
                 })
+                .catch( e => next(e))
             })
             return obj;
         })
@@ -154,11 +53,14 @@ router.post('/create',(req,res,next) => {
             investments.forEach( e => { 
                 Investment.create(e)
                 .then( (investment_x) => {
-                    Loan.findByIdAndUpdate(loanId,
-                        {$push: {investors: investment_x._id}},
-                        {safe: true, upsert: true}).exec()
                     User.findByIdAndUpdate(e._investor,
                         {$push: {investments: investment_x._id}},
+                        {safe: true, upsert: true}).exec()
+                    return investment_x
+                })
+                .then( (investment_x) => {
+                    Loan.findByIdAndUpdate(loanId,
+                        {$push: {investors: investment_x._id}},
                         {safe: true, upsert: true}).exec()
                 })
             })
@@ -180,7 +82,7 @@ router.post('/create',(req,res,next) => {
                 let transaction = {
                     _loan: e._loan,
                     _investor: mongoose.Types.ObjectId(e._investor),
-                    date: startDate,
+                    date: loanDetails.startDate,
                     cashAccount: e.cashAccount,
                     concept: 'INVESTMENT',
                     credit: credit
@@ -191,7 +93,9 @@ router.post('/create',(req,res,next) => {
             return obj
         })
         .then( obj => res.status(200).json(obj))
-        .catch(e => next(e))
+        .catch(e => {
+            res.status(500).json(e) 
+        })
 })
 
 

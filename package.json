@@ -1,6 +1,6 @@
 {
-  "name": "server",
-  "version": "0.0.0",
+  "name": "ribo_server",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
@@ -16,7 +16,6 @@
     "cors": "^2.8.4",
     "cryptiles": "^4.1.2",
     "dotenv": "~4.0.0",
-    "dynamic-html-pdf": "^1.0.0",
     "express": "~4.16.0",
     "express-session": "^1.15.6",
     "fs": "0.0.1-security",
@@ -27,11 +26,9 @@
     "mongo-round": "^1.0.0",
     "mongoose": "latest",
     "morgan": "^1.9.1",
-    "node-cron": "^2.0.3",
     "node-sass-middleware": "0.11.0",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
-    "pdfkit": "^0.9.1",
     "pdfmake": "^0.1.56",
     "serve-favicon": "~2.4.5",
     "written-number": "^0.9.1"
