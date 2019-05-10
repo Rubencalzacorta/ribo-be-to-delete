@@ -1,13 +1,16 @@
 const express = require('express');
+const writtenNumber = require('written-number');
 const router  = express.Router();
 const mongoose   = require('mongoose')
 const _ = require('lodash');
 const fs = require('fs');
-const pdf = require('dynamic-html-pdf');
+const PDFDocument = require('pdfkit');
 const moment = require('moment')
 const path = require('path');
-const template= path.join(__dirname, './helpers/templates/loan-quote.html');
-const loanTemplate = fs.readFileSync(template, 'utf8');
+// const template= path.join(__dirname, './helpers/templates/loan-quote.html');
+// const pntTemplate= path.join(__dirname, './helpers/templates/pagare.html');
+// const loanTemplate = fs.readFileSync(template, 'utf8');
+// const promissoryNoteTemplate = fs.readFileSync(pntTemplate, 'utf8');
 const LoanSchedule = require("../models/LoanSchedule")
 const Transaction = require("../models/Transaction")
 const Investment = require("../models/Investment")
@@ -27,6 +30,57 @@ const {
     overdueQuery
 } = require('./helpers/aggregates')
 
+
+
+
+
+const pdfMakePrinter = require('pdfmake/src/printer');
+
+const generatePdf = (docDefinition, callback) => {
+
+
+    try {
+        
+        var fontDescriptors = {
+            Roboto: {
+              normal: path.join(__dirname, '../public/fonts/Roboto-Regular.ttf'),
+              bold: path.join(__dirname, '../public/fonts/Roboto-Medium.ttf'),
+              italics: path.join(__dirname, '../public/fonts/Roboto-Italic.ttf'),
+              bolditalics: path.join(__dirname, '../public/fonts/Roboto-MediumItalic.ttf'),
+            }
+          };
+
+        const printer = new pdfMakePrinter(fontDescriptors);
+        const doc = printer.createPdfKitDocument(docDefinition);
+        
+        let chunks = [];
+
+        doc.on('data', (chunk) => {
+            chunks.push(chunk);
+        });
+
+        doc.on('end', () => {
+            const result = Buffer.concat(chunks);
+            callback('data:application/pdf;base64,' + result.toString('base64'));
+        });
+        
+        doc.end();
+        
+    } catch(err) {
+        throw(err);
+    }
+};
+
+router.post('/promissory-note', async (req, res, next) => {
+
+    const docDefinition = {
+        content: ['This will show up in the file created']
+      };
+      
+      generatePdf(docDefinition, (response) => {
+        res.send(response); // sends a base64 encoded string to client
+      });
+})
 
 // router.post('/get-loan-quote', async (req, res, next) => {
 //     let { _borrower, period, interest, duration, capital, loanType, startDate, paymentDate} = req.body 

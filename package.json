@@ -31,7 +31,10 @@
     "node-sass-middleware": "0.11.0",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
-    "serve-favicon": "~2.4.5"
+    "pdfkit": "^0.9.1",
+    "pdfmake": "^0.1.56",
+    "serve-favicon": "~2.4.5",
+    "written-number": "^0.9.1"
   },
   "devDependencies": {
     "nodemon": "^1.12.1"
