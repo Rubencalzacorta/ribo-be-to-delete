@@ -3,6 +3,7 @@ const router  = express.Router();
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
 const passport = require('passport');
+const sendMail = require("../mail/mail");
 
 
 const login = (req, user) => {
@@ -28,6 +29,9 @@ router.post('/signup', (req, res, next) => {
           lastName
         } = req.body;
 
+ 
+
+  console.log('entra')
   // Check for non empty user or password
   if (!email || !password){
     next(new Error('You must provide valid credentials'));
@@ -36,17 +40,28 @@ router.post('/signup', (req, res, next) => {
   // Check if user exists in DB
   User.findOne({ email })
   .then( foundUser => {
+    console.log('asd')
     if (foundUser) throw new Error('email already exists');
 
     const salt     = bcrypt.genSaltSync(10);
     const hashPass = bcrypt.hashSync(password, salt);
+    const confirmationCode = bcrypt.hashSync(email, salt);
+    console.log(confirmationCode)
 
     return new User({
       email,
       password: hashPass,
       firstName, 
-      lastName
-    }).save();
+      lastName,
+      confirmationCode
+    })
+    .save()
+    .then( (savedUser) => { 
+      let sub="Confirmation Mail"
+      let msg=`<a href="http://localhost:3010/auth/confirm/${confirmationCode}">Click to confirm Email<a> ${email}`
+      sendMail(email,sub,msg) 
+      return savedUser
+    })
   })
   .then( savedUser => login(req, savedUser)) // Login the user using passport
   .then( user => res.json({status: 'signup & login successfully', user})) // Answer JSON

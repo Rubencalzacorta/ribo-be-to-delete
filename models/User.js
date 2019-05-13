@@ -47,7 +47,13 @@ const userSchema = new Schema({
   businessEmail: String,
   monthlyIncome: Number,
   otherIncome: Number,
-  loans: [{ type: Schema.ObjectId, ref: 'Loan' }]
+  loans: [{ type: Schema.ObjectId, ref: 'Loan' }],
+  status: {
+    type: String,
+    enum: ["Pending confirmation", "Active"],
+    default: "Pending confirmation"
+  },
+  confirmationCode: String
 }, {
   timestamps: {
     createdAt: 'created_at',
