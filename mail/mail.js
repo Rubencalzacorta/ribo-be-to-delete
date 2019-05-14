@@ -23,8 +23,8 @@ const sendMail= (to,sub,msg)=>{
     subject:sub,
     html:msg
   })
-  .then(info=>console.log(info, 'SUCCESS'))
-  .catch(error=>console.log(error, 'MAIL TRANSPORTER'))
+  .then(info=> {return info})
+  .catch(e=> next(e))
 }
 
 module.exports=sendMail; 

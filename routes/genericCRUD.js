@@ -5,6 +5,7 @@ const moment = require('moment')
 const LoanSchedule = require('../models/LoanSchedule')
 const Investment = require('../models/Investment')
 const Transaction = require('../models/Transaction')
+const uploadCloud = require('../config/cloudinary')
 
 const simpleCrud = (Model, extensionFn) => {
     let router  = express.Router();
@@ -169,15 +170,40 @@ const simpleCrud = (Model, extensionFn) => {
     })
 
     // CRUD: UPDATE
-    router.patch('/update/:id',(req,res,next) => {
+    router.patch('/update/details/:id',(req,res,next) => {
         const {id} = req.params;
-        const object = _.pickBy(req.body, (e,k) => paths.includes(k));
-        const updates = _.pickBy(object, _.identity);
+        updates = req.body.details
         Model.findByIdAndUpdate(id, updates ,{new:true})
             .then( obj => {
                 res.status(200).json({status:'updated',obj});
             })
             .catch(e => next(e))
+    })
+    router.post('/update/documentID/:id', 
+        uploadCloud.single('photo'), (req, res, next) => {
+            try {
+                updates = req.file ? req.file.url : null;
+                Model.findByIdAndUpdate(req.params.id, {documentID: updates} ,{new:true})
+                .then( obj => {
+                    res.status(200).json({status:'updated',obj});
+                })
+            } catch (err) {
+                console.log(err)
+            }
+    })
+
+    router.post('/update/documentIncome/:id', 
+        uploadCloud.single('photo'), (req, res, next) => {
+        try {
+            updates = req.file ? req.file.url : null;
+            
+            Model.findByIdAndUpdate(req.params.id, {documentIncomeOrPayslip: updates} ,{new:true})
+            .then( obj => {
+                res.status(200).json({status:'updated',obj});
+            })
+        } catch (err) {
+            console.log(err)
+        }
     })
 
     router.patch('/loan-payment/:id',(req,res,next) => {

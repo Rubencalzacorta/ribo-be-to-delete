@@ -4,6 +4,8 @@ const bcrypt = require('bcrypt');
 const User = require('../models/User');
 const passport = require('passport');
 const sendMail = require("../mail/mail");
+const hbs = require("handlebars");
+const fs = require("fs");
 
 
 const login = (req, user) => {
@@ -31,7 +33,6 @@ router.post('/signup', (req, res, next) => {
 
  
 
-  console.log('entra')
   // Check for non empty user or password
   if (!email || !password){
     next(new Error('You must provide valid credentials'));
@@ -45,8 +46,9 @@ router.post('/signup', (req, res, next) => {
 
     const salt     = bcrypt.genSaltSync(10);
     const hashPass = bcrypt.hashSync(password, salt);
-    const confirmationCode = bcrypt.hashSync(email, salt);
-    console.log(confirmationCode)
+    const confirmationCode = encodeURIComponent(bcrypt.hashSync(email, salt));
+
+    
 
     return new User({
       email,
@@ -57,16 +59,38 @@ router.post('/signup', (req, res, next) => {
     })
     .save()
     .then( (savedUser) => { 
-      let sub="Confirmation Mail"
-      let msg=`<a href="http://localhost:3010/auth/confirm/${confirmationCode}">Click to confirm Email<a> ${email}`
-      sendMail(email,sub,msg) 
+
+      let confirmationCode = savedUser.confirmationCode
+      const templateStr = fs.readFileSync("./mail/template.hbs").toString();
+      const template = hbs.compile(templateStr);
+      const html = template({ confirmationCode, firstName, lastName });
+      const sub = "Confirmación de cuenta - RIBO";
+
+      sendMail(email,sub,html) 
       return savedUser
+
     })
   })
   .then( savedUser => login(req, savedUser)) // Login the user using passport
   .then( user => res.json({status: 'signup & login successfully', user})) // Answer JSON
   .catch(e => next(e));
 });
+
+router.post('/confirmation', (req, res, next) => {
+  let { confirmationCode } = req.body
+
+  User.findOneAndUpdate(
+    { confirmationCode: confirmationCode },
+    { status: "ACTIVE" }
+  ).then( (user) => {
+    if (user.status === 'ACTIVE'){
+      res.status(200).json({confirmed: true}) 
+    } else {
+      res.status(304).json({confirmed: false}) 
+    }
+  })
+  .catch(e=> next(e));
+})
 
 
 router.post('/login', (req, res, next) => {
@@ -82,6 +106,26 @@ router.post('/login', (req, res, next) => {
   })(req, res, next);
 });
 
+router.get('/resend-confirmation', (req, res, next) => {
+  let { email, _id } = req.user
+
+  const salt     = bcrypt.genSaltSync(10);
+  const confirmationCode = encodeURIComponent(bcrypt.hashSync(email, salt))
+  let update = { confirmationCode: confirmationCode };
+  User.findByIdAndUpdate(_id, update, {new:true})
+    .then( user => {
+      let {confirmationCode, firstName, lastName} = user
+      const templateStr = fs.readFileSync("./mail/template.hbs").toString();
+      const template = hbs.compile(templateStr);
+      const html = template({ confirmationCode, firstName, lastName });
+      const sub = "Activación de cuenta - RIBO";
+
+      sendMail(email,sub,html) 
+      return user
+    })
+    .then( user => res.status(200).json({status: 'success', user}))
+    .catch(e => next(e));
+})
 
 router.get('/currentuser', (req,res,next) => {
 

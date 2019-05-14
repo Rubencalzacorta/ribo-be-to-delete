@@ -8,7 +8,7 @@ const userSchema = new Schema({
   fullName: String,
   username: String,
   password: String,
-  location: {type: String, enum:['PERU', 'DOMINICAN REPUBLIC', 'VENEZUELA', 'DOMINICAN_REPUBLIC', 'WORLD']},
+  location: {type: String, enum:['PERU', 'VENEZUELA', 'DOMINICAN_REPUBLIC', 'WORLD']},
   investments: [{ type: Schema.ObjectId, ref: 'Investment' }],
   username: String,
   password: String,
@@ -19,6 +19,7 @@ const userSchema = new Schema({
   gender: String,
   civilStatus: String,
   nationalId: String,
+  nationalIdType: {type: String, enum:['PASSPORT', 'DRIVING_LICENCE', 'ID', 'IMMIGRATION_CERTIFICATE']},
   nationality: String,
   otherNationalities: String,
   placeOfBirth: String,
@@ -31,6 +32,7 @@ const userSchema = new Schema({
   spouseDOB: Date,
   spousePlaceOfBirth: String,
   street: String,
+  address: String,
   residenceName: String,
   residenceNumber: String,
   city: String,
@@ -43,15 +45,19 @@ const userSchema = new Schema({
   businessAddress: String,
   businessPosition: String,
   startDate: Date,
+  documentID: String,
+  documentIncomeOrPayslip: String,
   businessPhoneNumber: Number,
   businessEmail: String,
+  bank: String,
+  accountNumber: String,
   monthlyIncome: Number,
   otherIncome: Number,
   loans: [{ type: Schema.ObjectId, ref: 'Loan' }],
   status: {
     type: String,
-    enum: ["Pending confirmation", "Active"],
-    default: "Pending confirmation"
+    enum: ["PENDING", "ACTIVE", 'VERIFIED'],
+    default: "PENDING"
   },
   confirmationCode: String
 }, {
