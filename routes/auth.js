@@ -76,11 +76,11 @@ router.post('/signup', (req, res, next) => {
   .catch(e => next(e));
 });
 
-router.get('/confirmation/:code', (req, res, next) => {
-  let { code } = req.params
+router.post('/confirmation', (req, res, next) => {
+  let { confirmationCode } = req.body
 
   User.findOneAndUpdate(
-    { confirmationCode: code },
+    { confirmationCode: confirmationCode },
     { status: "ACTIVE" }
   ).then( (user) => {
     if (user.status === 'ACTIVE'){
