@@ -76,7 +76,7 @@ router.post('/signup', (req, res, next) => {
   .catch(e => next(e));
 });
 
-router.post('/confirmation/:code', (req, res, next) => {
+router.get('/confirmation/:code', (req, res, next) => {
   let { code } = req.params
 
   User.findOneAndUpdate(
