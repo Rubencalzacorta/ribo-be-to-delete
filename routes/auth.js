@@ -82,14 +82,13 @@ router.post('/confirmation', (req, res, next) => {
   User.findOneAndUpdate(
     { confirmationCode: confirmationCode },
     { status: "ACTIVE" }
-  ).then( (user) => {
-    if (user.status === 'ACTIVE'){
-      res.status(200).json({confirmed: true}) 
-    } else {
-      res.status(304).json({confirmed: false}) 
-    }
-  })
-  .catch(e=> next(e));
+    ).then( (user) => {
+      if (user.status === 'ACTIVE'){
+        res.status(200).json({confirmed: true}) 
+      } else {
+        res.status(304).json({confirmed: false}) 
+      }})
+    .catch(e=> next(e));
 })
 
 
@@ -127,7 +126,7 @@ router.get('/resend-confirmation', (req, res, next) => {
     .catch(e => next(e));
 })
 
-router.get('/currentuser', (req,res,next) => {
+router.get('/currentUser', (req,res,next) => {
 
   if(req.user){
     res.status(200).json(req.user);
