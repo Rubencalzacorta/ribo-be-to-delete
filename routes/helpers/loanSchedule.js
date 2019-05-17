@@ -314,9 +314,37 @@ const daysDiff = (initialDate, lastDate) => {
 }
 
 
+const factoring = (loan, startDate, days, interest, capital) => {
+  let schedule = []
+  var interest = [(interest/100)*(days/30)] * capital 
+  amortization_pmt = {
+    _loan: loan,
+    date: moment(startDate).format('YYYY-MM-DD'),
+    payment: 0,
+    interest: 0,
+    principal: 0,
+    balance: capital,
+    status: "DISBURSTMENT"
+  }
+  schedule.push(amortization_pmt)
+  amortization_pmt = {
+    _loan: loan,
+    date: moment(startDate).add(days, 'days').format('YYYY-MM-DD'),
+    payment: capital+interest,
+    interest: interest,
+    principal: capital,
+    balance: 0,
+    status: days > 31 ? 'PENDING' : 'DUE'
+  }
+  schedule.push(amortization_pmt)
+
+  return schedule
+}
+
+
 const loanSelector = (loanId, loanDetails) => {
 
-  const { loanType, period, duration, interest, capital, startDate, paymentDate } = loanDetails
+  const { loanType, period, duration, interest, capital, startDate, paymentDate, days } = loanDetails
 
   switch (loanType) {
     case 'linear': 
@@ -327,8 +355,9 @@ const loanSelector = (loanId, loanDetails) => {
       return linearLoanIntFirst(loanId, period, duration, interest, capital, startDate, paymentDate)
     case 'payDay':
       return payDayLoan(loanId, period, duration, interest, capital, startDate)
+    case 'factoring':
+      return factoring(loanId, startDate, days, interest, capital)
   }
-
 }
 
 module.exports = {

@@ -8,16 +8,16 @@ const Transaction = require('../models/Transaction')
 const uploadCloud = require('../config/cloudinary')
 
 const simpleCrud = (Model, extensionFn) => {
+
     let router  = express.Router();
 
-    // Detect paths from model
     let notUsedPaths = ['_id','updated_at','created_at','__v'];
     let paths = Object.keys(Model.schema.paths).filter(e => !notUsedPaths.includes(e));
-    
-    if(extensionFn){
+
+    if( extensionFn ) {
         router = extensionFn(router);
     }
-    // CRUD: RETRIEVE
+
     router.get('/',(req,res,next) => {
         Model.find()
             .then( objList => res.status(200).json(objList))
@@ -29,7 +29,7 @@ const simpleCrud = (Model, extensionFn) => {
             .then( objList => res.status(200).json(objList))
             .catch(e => next(e))
     })
-    
+        
     router.get('/all-clients/:country/:query',(req,res,next) => {
         let { query, country } = req.params
         console.log(query, country)
@@ -104,6 +104,14 @@ const simpleCrud = (Model, extensionFn) => {
         const object = _.pickBy(req.body, (e,k) => paths.includes(k));
         Model.create(object)
             .then( obj => res.status(200).json({status: "success", response: obj}))
+            .catch(e => next(e))
+    })
+
+    router.post('/create-account',(req,res,next) => {
+        let { details } = req.body
+        
+        Model.create(details)
+            .then( obj => {res.status(200).json({status: "success", response: obj})})
             .catch(e => next(e))
     })
 
