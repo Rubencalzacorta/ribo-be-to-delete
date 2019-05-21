@@ -287,15 +287,17 @@ router.get('/portfolio-status/:country/:fromDate/:toDate', async (req, res, next
     
     let { country, fromDate, toDate} = req.params
     let allLoansSearch, paidQuerySearch, dueQuerySearch, overdueQuerySearch
-
+    let startOfMonth = moment().startOf('month')
+    let endOfMonth = moment().endOf('month')
+    
     if (country === 'WORLD') {
         allLoansSearch = await LoanSchedule.aggregate(allLoansQuery(fromDate, toDate))
-        paidQuerySearch = await LoanSchedule.aggregate(paidQuery(fromDate, toDate))
+        paidQuerySearch = await LoanSchedule.aggregate(paidQuery(startOfMonth, endOfMonth))
         dueQuerySearch = await LoanSchedule.aggregate(dueQuery(fromDate, toDate))
         overdueQuerySearch = await LoanSchedule.aggregate(overdueQuery())
     } else {
         allLoansSearch = await LoanSchedule.aggregate(countryAllLoansQuery(country, fromDate, toDate))
-        paidQuerySearch = await LoanSchedule.aggregate(countryPaidQuery(country, fromDate, toDate))
+        paidQuerySearch = await LoanSchedule.aggregate(countryPaidQuery(country, startOfMonth, endOfMonth))
         dueQuerySearch = await LoanSchedule.aggregate(countryDueQuery(country,fromDate, toDate))
         overdueQuerySearch = await LoanSchedule.aggregate(countryOverdueQuery(country))
     }
