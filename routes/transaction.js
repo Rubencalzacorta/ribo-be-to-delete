@@ -36,79 +36,104 @@ router.get('/totals',(req,res,next) => {
 
 router.get('/totals/:country', async (req,res,next) => {
   let { country } = req.params
-  if ( country === 'WORLD') {
+  if ( country === 'WORLD' || country === 'VENEZUELA') {
     Transaction.aggregate([
-                {
-                  '$project': {
-                    '_investor': 1, 
-                    'total': {
-                      '$subtract': [
-                        '$debit', '$credit'
-                      ]
-                    }
-                  }
-                }, {
-                  '$group': {
-                    '_id': '$_investor', 
-                    'accumTotal': {
-                      '$sum': '$total'
-                    }
-                  }
-                }, {
-                  '$lookup': {
-                    'from': 'users', 
-                    'localField': '_id', 
-                    'foreignField': '_id', 
-                    'as': 'investor'
-                  }
-                }
-              ])
-              .then( obj => res.status(200).json(obj))
+      {
+        '$project': {
+          '_investor': 1, 
+          'cashAccount': 1, 
+          'total': {
+            '$subtract': [
+              '$debit', '$credit'
+            ]
+          }
+        }
+      }, {
+        '$group': {
+          '_id': {
+            'investor': '$_investor', 
+            'cashAccount': '$cashAccount'
+          }, 
+          'accumTotal': {
+            '$sum': '$total'
+          }
+        }
+      }, {
+        '$project': {
+          'investor': '$_id.investor', 
+          'cashAccount': '$_id.cashAccount', 
+          'accumTotal': '$accumTotal', 
+          '_id': 0
+        }
+      }, {
+        '$lookup': {
+          'from': 'users', 
+          'localField': 'investor', 
+          'foreignField': '_id', 
+          'as': 'investor'
+        }
+      }
+    ])
+              .then( obj => {
+                console.log(obj)
+                res.status(200).json(obj)})
               .catch(e => next(e))
   } else {
-    Transaction.aggregate([
-                        {
-                          '$lookup': {
-                            'from': 'users', 
-                            'localField': '_investor', 
-                            'foreignField': '_id', 
-                            'as': 'details'
-                          }
-                        }, {
-                          '$unwind': {
-                            'path': '$details'
-                          }
-                        }, {
-                          '$match': {
-                            'details.location': `${country}`
-                          }
-                        }, {
-                          '$project': {
-                            '_investor': 1, 
-                            'total': {
-                              '$subtract': [
-                                '$debit', '$credit'
-                              ]
-                            }
-                          }
-                        }, {
-                          '$group': {
-                            '_id': '$_investor', 
-                            'accumTotal': {
-                              '$sum': '$total'
-                            }
-                          }
-                        }, {
-                          '$lookup': {
-                            'from': 'users', 
-                            'localField': '_id', 
-                            'foreignField': '_id', 
-                            'as': 'investor'
-                          }
-                        }
-                    ])
-                    .then( obj => res.status(200).json(obj))
-                    .catch(e => next(e))
+        Transaction.aggregate([
+          {
+            '$lookup': {
+              'from': 'users', 
+              'localField': '_investor', 
+              'foreignField': '_id', 
+              'as': 'details'
+            }
+          }, {
+            '$unwind': {
+              'path': '$details'
+            }
+          }, {
+            '$match': {
+              'details.location': `${country}`
+            }
+          }, {
+            '$project': {
+              '_investor': 1, 
+              'cashAccount': 1, 
+              'total': {
+                '$subtract': [
+                  '$debit', '$credit'
+                ]
+              }
+            }
+          }, {
+            '$group': {
+              '_id': {
+                'investor': '$_investor', 
+                'cashAccount': '$cashAccount'
+              }, 
+              'accumTotal': {
+                '$sum': '$total'
+              }
+            }
+          }, {
+            '$project': {
+              'investor': '$_id.investor', 
+              'cashAccount': '$_id.cashAccount', 
+              'accumTotal': '$accumTotal', 
+              '_id': 0
+            }
+          }, {
+            '$lookup': {
+              'from': 'users', 
+              'localField': 'investor', 
+              'foreignField': '_id', 
+              'as': 'investor'
+            }
+          }
+        ])
+    .then( obj => {console.log(obj)
+      res.status(200).json(obj)})
+    .catch(e => next(e))
     }
 })
 
