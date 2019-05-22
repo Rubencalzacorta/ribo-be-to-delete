@@ -106,6 +106,7 @@ router.patch('/installmentpmt/:id',(req,res,next) => {
     
     const {id} = req.params;
     const { cashAccount, fee, interest_pmt, principal_pmt, date_pmt } = req.body.payment
+    console.log(req.body.payment)
     const object = _.pickBy(req.body.payment, (e,k) => paths.includes(k));
     const updates = _.pickBy(object, _.identity);
 
