@@ -130,7 +130,6 @@ router.get('/currentUser', (req,res,next) => {
 
   if(req.user){
     res.status(200).json(req.user);
-
   }else{
     next(new Error('Not logged in'))
   }
@@ -138,8 +137,12 @@ router.get('/currentUser', (req,res,next) => {
 
 
 router.get('/logout', (req,res) => {
-  req.logout();
-  res.status(200).json({message:'logged out'})
+
+  req.logout()
+  if (!req.user) {
+    console.log('logged out')
+    res.status(200).json({message:'success'})
+  }
 });
 
 
