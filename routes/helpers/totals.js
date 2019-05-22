@@ -8,7 +8,7 @@ const LoanTotals = () => {
     return Loan.aggregate([
       {
         '$match': {
-          'status': 'open'
+          'status': 'OPEN'
         }
       }, {
         '$project': {
@@ -26,11 +26,6 @@ const LoanTotals = () => {
             '$divide': [
               '$interest', 100
             ]
-          }, 
-          'amort': {
-            '$divide': [
-              '$capital', '$duration'
-            ]
           }
         }
       }, {
@@ -41,7 +36,6 @@ const LoanTotals = () => {
           'capital': 1, 
           'duration': 1, 
           'startDate': 1, 
-          'amort': 1, 
           'interest': {
             '$multiply': [
               '$interestRate', '$capital'
@@ -66,9 +60,6 @@ const LoanTotals = () => {
           'totalCapitalRemaining': {
             '$sum': '$capitalRemaining'
           }, 
-          'totalAmort': {
-            '$sum': '$amort'
-          }, 
           'totalInterest': {
             '$sum': '$interest'
           }
@@ -80,7 +71,6 @@ const LoanTotals = () => {
           'totalCapitalRemaining': 1, 
           'totalInterest': 1, 
           'totalActiveLoans': 1, 
-          'totalAmort': 1, 
           'averageDuration': {
             '$divide': [
               '$totalDuration', '$totalActiveLoans'
@@ -128,7 +118,7 @@ const CountryLoanTotals = (country) => {
       }, {
         '$match': {
           'details.country': country, 
-          'status': 'open'
+          'status': 'OPEN'
         }
       }, {
         '$project': {

@@ -240,7 +240,7 @@ router.get('/schedule/:startDate/:endDate/:country', (req,res,next) => {
               }
             }, {
               '$match': {
-                'details.status': 'open', 
+                'details.status': 'OPEN', 
                 'date': {
                   '$gte': new Date(fromDate), 
                   '$lt': new Date(toDate)
@@ -269,7 +269,7 @@ router.get('/schedule/:startDate/:endDate/:country', (req,res,next) => {
               }
             }, {
               '$match': {
-                'details.status': 'open', 
+                'details.status': 'OPEN', 
                 'date': {
                     '$gte': new Date(fromDate), 
                     '$lt': new Date(toDate)
