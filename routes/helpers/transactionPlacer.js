@@ -1,6 +1,5 @@
 const mongoose   = require('mongoose')
 
-
 const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_pmt, date_pmt, id) => {
     console.log("aqui")
     pendingTransactions = []
@@ -41,7 +40,6 @@ const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_
                 concept: "INTEREST",
                 debit: interest_pmt * e.pct,
             }
-
             pendingTransactions.push(interestTransaction)
         })
     }
