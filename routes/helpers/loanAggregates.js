@@ -61,3 +61,40 @@ const loansTotalCollateral = (status) => {
   ]
 }
 
+
+
+
+
+const loanScheduleTotalsByStatus = (status) => {
+  return [
+    {
+      '$match': {
+        'status': `${status}`
+      }
+    }, {
+      '$group': {
+        '_id': `${status} PAYMENTS`, 
+        'totalPayment': {
+          '$sum': '$payment'
+        }, 
+        'totalInterest': {
+          '$sum': '$interest'
+        }, 
+        'totalCapital': {
+          '$sum': '$principal'
+        }, 
+        'totalQuantity': {
+          '$sum': 1
+        }
+      }
+    }
+  ]
+}
+
+module.exports = {
+  loansTotalRemaining,
+  loansTotalPaid,
+  loansTotalNominal,
+  loansTotalCollateral,
+  loanScheduleTotalsByStatus
+}

@@ -2,6 +2,7 @@ const express = require('express');
 const router  = express.Router();
 const LoanSchedule = require("../models/LoanSchedule")
 const { portfolioAggregates } = require('./helpers/portfolioAggregates')
+const { loanScheduleTotalsByStatus } = require('./helpers/loanAggregates')
 const { conceptAggregates } = require('./helpers/investorAggregates')
 const User = require("../models/User")
 const Transaction = require("../models/Transaction")
@@ -14,13 +15,13 @@ router.get('/totals/:country', async (req,res,next) => {
       let cTotals = []
       let countries = User.schema.path('country').enumValues;
       generalTotals = cTotals.push(LoanTotals())
-      countries.forEach( e => cTotals.push(CountryLoanTotals(e)))
+    //   countries.forEach( e => cTotals.push(CountryLoanTotals(e)))
       Promise.all(cTotals) 
         .then( obj => {
             obj = obj.filter( e =>  e.length !== 0)
             res.status(200).json(obj)
         })
-        .catch(e => next(e))
+        .catch(e => console.log(e))
     } else {
       let countryTotals =  await CountryLoanTotals(req.params.country)
       Promise.all([countryTotals])
@@ -47,6 +48,45 @@ router.get('/',(req,res,next) => {
 
 router.post('/',(req,res,next) => {
     Transaction.create(req.body)
+        .then( obj => res.status(200).json(obj))
+        .catch(e => next(e))
+})
+
+router.get('/portfolio/total/schedule/all', async (req, res, next) => {
+
+    let paid = await LoanSchedule.aggregate(loanScheduleTotalsByStatus('PAID'))
+    let due = await LoanSchedule.aggregate(loanScheduleTotalsByStatus('DUE'))
+    let overdue = await LoanSchedule.aggregate(loanScheduleTotalsByStatus('OVERDUE'))
+    let pending = await LoanSchedule.aggregate(loanScheduleTotalsByStatus('PENDING'))
+
+    Promise.all([paid, due, overdue, pending])
+        .then( obj => res.status(200).json(obj))
+        .catch(e => next(e))
+})
+
+router.get('/portfolio/total/schedule/:status', (req, res, next) => {
+    LoanSchedule.aggregate(loanScheduleTotalsByStatus(req.params.status))
+        .then( obj => res.status(200).json(obj))
+        .catch(e => next(e))
+})
+
+router.get('/portfolio/month/schedule/', (req, res, next) => {
+
+    LoanSchedule.find({date: {$gte: moment().startOf('month'), $lte:  moment().endOf('month')}, status: {$nin: ['DISBURSTMENT', 'CLOSED']}})
+        .then( async data => {
+            let totalInterestPaid = await data.reduce( (acc, e) => { return acc + e.interest_pmt},0)
+            let totalPrincipalPaid = await data.reduce( (acc, e) => { return acc + e.principal_pmt},0)
+            let totalInterest = await data.reduce( (acc, e) => { return acc + e.interest},0)
+            let totalPrincipal = await data.reduce( (acc, e) => { return acc + e.principal},0)
+            return ({
+                'interestPaid': totalInterestPaid, 
+                'principalPaid': totalPrincipalPaid,
+                'projectedInterest': totalInterest, 
+                'projectedPrincipal': totalPrincipal,
+                'pctInterestPaid': totalInterestPaid/totalInterest,
+                'pctPrincipalPaid': totalPrincipalPaid/totalPrincipal,
+             })
+        })
         .then( obj => res.status(200).json(obj))
         .catch(e => next(e))
 })

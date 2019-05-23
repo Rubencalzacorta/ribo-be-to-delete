@@ -344,7 +344,12 @@ const factoring = (loan, startDate, days, interest, capital) => {
 
 const loanSelector = (loanId, loanDetails) => {
 
-  const { loanType, period, duration, interest, capital, startDate, paymentDate, days } = loanDetails
+  let { loanType, period, duration, interest, capital, startDate, paymentDate, days } = loanDetails
+
+  interest = parseFloat(interest)
+  duration = parseFloat(duration)
+  capital  = parseFloat(capital)
+  days     = parseFloat(days)
 
   switch (loanType) {
     case 'linear': 

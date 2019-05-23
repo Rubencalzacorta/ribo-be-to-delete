@@ -387,6 +387,20 @@ router.patch('/update-status-database', async (req, res, next) => {
 })
 
 
+
+router.patch('/payment-fix', async (req, res, next) => {
+    arr = []
+    items = await LoanSchedule.find({}).select({"_id": 1, "interest": 1, "principal": 1})
+    Promise.all([items])
+        .then( items => {
+            items[0].forEach( async e => {
+                let update = parseFloat(e.interest)+parseFloat(e.principal)
+                await LoanSchedule.findByIdAndUpdate(e._id, {payment: update}, {new: true})
+                .then(console.log)
+        }).catch(e => console.log(e))
+
+})})
+
 router.patch('/update-database', async (req, res, next) => {
     
 
