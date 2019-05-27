@@ -32,10 +32,12 @@ router.post('/create',(req,res,next) => {
     let paths = Object.keys(Loan.schema.paths).filter(e => !notUsedPaths.includes(e));
     const loanInitDetails = _.pickBy(req.body, (e,k) => paths.includes(k));
     let { _borrower, loanDetails, toInvest} = req.body 
+    console.log(req.body)
+    let {currency} = loanInitDetails
     Loan.create({...loanInitDetails, ...loanDetails})
         .then( obj => {
             let loanId = obj._id
-            let schedule = loanSelector(loanId, loanDetails)
+            let schedule = loanSelector(loanId, loanDetails, currency)
             schedule.forEach( e => {
                 LoanSchedule.create(e)
                 .then( (schedule_t) => {
@@ -43,13 +45,14 @@ router.post('/create',(req,res,next) => {
                         {$push: {loanSchedule: schedule_t._id}},
                         {safe: true, upsert: true}).exec()
                 })
+                .then(console.log)
                 .catch( e => next(e))
             })
             return obj;
         })
         .then( obj => {
             let loanId = obj._id
-            let investments = toInvest.map( e => ({_loan: loanId, ...e}))
+            let investments = toInvest.map( e => ({_loan: loanId, ...e, currency}))
             investments.forEach( e => { 
                 Investment.create(e)
                 .then( (investment_x) => {
@@ -75,7 +78,7 @@ router.post('/create',(req,res,next) => {
         })
         .then( obj => {
             let loanId = obj._id
-            let investments = toInvest.map( e => ({_loan: loanId, ...e}))
+            let investments = toInvest.map( e => ({_loan: loanId, ...e, currency}))
             pendingTransactions = []
             investments.forEach( e => { 
                 let credit = e.amount
@@ -85,14 +88,18 @@ router.post('/create',(req,res,next) => {
                     date: loanDetails.startDate,
                     cashAccount: e.cashAccount,
                     concept: 'INVESTMENT',
-                    credit: credit
+                    credit: credit,
+                    currency: currency
                 }
                 pendingTransactions.push(transaction)
             })
             Transaction.insertMany(pendingTransactions)
             return obj
         })
-        .then( obj => res.status(200).json(obj))
+        .then( obj => {
+            console.log(obj)
+            res.status(200).json(obj)
+        })
         .catch(e => {
             res.status(500).json(e) 
         })

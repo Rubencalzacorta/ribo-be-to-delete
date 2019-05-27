@@ -7,6 +7,7 @@ const transactionSchema = new Schema({
   _loanSchedule: { type: Schema.ObjectId, ref: 'loanSchedule' },
   date: Date,
   cashAccount: { type: String, enum: ['PLPERU','REMPERU','GCUS','GFUS', 'GCDR']},
+  currency: {type: String, default: 'USD', enum: ['DOP', 'USD', 'PEN']},
   concept: {type: String, enum: ['DEPOSIT','INVESTMENT','WITHDRAWAL','INTEREST', 'CAPITAL', 'FEE', 'COST']},
   debit: {type: Number, default: 0},
   credit: {type: Number, default: 0},

@@ -4,6 +4,7 @@ const Schema   = mongoose.Schema;
 const investmentSchema = new Schema({
   _investor: { type: Schema.ObjectId, ref: 'User' },
   _loan: { type: Schema.ObjectId, ref: 'Loan' },
+  currency: {type: String, default: "USD", enum: ['DOP', 'USD', 'PEN']},
   pct: Number,
   amount: Number
 }, {

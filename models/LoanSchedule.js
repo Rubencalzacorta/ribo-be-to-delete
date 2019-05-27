@@ -9,11 +9,11 @@ const loanScheduleSchema = new Schema({
   payment: Number,
   balance: Number,
   status: {type: String, enum: ['DISBURSTMENT' ,'PENDING', 'DUE', 'OVERDUE', 'PAID', 'OUTSTANDING', 'CLOSED']},
+  currency: {type: String, default: "USD", enum: ['DOP', 'USD', 'PEN']},
   tracking: String,
   interest_pmt: {type: Number, default: 0},
   principal_pmt: {type: Number, default: 0},
-  date_pmt: Date,
-
+  date_pmt: Date
 }, {
   timestamps: {
     createdAt: 'created_at',

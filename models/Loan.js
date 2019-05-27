@@ -21,6 +21,7 @@ const loanSchema = new Schema({
   paymentDate: Date,
   loanType: String,
   useOfFunds: String,
+  currency: {type: String, default: "USD", enum: ['DOP', 'USD', 'PEN']},
   status: {type: String, default: "OPEN", enum: ['OPEN', 'CLOSED']},
 }, {
   timestamps: {

@@ -33,7 +33,7 @@ const getStartDate = (date) => {
   }
 }
 
-const payDayLoan = (loan, period, duration, interestRate, capital, date) => {
+const payDayLoan = (loan, period, duration, interestRate, capital, date, currency) => {
 
   const frequencyStructure = {
     'biWeekly': {
@@ -74,7 +74,8 @@ const payDayLoan = (loan, period, duration, interestRate, capital, date) => {
     interest: 0,
     principal: 0,
     balance: capital,
-    status: "DISBURSTMENT"
+    status: "DISBURSTMENT",
+    currency: currency
   }]
 
 
@@ -87,7 +88,8 @@ const payDayLoan = (loan, period, duration, interestRate, capital, date) => {
           interest: interest*firstInterestPaymentPortion,
           principal: principal,
           balance: capital,
-          status: "DUE"
+          status: "DUE",
+          currency: currency
         }
         schedule.push(amortization_pmt)
 
@@ -105,7 +107,8 @@ const payDayLoan = (loan, period, duration, interestRate, capital, date) => {
         interest: interest,
         principal: principal,
         balance: capital - ((i)*principal),
-        status: "PENDING"
+        status: "PENDING",
+        currency: currency
       }
       schedule.push(amortization_pmt)
 
@@ -114,7 +117,7 @@ const payDayLoan = (loan, period, duration, interestRate, capital, date) => {
 }
 
 
-const linearLoan = (loan, period, duration, interest, capital, date) => {
+const linearLoan = (loan, period, duration, interest, capital, date, currency) => {
 
   const frequencyStructure = {
     'biWeekly': {
@@ -151,7 +154,8 @@ const linearLoan = (loan, period, duration, interest, capital, date) => {
     interest: 0,
     principal: 0,
     balance: capital,
-    status: "DISBURSTMENT"
+    status: "DISBURSTMENT",
+    currency: currency
   }]
 
   let t1 = moment(date)
@@ -168,7 +172,8 @@ const linearLoan = (loan, period, duration, interest, capital, date) => {
       interest: interestPmt,
       principal: principal,
       balance: capital - (i*principal),
-      status: days > 31 ? 'PENDING' : 'DUE'
+      status: days > 31 ? 'PENDING' : 'DUE',
+      currency: currency
     }
     schedule.push(amortization_pmt)
   }
@@ -176,7 +181,7 @@ const linearLoan = (loan, period, duration, interest, capital, date) => {
   return schedule
 }
 
-function lumpSumLoan(loan, frequency, duration, interest, capital, date) {
+function lumpSumLoan(loan, duration, interest, capital, date, currency) {
 
   let interestPmt = (interest / 100) * capital
   let principal = capital
@@ -190,7 +195,8 @@ function lumpSumLoan(loan, frequency, duration, interest, capital, date) {
       interest: 0,
       principal: 0,
       balance: capital,
-      status: "DISBURSTMENT"
+      status: "DISBURSTMENT",
+      currency: currency
   }]
 
 
@@ -209,7 +215,8 @@ function lumpSumLoan(loan, frequency, duration, interest, capital, date) {
           interest: interestPmt,
           principal: 0,
           balance: principal,
-          status: days > 31 ? 'PENDING' : 'DUE'
+          status: days > 31 ? 'PENDING' : 'DUE',
+          currency: currency
       }
       schedule.push(amortization_pmt)
     } else {
@@ -220,7 +227,8 @@ function lumpSumLoan(loan, frequency, duration, interest, capital, date) {
           interest: interestPmt,
           principal: principal,
           balance: 0,
-          status: days > 31 ? 'PENDING' : 'DUE'
+          status: days > 31 ? 'PENDING' : 'DUE',
+          currency: currency
       }
       schedule.push(amortization_pmt)
     }
@@ -228,7 +236,7 @@ function lumpSumLoan(loan, frequency, duration, interest, capital, date) {
   return schedule
 }
 
-const linearLoanIntFirst = (loan, period, duration, interest, capital, date, paymentDate) => {
+const linearLoanIntFirst = (loan, period, duration, interest, capital, date, paymentDate, currency) => {
 
   const frequencyStructure = {
     'biWeekly': {
@@ -265,7 +273,8 @@ const linearLoanIntFirst = (loan, period, duration, interest, capital, date, pay
     interest: 0,
     principal: 0,
     balance: capital,
-    status: "DISBURSTMENT"
+    status: "DISBURSTMENT",
+    currency: currency
   }]
 
   let t1 = moment(date)
@@ -283,7 +292,8 @@ const linearLoanIntFirst = (loan, period, duration, interest, capital, date, pay
         interest: interestPmt,
         principal: principal,
         balance: capital - ((i-1)*principal),
-        status: days > 31 ? 'PENDING' : 'DUE'
+        status: days > 31 ? 'PENDING' : 'DUE',
+        currency: currency
       }
       schedule.push(amortization_pmt)
 
@@ -296,7 +306,8 @@ const linearLoanIntFirst = (loan, period, duration, interest, capital, date, pay
         interest: daysDiff(date, paymentDate)*(-interestPmt/30),
         principal: 0,
         balance: capital,
-        status: days > 31 ? 'PENDING' : 'DUE'
+        status: days > 31 ? 'PENDING' : 'DUE',
+        currency: currency
       }
       schedule.push(amortization_pmt)
     }
@@ -314,7 +325,7 @@ const daysDiff = (initialDate, lastDate) => {
 }
 
 
-const factoring = (loan, startDate, days, interest, capital) => {
+const factoring = (loan, startDate, days, interest, capital, currency) => {
   let schedule = []
   var interest = [(interest/100)*(days/30)] * capital 
   amortization_pmt = {
@@ -324,7 +335,8 @@ const factoring = (loan, startDate, days, interest, capital) => {
     interest: 0,
     principal: 0,
     balance: capital,
-    status: "DISBURSTMENT"
+    status: "DISBURSTMENT",
+    currency: currency
   }
   schedule.push(amortization_pmt)
   amortization_pmt = {
@@ -334,7 +346,8 @@ const factoring = (loan, startDate, days, interest, capital) => {
     interest: interest,
     principal: capital,
     balance: 0,
-    status: days > 31 ? 'PENDING' : 'DUE'
+    status: days > 31 ? 'PENDING' : 'DUE',
+    currency: currency
   }
   schedule.push(amortization_pmt)
 
@@ -342,7 +355,7 @@ const factoring = (loan, startDate, days, interest, capital) => {
 }
 
 
-const loanSelector = (loanId, loanDetails) => {
+const loanSelector = (loanId, loanDetails, currency) => {
 
   let { loanType, period, duration, interest, capital, startDate, paymentDate, days } = loanDetails
 
@@ -353,15 +366,15 @@ const loanSelector = (loanId, loanDetails) => {
 
   switch (loanType) {
     case 'linear': 
-      return linearLoan(loanId, period, duration, interest, capital, startDate)
+      return linearLoan(loanId, period, duration, interest, capital, startDate, currency)
     case 'lumpSum': 
-      return lumpSumLoan(loanId, period, duration, interest, capital, startDate)
+      return lumpSumLoan(loanId, period, duration, interest, capital, startDate, currency)
     case 'linearIntFirst': 
-      return linearLoanIntFirst(loanId, period, duration, interest, capital, startDate, paymentDate)
+      return linearLoanIntFirst(loanId, period, duration, interest, capital, startDate, paymentDate, currency)
     case 'payDay':
-      return payDayLoan(loanId, period, duration, interest, capital, startDate)
+      return payDayLoan(loanId, period, duration, interest, capital, startDate, currency)
     case 'factoring':
-      return factoring(loanId, startDate, days, interest, capital)
+      return factoring(loanId, startDate, days, interest, capital, currency)
   }
 }
 
