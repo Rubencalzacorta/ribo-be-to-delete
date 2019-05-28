@@ -45,7 +45,6 @@ router.post('/create',(req,res,next) => {
                         {$push: {loanSchedule: schedule_t._id}},
                         {safe: true, upsert: true}).exec()
                 })
-                .then(console.log)
                 .catch( e => next(e))
             })
             return obj;
@@ -112,7 +111,7 @@ router.patch('/installmentpmt/:id',(req,res,next) => {
     let paths = Object.keys(LoanSchedule.schema.paths).filter(e => !notUsedPaths.includes(e));
     
     const {id} = req.params;
-    const { cashAccount, fee, interest_pmt, principal_pmt, date_pmt } = req.body.payment
+    const { cashAccount, fee, interest_pmt, principal_pmt, date_pmt, currency } = req.body.payment
     console.log(req.body.payment)
     const object = _.pickBy(req.body.payment, (e,k) => paths.includes(k));
     const updates = _.pickBy(object, _.identity);
@@ -122,7 +121,8 @@ router.patch('/installmentpmt/:id',(req,res,next) => {
             return Investment.find({_loan: obj._loan}).populate('_investor').exec()
         })
         .then( investors => {
-            let pendingTransactions = transactionPlacer(investors, cashAccount, fee, interest_pmt, principal_pmt, date_pmt, id)
+            let pendingTransactions = transactionPlacer(investors, cashAccount, fee, interest_pmt, principal_pmt, date_pmt, currency, id)
+            console.log(pendingTransactions)
             Transaction.insertMany(pendingTransactions)
             return investors
         })
@@ -157,7 +157,7 @@ router.delete('/deletepmt/:id',(req,res,next) => {
             }
         }})
     .then( (updates) => { LoanSchedule.findByIdAndUpdate(id, updates, {new:true}).exec()})
-    .then( () => {Transaction.find({_loanSchedule: mongoose.Types.ObjectId(id)}).remove().exec()})
+    .then( async () => { await Transaction.deleteMany({_loanSchedule: mongoose.Types.ObjectId(id)})})
     .then( () => res.status(200).json({status: "Success", message: "Removed Successfully"}))
     .catch(e => next(e))
 })

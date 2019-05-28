@@ -1,6 +1,6 @@
 const mongoose   = require('mongoose')
 
-const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_pmt, date_pmt, id) => {
+const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_pmt, date_pmt, currency, id) => {
     console.log("aqui")
     pendingTransactions = []
 
@@ -19,6 +19,7 @@ const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_
                 _loanSchedule: mongoose.Types.ObjectId(id),
                 date: date_pmt,
                 cashAccount: cashAccount,
+                currency: currency,
                 concept: "INTEREST",
                 debit: interest_pmt * 1,
             }
@@ -37,6 +38,7 @@ const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_
                 _loanSchedule: mongoose.Types.ObjectId(id),
                 date: date_pmt,
                 cashAccount: cashAccount,
+                currency: currency,
                 concept: "INTEREST",
                 debit: interest_pmt * e.pct,
             }
@@ -51,6 +53,7 @@ const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_
             _loanSchedule: mongoose.Types.ObjectId(id),
             date: date_pmt,
             cashAccount: cashAccount,
+            currency: currency,
             concept: "CAPITAL",
             debit: principal_pmt * e.pct,
         }
@@ -76,6 +79,7 @@ const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_
                         _loanSchedule: mongoose.Types.ObjectId(id),
                         date: date_pmt,
                         cashAccount: cashAccount,
+                        currency: currency,
                         concept: "FEE",
                         credit: feeCharge
                     }
@@ -86,6 +90,7 @@ const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_
                         _loanSchedule: mongoose.Types.ObjectId(id),
                         date: date_pmt,
                         cashAccount: cashAccount,
+                        currency: currency,
                         concept: "FEE",
                         debit: feeCharge
                     }
@@ -109,6 +114,7 @@ const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_
                     _loanSchedule: mongoose.Types.ObjectId(id),
                     date: date_pmt,
                     cashAccount: cashAccount,
+                    currency: currency,
                     concept: "FEE",
                     credit: feeCharge
                 }
@@ -119,6 +125,7 @@ const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_
                     _loanSchedule: mongoose.Types.ObjectId(id),
                     date: date_pmt,
                     cashAccount: cashAccount,
+                    currency: currency,
                     concept: "FEE",
                     debit: feeCharge
                 }

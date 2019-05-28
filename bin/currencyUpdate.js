@@ -45,16 +45,16 @@ const dueReview = async () => {
                 .then( () => console.log('done modifying transactions to DOP'))
         })
     })
-    // .then( async () => { await Investment.updateMany({currency: "DOP"}, {$mul: {amount: 50.5612 }})
-    //     .then( () => console.log("UPDATED Investment TRANSACTIONS")) })
-    // .catch(err => { console.error('Error connecting to mongo', err)});
-    // .then( async () => { await Loan.updateMany({currency: "DOP"}, {$mul: {capital: 50.5612, collateralValue: 50.5612, capitalRemaining: 50.5612 }})
-    //     .then( () => console.log("LOAN FIELDS UPDATED")) })
-    // .then( async () => { await LoanSchedule.updateMany({currency: "DOP"}, {$mul: {interest: 50.5612, principal: 50.5612, balance: 50.5612, payment: 50.5612 }})
-    //     .then( () => console.log("UPDATED LOAN SCHEDULE FIELDS")) })
-    // .then( async () => { await Transaction.updateMany({currency: "DOP"}, {$mul: {debit: 50.5612, credit: 50.5612 }})
-    //     .then( () => console.log("UPDATED DEBIT AND CREDIT TRANSACTIONS")) })
-}
+    .then( async () => { await Investment.updateMany({currency: "DOP"}, {$mul: {amount: 50.5612 }})
+        .then( () => console.log("UPDATED Investment TRANSACTIONS")) })
+    .then( async () => { await Loan.updateMany({currency: "DOP"}, {$mul: {capital: 50.5612, collateralValue: 50.5612, capitalRemaining: 50.5612 }})
+        .then( () => console.log("LOAN FIELDS UPDATED")) })
+    .then( async () => { await LoanSchedule.updateMany({currency: "DOP"}, {$mul: {interest: 50.5612, principal: 50.5612, balance: 50.5612, payment: 50.5612 }})
+        .then( () => console.log("UPDATED LOAN SCHEDULE FIELDS")) })
+    .then( async () => { await Transaction.updateMany({currency: "DOP"}, {$mul: {debit: 50.5612, credit: 50.5612 }})
+        .then( () => console.log("UPDATED DEBIT AND CREDIT TRANSACTIONS")) })
+    .catch(err => { console.error('Error connecting to mongo', err)});
+    }
 
 dueReview()
 

@@ -2,7 +2,33 @@
 
 const LoanSchedule = require("../../models/LoanSchedule")
 const Loan = require("../../models/Loan")
+const moment = require("moment")
 
+
+const MonthlyLoanScheduleTotals = (currency) => {
+    let c = currency
+    console.log(c)
+    return LoanSchedule.find({date: {$gte: moment().startOf('month'), $lte:  moment().endOf('month')}, status: {$nin: ['DISBURSTMENT', 'CLOSED']}, currency: c})
+    .then( async data => {
+      let totalInterestPaid = await data.reduce( (acc, e) => { return acc + e.interest_pmt},0)
+      let totalPrincipalPaid = await data.reduce( (acc, e) => { return acc + e.principal_pmt},0)
+      let totalInterest = await data.reduce( (acc, e) => { return acc + e.interest},0)
+      let totalPrincipal = await data.reduce( (acc, e) => { return acc + e.principal},0)
+      details = 
+          {'_id': c,
+           'details': {
+          'interestPaid': totalInterestPaid, 
+          'principalPaid': totalPrincipalPaid,
+          'projectedInterest': totalInterest, 
+          'projectedPrincipal': totalPrincipal,
+          'pctInterestPaid': totalInterestPaid/totalInterest || 0,
+          'pctPrincipalPaid': totalPrincipalPaid/totalPrincipal || 0
+          }}
+        
+      return details
+    })
+    .catch( e => console.log(e))
+}
 
 const LoanTotals = () => {
     return Loan.aggregate([
@@ -16,6 +42,7 @@ const LoanTotals = () => {
           'totalPaid': 1, 
           'duration': 1, 
           'startDate': 1, 
+          'currency': 1, 
           'currentDate': new Date(), 
           'capitalRemaining': {
             '$subtract': [
@@ -36,6 +63,7 @@ const LoanTotals = () => {
           'capital': 1, 
           'duration': 1, 
           'startDate': 1, 
+          'currency': 1, 
           'interest': {
             '$multiply': [
               '$interestRate', '$capital'
@@ -44,7 +72,7 @@ const LoanTotals = () => {
         }
       }, {
         '$group': {
-          '_id': 'global', 
+          '_id': '$currency', 
           'totalDuration': {
             '$sum': '$duration'
           }, 
@@ -223,5 +251,6 @@ const CountryLoanTotals = (country) => {
 
 module.exports = {
     LoanTotals,
-    CountryLoanTotals
+    CountryLoanTotals,
+    MonthlyLoanScheduleTotals
 }

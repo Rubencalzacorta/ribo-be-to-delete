@@ -4,20 +4,22 @@ const LoanSchedule = require("../models/LoanSchedule")
 const { portfolioAggregates } = require('./helpers/portfolioAggregates')
 const { loanScheduleTotalsByStatus } = require('./helpers/loanAggregates')
 const { conceptAggregates } = require('./helpers/investorAggregates')
+const { LoanTotals , CountryLoanTotals, MonthlyLoanScheduleTotals} = require('./helpers/totals')
 const User = require("../models/User")
+const Loan = require("../models/Loan")
 const Transaction = require("../models/Transaction")
 var ObjectID = require('mongodb').ObjectID
-const { LoanTotals , CountryLoanTotals} = require('./helpers/totals')
 const moment = require('moment')
 
 router.get('/totals/:country', async (req,res,next) => {
     if (req.params.country === "WORLD") {
       let cTotals = []
       let countries = User.schema.path('country').enumValues;
-      generalTotals = cTotals.push(LoanTotals())
+      generalTotals = await cTotals.push(LoanTotals())
     //   countries.forEach( e => cTotals.push(CountryLoanTotals(e)))
       Promise.all(cTotals) 
         .then( obj => {
+            console.log(obj)
             obj = obj.filter( e =>  e.length !== 0)
             res.status(200).json(obj)
         })
@@ -72,22 +74,12 @@ router.get('/portfolio/total/schedule/:status', (req, res, next) => {
 
 router.get('/portfolio/month/schedule/', (req, res, next) => {
 
-    LoanSchedule.find({date: {$gte: moment().startOf('month'), $lte:  moment().endOf('month')}, status: {$nin: ['DISBURSTMENT', 'CLOSED']}})
-        .then( async data => {
-            let totalInterestPaid = await data.reduce( (acc, e) => { return acc + e.interest_pmt},0)
-            let totalPrincipalPaid = await data.reduce( (acc, e) => { return acc + e.principal_pmt},0)
-            let totalInterest = await data.reduce( (acc, e) => { return acc + e.interest},0)
-            let totalPrincipal = await data.reduce( (acc, e) => { return acc + e.principal},0)
-            return ({
-                'interestPaid': totalInterestPaid, 
-                'principalPaid': totalPrincipalPaid,
-                'projectedInterest': totalInterest, 
-                'projectedPrincipal': totalPrincipal,
-                'pctInterestPaid': totalInterestPaid/totalInterest,
-                'pctPrincipalPaid': totalPrincipalPaid/totalPrincipal,
-             })
-        })
-        .then( obj => res.status(200).json(obj))
+    let currencies = Loan.schema.path('currency').enumValues;
+    cTotals = []
+    currencies.forEach( e => cTotals.push(MonthlyLoanScheduleTotals(e)) )
+    Promise.all(cTotals)
+        .then( obj => {
+            res.status(200).json(obj)})
         .catch(e => next(e))
 })
 
