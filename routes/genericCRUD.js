@@ -43,6 +43,7 @@ const simpleCrud = (Model, extensionFn) => {
                         { 'lastName': { '$regex': query, '$options': 'i' } },
                         { 'email': { '$regex': query, '$options': 'i' } },
                         { 'fullName': { '$regex': query, '$options': 'i' } },
+                        { 'businessName': { '$regex': query, '$options': 'i' } },
                     ]
                     }
                 ]
@@ -55,6 +56,7 @@ const simpleCrud = (Model, extensionFn) => {
                         { 'lastName': { '$regex': query, '$options': 'i' } },
                         { 'email': { '$regex': query, '$options': 'i' } },
                         { 'fullName': { '$regex': query, '$options': 'i' } },
+                        { 'businessName': { '$regex': query, '$options': 'i' } },
                     ]
                     }
                 ] 

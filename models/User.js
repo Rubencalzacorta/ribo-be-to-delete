@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const Schema   = mongoose.Schema;
+const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
   name: String,
@@ -8,18 +8,39 @@ const userSchema = new Schema({
   fullName: String,
   username: String,
   password: String,
-  location: {type: String, enum:['PERU', 'VENEZUELA', 'DOMINICAN_REPUBLIC', 'WORLD']},
-  investments: [{ type: Schema.ObjectId, ref: 'Investment' }],
+  location: {
+    type: String,
+    enum: ['PERU', 'VENEZUELA', 'DOMINICAN_REPUBLIC', 'WORLD']
+  },
+  investments: [{
+    type: Schema.ObjectId,
+    ref: 'Investment'
+  }],
   username: String,
   password: String,
-  superAdmin: {type: Boolean, default: false},
-  admin: {type: Boolean, default: false},
-  borrower: {type: Boolean, default: true},
-  investor: {type: Boolean, default: false},
+  superAdmin: {
+    type: Boolean,
+    default: false
+  },
+  admin: {
+    type: Boolean,
+    default: false
+  },
+  borrower: {
+    type: Boolean,
+    default: true
+  },
+  investor: {
+    type: Boolean,
+    default: false
+  },
   gender: String,
   civilStatus: String,
   nationalId: String,
-  nationalIdType: {type: String, enum:['PASSPORT', 'DRIVING_LICENCE', 'ID', 'IMMIGRATION_CERTIFICATE']},
+  nationalIdType: {
+    type: String,
+    enum: ['PASSPORT', 'DRIVING_LICENCE', 'ID', 'IMMIGRATION_CERTIFICATE']
+  },
   nationality: String,
   otherNationalities: String,
   placeOfBirth: String,
@@ -36,7 +57,10 @@ const userSchema = new Schema({
   residenceName: String,
   residenceNumber: String,
   city: String,
-  country: {type: String, enum: ['PERU', 'VENEZUELA', 'DOMINICAN_REPUBLIC']},
+  country: {
+    type: String,
+    enum: ['PERU', 'VENEZUELA', 'DOMINICAN_REPUBLIC']
+  },
   cellphoneNumber: String,
   email: String,
   zipCode: String,
@@ -53,7 +77,10 @@ const userSchema = new Schema({
   accountNumber: String,
   monthlyIncome: Number,
   otherIncome: Number,
-  loans: [{ type: Schema.ObjectId, ref: 'Loan' }],
+  loans: [{
+    type: Schema.ObjectId,
+    ref: 'Loan'
+  }],
   status: {
     type: String,
     enum: ["PENDING", "ACTIVE", 'VERIFIED'],
