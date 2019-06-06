@@ -32,13 +32,11 @@ router.post('/create',(req,res,next) => {
     let paths = Object.keys(Loan.schema.paths).filter(e => !notUsedPaths.includes(e));
     const loanInitDetails = _.pickBy(req.body, (e,k) => paths.includes(k));
     let { _borrower, loanDetails, toInvest} = req.body 
-    console.log(req.body)
     let {currency} = loanInitDetails
     Loan.create({...loanInitDetails, ...loanDetails})
         .then( obj => {
             let loanId = obj._id
             let schedule = loanSelector(loanId, loanDetails, currency)
-            console.log(schedule)
             schedule.forEach( e => {
                 LoanSchedule.create(e)
                 .then( (schedule_t) => {
