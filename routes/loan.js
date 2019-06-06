@@ -38,6 +38,7 @@ router.post('/create',(req,res,next) => {
         .then( obj => {
             let loanId = obj._id
             let schedule = loanSelector(loanId, loanDetails, currency)
+            console.log(schedule)
             schedule.forEach( e => {
                 LoanSchedule.create(e)
                 .then( (schedule_t) => {
