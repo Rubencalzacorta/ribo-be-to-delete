@@ -1,56 +1,85 @@
 const express = require('express');
-const router  = express.Router();
+const router = express.Router();
 const LoanSchedule = require("../models/LoanSchedule")
-const { portfolioAggregates } = require('./helpers/portfolioAggregates')
-const { loanScheduleTotalsByStatus } = require('./helpers/loanAggregates')
-const { conceptAggregates } = require('./helpers/investorAggregates')
-const { LoanTotals , CountryLoanTotals, MonthlyLoanScheduleTotals} = require('./helpers/totals')
+const {
+    portfolioAggregates
+} = require('./helpers/portfolioAggregates')
+const {
+    loanScheduleTotalsByStatus
+} = require('./helpers/loanAggregates')
+const {
+    conceptAggregates
+} = require('./helpers/investorAggregates')
+const {
+    LoanTotals,
+    CountryLoanTotals,
+    MonthlyLoanScheduleTotals
+} = require('./helpers/totals')
 const User = require("../models/User")
 const Loan = require("../models/Loan")
 const Transaction = require("../models/Transaction")
 var ObjectID = require('mongodb').ObjectID
 const moment = require('moment')
 
-router.get('/totals/:country', async (req,res,next) => {
+router.get('/totals/:country', async (req, res, next) => {
     if (req.params.country === "WORLD") {
-      let cTotals = []
-      let countries = User.schema.path('country').enumValues;
-      generalTotals = await cTotals.push(LoanTotals())
-    //   countries.forEach( e => cTotals.push(CountryLoanTotals(e)))
-      Promise.all(cTotals) 
-        .then( obj => {
-            console.log(obj)
-            obj = obj.filter( e =>  e.length !== 0)
-            res.status(200).json(obj)
-        })
-        .catch(e => console.log(e))
+        let cTotals = []
+        let countries = User.schema.path('country').enumValues;
+        generalTotals = await cTotals.push(LoanTotals())
+        //   countries.forEach( e => cTotals.push(CountryLoanTotals(e)))
+        Promise.all(cTotals)
+            .then(obj => {
+                console.log(obj)
+                obj = obj.filter(e => e.length !== 0)
+                res.status(200).json(obj)
+            })
+            .catch(e => console.log(e))
     } else {
-      let countryTotals =  await CountryLoanTotals(req.params.country)
-      Promise.all([countryTotals])
-        .then( obj => {res.status(200).json(obj)})
-        .catch(e => next(e))
+        let countryTotals = await CountryLoanTotals(req.params.country)
+        Promise.all([countryTotals])
+            .then(obj => {
+                res.status(200).json(obj)
+            })
+            .catch(e => next(e))
     }
 })
 
-router.get('/list/:id',(req,res,next) => {
-    let { id } = req.params
-    Transaction.find({'_investor': new ObjectID(id)}, null, {sort: {date: 1}})
-        .populate({path: '_loan', populate: {path: '_borrower'}})
-        .populate({path: '_investor'})
-        .then( obj => {res.status(200).json(obj)})
+router.get('/list/:id', (req, res, next) => {
+    let {
+        id
+    } = req.params
+    Transaction.find({
+            '_investor': new ObjectID(id)
+        }, null, {
+            sort: {
+                date: 1
+            }
+        })
+        .populate({
+            path: '_loan',
+            populate: {
+                path: '_borrower'
+            }
+        })
+        .populate({
+            path: '_investor'
+        })
+        .then(obj => {
+            res.status(200).json(obj)
+        })
         .catch(e => next(e))
 })
 
-router.get('/',(req,res,next) => {
+router.get('/', (req, res, next) => {
     Transaction.find()
-        .then( objList => res.status(200).json(objList))
+        .then(objList => res.status(200).json(objList))
         .catch(e => next(e))
 })
 
 
-router.post('/',(req,res,next) => {
+router.post('/', (req, res, next) => {
     Transaction.create(req.body)
-        .then( obj => res.status(200).json(obj))
+        .then(obj => res.status(200).json(obj))
         .catch(e => next(e))
 })
 
@@ -62,13 +91,13 @@ router.get('/portfolio/total/schedule/all', async (req, res, next) => {
     let pending = await LoanSchedule.aggregate(loanScheduleTotalsByStatus('PENDING'))
 
     Promise.all([paid, due, overdue, pending])
-        .then( obj => res.status(200).json(obj))
+        .then(obj => res.status(200).json(obj))
         .catch(e => next(e))
 })
 
 router.get('/portfolio/total/schedule/:status', (req, res, next) => {
     LoanSchedule.aggregate(loanScheduleTotalsByStatus(req.params.status))
-        .then( obj => res.status(200).json(obj))
+        .then(obj => res.status(200).json(obj))
         .catch(e => next(e))
 })
 
@@ -76,16 +105,18 @@ router.get('/portfolio/month/schedule/', (req, res, next) => {
 
     let currencies = Loan.schema.path('currency').enumValues;
     cTotals = []
-    currencies.forEach( e => cTotals.push(MonthlyLoanScheduleTotals(e)) )
+    currencies.forEach(e => cTotals.push(MonthlyLoanScheduleTotals(e)))
     Promise.all(cTotals)
-        .then( obj => {
-            res.status(200).json(obj)})
+        .then(obj => {
+            console.log(obj)
+            res.status(200).json(obj)
+        })
         .catch(e => next(e))
 })
 
 router.get('/portfolioAggregates', (req, res, next) => {
     LoanSchedule.aggregate(portfolioAggregates())
-        .then( obj => {
+        .then(obj => {
             let runningActualInterest = []
             let totalActualInterest = 0
             let runningProjectedInterest = []
@@ -98,32 +129,78 @@ router.get('/portfolioAggregates', (req, res, next) => {
                 runningProjectedInterest.push(totalProjectedInterest)
             })
 
-            return { 
-            dates: {text: 'Fechas', values: obj.map( e => { return moment(e.date).format('MM-YY') })},
-            InterestProjectedIncome: {text: 'Intereses Projectados', color: '#FF6384', values: obj.map( e => { return e.InterestProjectedIncome })},
-            InterestActualIncome: {text: 'Intereses Recibidos', color: '#36A2EB', values: obj.map( e => { return e.InterestActualIncome })},
-            cumulativeActualIncome: {text: 'Ingreso x Intereses Acumulado', color: '#FF6384', values: runningActualInterest},
-            cumulativeProjectedIncome: {text: 'Interes Acumulado Projectado', color: '#36A2EB', values: runningProjectedInterest},
-            PrincipalActualRepayment: {text: 'Capital Repagado', color: '#36A2EB', values: obj.map( e => { return e.PrincipalActualRepayment })},
-            PrincipalProjectedRepayment: {text: 'Repago de Capital Proyectado', color: '#FFCE56', values: obj.map( e => { return e.PrincipalProjectedRepayment })},
-            PrincipalProjectedOutstanding: {text: 'Capital Colocado', color: 'black', values: obj.map( e => { return e.PrincipalProjectedOutstanding })},
-    }})
-        .then( obj => res.status(200).json(obj))
+            return {
+                dates: {
+                    text: 'Fechas',
+                    values: obj.map(e => {
+                        return moment(e.date).format('MM-YY')
+                    })
+                },
+                InterestProjectedIncome: {
+                    text: 'Intereses Projectados',
+                    color: '#FF6384',
+                    values: obj.map(e => {
+                        return e.InterestProjectedIncome
+                    })
+                },
+                InterestActualIncome: {
+                    text: 'Intereses Recibidos',
+                    color: '#36A2EB',
+                    values: obj.map(e => {
+                        return e.InterestActualIncome
+                    })
+                },
+                cumulativeActualIncome: {
+                    text: 'Ingreso x Intereses Acumulado',
+                    color: '#FF6384',
+                    values: runningActualInterest
+                },
+                cumulativeProjectedIncome: {
+                    text: 'Interes Acumulado Projectado',
+                    color: '#36A2EB',
+                    values: runningProjectedInterest
+                },
+                PrincipalActualRepayment: {
+                    text: 'Capital Repagado',
+                    color: '#36A2EB',
+                    values: obj.map(e => {
+                        return e.PrincipalActualRepayment
+                    })
+                },
+                PrincipalProjectedRepayment: {
+                    text: 'Repago de Capital Proyectado',
+                    color: '#FFCE56',
+                    values: obj.map(e => {
+                        return e.PrincipalProjectedRepayment
+                    })
+                },
+                PrincipalProjectedOutstanding: {
+                    text: 'Capital Colocado',
+                    color: 'black',
+                    values: obj.map(e => {
+                        return e.PrincipalProjectedOutstanding
+                    })
+                },
+            }
+        })
+        .then(obj => res.status(200).json(obj))
         .catch(e => next(e))
 })
 
 router.get('/investorAggregates/:id', async (req, res, next) => {
-    let { id } = req.params
-    let deposit =  await Transaction.aggregate(conceptAggregates('DEPOSIT', id))
+    let {
+        id
+    } = req.params
+    let deposit = await Transaction.aggregate(conceptAggregates('DEPOSIT', id))
     let fees = await Transaction.aggregate(conceptAggregates('FEE', id))
     let interest = await Transaction.aggregate(conceptAggregates('INTEREST', id))
     let capital = await Transaction.aggregate(conceptAggregates('CAPITAL', id))
-    let withdrawals = await Transaction.aggregate(conceptAggregates('WITHDRAWAL', id)) 
-    let costs = await Transaction.aggregate(conceptAggregates('COST', id)) 
-    let investment = await Transaction.aggregate(conceptAggregates('INVESTMENT', id)) 
+    let withdrawals = await Transaction.aggregate(conceptAggregates('WITHDRAWAL', id))
+    let costs = await Transaction.aggregate(conceptAggregates('COST', id))
+    let investment = await Transaction.aggregate(conceptAggregates('INVESTMENT', id))
 
-    Promise.all([deposit,fees,interest,capital,withdrawals,costs,investment])
-        .then( obj => {
+    Promise.all([deposit, fees, interest, capital, withdrawals, costs, investment])
+        .then(obj => {
             let runningInterest = []
             let totalInterest = 0
             let runningCapital = []
@@ -138,7 +215,7 @@ router.get('/investorAggregates/:id', async (req, res, next) => {
             let totalWithdrawal = 0
             let runningCost = []
             let totalCost = 0
-            
+
             obj[0].forEach(e => {
                 totalDeposit = totalDeposit + e.available
                 runningDeposit.push(totalDeposit)
@@ -176,22 +253,79 @@ router.get('/investorAggregates/:id', async (req, res, next) => {
 
 
             return {
-            deposits: {text: 'DEPOSITOS', values: obj[0].map( e => e.available), dates: obj[0].map( e => moment(e.date).format('MM-YY'))},
-            acDeposits: {text: 'DEPOSITOS ACUMULADOS', values: runningDeposit, dates: obj[0].map( e => moment(e.date).format('MM-YY'))},
-            fees: {text: 'FEES', values: obj[1].map( e => e.available), dates: obj[1].map( e => moment(e.date).format('MM-YY'))},
-            acFees: {text: 'FEES ACUMULADOS', values: runningInterest, dates: obj[1].map( e => moment(e.date).format('MM-YY'))},
-            interest: {text: 'INTERESES', values: obj[2].map( e => e.available), dates: obj[2].map( e => moment(e.date).format('MM-YY'))},
-            acInterest: {text: 'INTERESES ACUMULADOS', values: runningInterest, dates: obj[2].map( e => moment(e.date).format('MM-YY'))},
-            capital: {text: 'CAPITAL', values: obj[3].map( e => e.available), dates: obj[3].map( e => moment(e.date).format('MM-YY'))},
-            acCapital: {text: 'CAPITAL REPAGADO ACUMULADO', values: runningCapital, dates: obj[3].map( e => moment(e.date).format('MM-YY'))},
-            withdrawals: {text: 'RETIROS', values: obj[4].map( e => e.available), dates: obj[4].map( e => moment(e.date).format('MM-YY'))},
-            acWithdrawals: {text: 'RETIROS ACUMULADOS', values: runningWithdrawal, dates: obj[4].map( e => moment(e.date).format('MM-YY'))},
-            costs: {text: 'COSTOS', values: obj[5].map( e => e.available), dates: obj[5].map( e => moment(e.date).format('MM-YY'))},
-            acCosts: {text: 'COSTO ACUMULADO', values: runningCost, dates: obj[5].map( e => moment(e.date).format('MM-YY'))},
-            investment: {text: 'INVERSIONES', values: obj[6].map( e => e.available), dates: obj[6].map( e => moment(e.date).format('MM-YY'))},
-            acInvestment: {text: 'INVERSIONES ACUMULADAS', values: runningInvestment, dates: obj[6].map( e => moment(e.date).format('MM-YY'))}
-        }})
-        .then( obj => res.status(200).json(obj))
+                deposits: {
+                    text: 'DEPOSITOS',
+                    values: obj[0].map(e => e.available),
+                    dates: obj[0].map(e => moment(e.date).format('MM-YY'))
+                },
+                acDeposits: {
+                    text: 'DEPOSITOS ACUMULADOS',
+                    values: runningDeposit,
+                    dates: obj[0].map(e => moment(e.date).format('MM-YY'))
+                },
+                fees: {
+                    text: 'FEES',
+                    values: obj[1].map(e => e.available),
+                    dates: obj[1].map(e => moment(e.date).format('MM-YY'))
+                },
+                acFees: {
+                    text: 'FEES ACUMULADOS',
+                    values: runningInterest,
+                    dates: obj[1].map(e => moment(e.date).format('MM-YY'))
+                },
+                interest: {
+                    text: 'INTERESES',
+                    values: obj[2].map(e => e.available),
+                    dates: obj[2].map(e => moment(e.date).format('MM-YY'))
+                },
+                acInterest: {
+                    text: 'INTERESES ACUMULADOS',
+                    values: runningInterest,
+                    dates: obj[2].map(e => moment(e.date).format('MM-YY'))
+                },
+                capital: {
+                    text: 'CAPITAL',
+                    values: obj[3].map(e => e.available),
+                    dates: obj[3].map(e => moment(e.date).format('MM-YY'))
+                },
+                acCapital: {
+                    text: 'CAPITAL REPAGADO ACUMULADO',
+                    values: runningCapital,
+                    dates: obj[3].map(e => moment(e.date).format('MM-YY'))
+                },
+                withdrawals: {
+                    text: 'RETIROS',
+                    values: obj[4].map(e => e.available),
+                    dates: obj[4].map(e => moment(e.date).format('MM-YY'))
+                },
+                acWithdrawals: {
+                    text: 'RETIROS ACUMULADOS',
+                    values: runningWithdrawal,
+                    dates: obj[4].map(e => moment(e.date).format('MM-YY'))
+                },
+                costs: {
+                    text: 'COSTOS',
+                    values: obj[5].map(e => e.available),
+                    dates: obj[5].map(e => moment(e.date).format('MM-YY'))
+                },
+                acCosts: {
+                    text: 'COSTO ACUMULADO',
+                    values: runningCost,
+                    dates: obj[5].map(e => moment(e.date).format('MM-YY'))
+                },
+                investment: {
+                    text: 'INVERSIONES',
+                    values: obj[6].map(e => e.available),
+                    dates: obj[6].map(e => moment(e.date).format('MM-YY'))
+                },
+                acInvestment: {
+                    text: 'INVERSIONES ACUMULADAS',
+                    values: runningInvestment,
+                    dates: obj[6].map(e => moment(e.date).format('MM-YY'))
+                }
+            }
+        })
+        .then(obj => res.status(200).json(obj))
         .catch(e => next(e))
 })
 
