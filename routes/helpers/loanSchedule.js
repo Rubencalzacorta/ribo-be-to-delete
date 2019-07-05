@@ -121,6 +121,72 @@ const payDayLoan = (loan, period, duration, interestRate, capital, date, currenc
   return schedule
 }
 
+const annuity = (C, i, n) => C * (i / (1 - (1 + i) ** (-n)));
+
+
+// saca proporciones 
+const balance_t = (loan, C, i, P, date, j, amount, periodicity, currency) => {
+  const period_movements = {}
+  period_movements._loan = loan,
+    period_movements.date = moment(date).add(j * amount, periodicity).format('YYYY-MM-DD')
+  period_movements.interest = C * i;
+  period_movements.principal = P - (C * i);
+  period_movements.payment = P;
+  period_movements.balance = Math.round((C - period_movements.principal) * 100) / 100;
+  period_movements.status = "DUE",
+    period_movements.currency = currency
+
+  return period_movements;
+}
+
+
+const amortLoan = (loan, period, duration, interest, capital, date, currency) => {
+
+  const frequencyStructure = {
+    'biWeekly': {
+      everyOther: 0.5,
+      periodicity: 'd',
+      amount: 15
+    },
+    'payDay': {
+      everyOther: 0.5,
+      periodicity: 'd',
+      amount: 15,
+    },
+    'monthly': {
+      everyOther: 1,
+      periodicity: 'M',
+      amount: 1
+    }
+  }
+
+  let times = frequencyStructure[period].everyOther
+  let amount = frequencyStructure[period].amount
+  let periodicity = frequencyStructure[period].periodicity
+  let n = duration * (1 / times)
+  interest = interest / 100
+
+  let schedule = [{
+    _loan: loan,
+    date: date,
+    interest: 0,
+    principal: 0,
+    payment: 0,
+    balance: capital,
+    status: "DISBURSTMENT",
+    currency: currency
+  }]
+
+  const payments = annuity(capital, interest, n);
+  for (let j = 0; j < n; j++) {
+    let a = schedule[schedule.length - 1]
+    let entry = balance_t(loan, a.balance, interest, payments, date, j + 1, amount, periodicity, currency)
+    schedule.push(entry)
+  }
+
+  return schedule
+}
+
 
 const linearLoan = (loan, period, duration, interest, capital, date, currency) => {
 
@@ -185,6 +251,8 @@ const linearLoan = (loan, period, duration, interest, capital, date, currency) =
 
   return schedule
 }
+
+
 
 function lumpSumLoan(loan, frequency, duration, interest, capital, date) {
 
@@ -386,6 +454,8 @@ const loanSelector = (loanId, loanDetails, currency) => {
       return payDayLoan(loanId, period, duration, interest, capital, startDate, currency)
     case 'factoring':
       return factoring(loanId, startDate, days, interest, capital, currency)
+    case 'amort':
+      return amortLoan(loanId, period, duration, interest, capital, startDate, currency)
   }
 }
 
