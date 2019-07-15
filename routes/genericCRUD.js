@@ -32,7 +32,6 @@ const simpleCrud = (Model, extensionFn) => {
         
     router.get('/all-clients/:country/:query',(req,res,next) => {
         let { query, country } = req.params
-        console.log(query, country)
         querym = (country === 'WORLD') 
                 ? 
                 { '$and': [
