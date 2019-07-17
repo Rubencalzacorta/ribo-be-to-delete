@@ -508,10 +508,6 @@ const loanSelector = (loanId, loanDetails, currency) => {
   }
 }
 
-monday = mondayPayDayLoan(1, 20, 7, 65000, '2019-07-10', '2019-07-15', 'USD')
-console.log(monday.length)
-console.log(mondayPayDayLoan(1, 20, 7, 65000, '2019-07-10', '2019-07-15', 'USD'))
-
 module.exports = {
   loanSelector,
   payDayLoan,
