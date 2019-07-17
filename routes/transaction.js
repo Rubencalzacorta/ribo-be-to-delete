@@ -130,7 +130,6 @@ router.get('/totals/:country', async (req, res, next) => {
         }
       }])
       .then(obj => {
-        console.log(obj)
         res.status(200).json(obj)
       })
       .catch(e => next(e))

@@ -43,8 +43,7 @@ router.post('/signup', (req, res, next) => {
       email
     })
     .then(foundUser => {
-      console.log('asd')
-      if (foundUser) throw new Error('email already exists');
+      if (foundUser) throw new Error('Email already exists');
 
       const salt = bcrypt.genSaltSync(10);
       const hashPass = bcrypt.hashSync(password, salt);

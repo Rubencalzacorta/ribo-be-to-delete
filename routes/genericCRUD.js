@@ -92,7 +92,6 @@ const simpleCrud = (Model, extensionFn) => {
 
     router.get('/detail/:id',(req,res,next) => {
         let { id } = req.params
-        console.log(id)
         Model.findById(id)
             .populate('loans')
             .then( obj => res.status(200).json(obj))
@@ -101,7 +100,6 @@ const simpleCrud = (Model, extensionFn) => {
 
     // CRUD: CREATE
     router.post('/',(req,res,next) => {
-        console.log(req.body)
         const object = _.pickBy(req.body, (e,k) => paths.includes(k));
         Model.create(object)
             .then( obj => res.status(200).json({status: "success", response: obj}))
@@ -169,7 +167,6 @@ const simpleCrud = (Model, extensionFn) => {
                     }
                     pendingTransactions.push(transaction)
                 })
-                console.log(pendingTransactions)
                 Transaction.insertMany(pendingTransactions)
 
                 return obj

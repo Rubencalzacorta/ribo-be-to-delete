@@ -21,7 +21,6 @@ const getStartDate = (date) => {
   let year = moment(date).year()
   let month = moment(date).month()
   let lastDay = date.endOf('month').date()
-  console.log(day, lastDay)
   if (day > 10 && day <= 15) {
     return moment([year, month, lastDay]).format('YYYY-MM-DD')
   } else if (day >= 1 && day <= 10) {

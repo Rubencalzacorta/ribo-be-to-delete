@@ -29,7 +29,6 @@ router.get('/totals/:country', async (req, res, next) => {
         //   countries.forEach( e => cTotals.push(CountryLoanTotals(e)))
         Promise.all(cTotals)
             .then(obj => {
-                console.log(obj)
                 obj = obj.filter(e => e.length !== 0)
                 res.status(200).json(obj)
             })
@@ -108,7 +107,6 @@ router.get('/portfolio/month/schedule/', (req, res, next) => {
     currencies.forEach(e => cTotals.push(MonthlyLoanScheduleTotals(e)))
     Promise.all(cTotals)
         .then(obj => {
-            console.log(obj)
             res.status(200).json(obj)
         })
         .catch(e => next(e))
