@@ -32,6 +32,53 @@ const getStartDate = (date) => {
     return moment([year, month, 15]).add(1, 'M').format('YYYY-MM-DD')
   }
 }
+const mondayPayDayLoan = (loan, duration, interestRate, capital, dstartDate, dpaymentDate, currency) => {
+  const startDate = moment(dstartDate)
+  let paymentDate = moment(dpaymentDate)
+  let firstInterestPayment = (((interestRate / 100) / 30) * capital) * -startDate.diff(paymentDate, 'days')
+  let amountOfPayments = duration
+  let principal = capital / amountOfPayments
+  let interest = ((interestRate / 100) / 30) * capital * 15
+
+
+  let schedule = [{
+    _loan: loan,
+    date: moment(startDate).toString(),
+    payment: 0,
+    interest: 0,
+    principal: 0,
+    balance: capital,
+    tracking: "DISBURSTMENT",
+    currency: currency
+  }, {
+    _loan: loan,
+    date: moment(paymentDate).toString(),
+    payment: firstInterestPayment + principal,
+    interest: firstInterestPayment,
+    principal: principal,
+    balance: capital - principal,
+    tracking: "DUE",
+    currency: currency
+  }]
+
+  for (i = 2; i <= amountOfPayments; i++) {
+    amort_pmt = {
+      _loan: loan,
+      date: moment(paymentDate).add(14 * (i - 1), "days").toString(),
+      payment: interest + principal,
+      interest: interest,
+      principal: principal,
+      balance: capital - (principal * i),
+      tracking: "PENDING",
+      currency: currency
+    }
+    schedule.push(amort_pmt)
+  }
+
+  return schedule
+
+}
+
 
 const payDayLoan = (loan, period, duration, interestRate, capital, date, currency) => {
 
@@ -450,6 +497,8 @@ const loanSelector = (loanId, loanDetails, currency) => {
       return lumpSumLoan(loanId, period, duration, interest, capital, startDate, currency)
     case 'linearIntFirst':
       return linearLoanIntFirst(loanId, period, duration, interest, capital, startDate, paymentDate, currency)
+    case 'monday':
+      return mondayPayDayLoan(loanId, duration, interest, capital, startDate, paymentDate, currency)
     case 'payDay':
       return payDayLoan(loanId, period, duration, interest, capital, startDate, currency)
     case 'factoring':
@@ -458,6 +507,10 @@ const loanSelector = (loanId, loanDetails, currency) => {
       return amortLoan(loanId, period, duration, interest, capital, startDate, currency)
   }
 }
+
+monday = mondayPayDayLoan(1, 20, 7, 65000, '2019-07-10', '2019-07-15', 'USD')
+console.log(monday.length)
+console.log(mondayPayDayLoan(1, 20, 7, 65000, '2019-07-10', '2019-07-15', 'USD'))
 
 module.exports = {
   loanSelector,
