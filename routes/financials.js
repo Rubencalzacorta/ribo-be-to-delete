@@ -1,5 +1,12 @@
 const express = require('express');
 const _ = require('lodash')
+const {
+    cashAvailable,
+    currencyCashFlow
+} = require('./helpers/financialsAggregates')
+const LoanSchedule = require('../models/LoanSchedule')
+
+
 const companyCrud = (Model, extensionFn) => {
 
     let router = express.Router();
@@ -11,9 +18,32 @@ const companyCrud = (Model, extensionFn) => {
         router = extensionFn(router);
     }
 
-    router.get('/', (req, res, next) => {
-        Model.find()
-            .then(objList => res.status(200).json(objList))
+    router.get('/cash-available', async (req, res, next) => {
+        let usCashAccounts = ['GFUS', 'GCUS']
+        let peruCashAccounts = ['REMPERU', 'PLPERU']
+        let rdCashAccounts = ['GCDR']
+
+        usAccounts = Model.aggregate(cashAvailable(usCashAccounts))
+        peruAccounts = Model.aggregate(cashAvailable(peruCashAccounts))
+        rdAccounts = Model.aggregate(cashAvailable(rdCashAccounts))
+
+        Promise.all([usAccounts, peruAccounts, rdAccounts])
+            .then(objList => res.status(200).json({
+                'US': parseFloat(objList[0][0].total),
+                'PERU': parseFloat(objList[1][0].total),
+                'RD:': parseFloat(objList[2][0].total)
+            }))
+            .catch(e => next(e))
+    })
+
+    router.get('/cash-flow', async (req, res, next) => {
+        usdCF = LoanSchedule.aggregate(currencyCashFlow('USD', new Date()))
+        domCF = LoanSchedule.aggregate(currencyCashFlow('DOP', new Date()))
+        console.log(LoanSchedule)
+        Promise.all([usdCF, domCF]).then(objList => res.status(200).json({
+                'US': objList[0],
+                'RD': objList[1]
+            }))
             .catch(e => next(e))
     })
 
@@ -26,6 +56,8 @@ const companyCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
 
+
+
     // CRUD: CREATE
     router.post('/', (req, res, next) => {
         const object = _.pickBy(req.body, (e, k) => paths.includes(k));
@@ -36,6 +68,7 @@ const companyCrud = (Model, extensionFn) => {
             }))
             .catch(e => console.log(e))
     })
+
 
     // CRUD: DELETE
     router.delete('/:id', (req, res, next) => {

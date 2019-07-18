@@ -89,12 +89,14 @@ const summaryRouter = require('./routes/summary');
 const transactionRouter = require('./routes/transaction');
 const genericCrud = require('./routes/genericCRUD');
 const companyCrud = require('./routes/company');
+const financialsRouter = require('./routes/financials');
 
 app.use('/api/auth', authRouter);
 app.use('/api/test/loan', loanRouter);
 app.use('/api/test/transaction', transactionRouter);
 app.use('/api/test/summary', summaryRouter);
 app.use('/api/company', companyCrud(require('./models/Company')));
+app.use('/api/financials', financialsRouter(require('./models/Transaction')));
 app.use('/api/test/loan', genericCrud(require('./models/Loan')));
 app.use('/api/test/client', genericCrud(require('./models/User')));
 app.use('/api/test/investment', genericCrud(require('./models/Investment')));

@@ -47,7 +47,7 @@ const mondayPayDayLoan = (loan, duration, interestRate, capital, dstartDate, dpa
     interest: 0,
     principal: 0,
     balance: capital,
-    tracking: "DISBURSTMENT",
+    status: "DISBURSTMENT",
     currency: currency
   }, {
     _loan: loan,
@@ -56,7 +56,7 @@ const mondayPayDayLoan = (loan, duration, interestRate, capital, dstartDate, dpa
     interest: firstInterestPayment,
     principal: principal,
     balance: capital - principal,
-    tracking: "DUE",
+    status: "DUE",
     currency: currency
   }]
 
@@ -68,7 +68,7 @@ const mondayPayDayLoan = (loan, duration, interestRate, capital, dstartDate, dpa
       interest: interest,
       principal: principal,
       balance: capital - (principal * i),
-      tracking: "PENDING",
+      status: "PENDING",
       currency: currency
     }
     schedule.push(amort_pmt)
