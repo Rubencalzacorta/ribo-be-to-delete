@@ -173,14 +173,14 @@ const annuity = (C, i, n) => C * (i / (1 - (1 + i) ** (-n)));
 // saca proporciones 
 const balance_t = (loan, C, i, P, date, j, amount, periodicity, currency) => {
   const period_movements = {}
-  period_movements._loan = loan,
-    period_movements.date = moment(date).add(j * amount, periodicity).format('YYYY-MM-DD')
+  period_movements._loan = loan
+  period_movements.date = moment(date).add(j * amount, periodicity).format('YYYY-MM-DD')
   period_movements.interest = C * i;
   period_movements.principal = P - (C * i);
   period_movements.payment = P;
   period_movements.balance = Math.round((C - period_movements.principal) * 100) / 100;
-  period_movements.status = "DUE",
-    period_movements.currency = currency
+  period_movements.status = "DUE"
+  period_movements.currency = currency
 
   return period_movements;
 }
@@ -261,7 +261,7 @@ const linearLoan = (loan, period, duration, interest, capital, date, currency) =
   let interestPmt = ((interest * times) / 100) * capital
   let numberOfPayments = duration * (1 / times)
   let principal = capital / numberOfPayments
-  let payment = interest + principal
+  let payment = interestPmt + principal
 
 
   let schedule = [{
@@ -298,7 +298,7 @@ const linearLoan = (loan, period, duration, interest, capital, date, currency) =
   return schedule
 }
 
-
+console.log(linearLoan(1, 'monthly', 12, 10, 1000, '2020-01-01', 'USD'))
 
 function lumpSumLoan(loan, frequency, duration, interest, capital, date) {
 
