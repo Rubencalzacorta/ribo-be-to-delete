@@ -298,7 +298,6 @@ const linearLoan = (loan, period, duration, interest, capital, date, currency) =
   return schedule
 }
 
-console.log(linearLoan(1, 'monthly', 12, 10, 1000, '2020-01-01', 'USD'))
 
 function lumpSumLoan(loan, frequency, duration, interest, capital, date) {
 
