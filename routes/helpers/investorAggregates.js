@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const Transaction = require('../../models/Transaction')
 
 conceptAggregates = (concept, id) => {
   return [{
@@ -57,7 +58,7 @@ conceptAggregates = (concept, id) => {
   ]
 }
 
-accountTotals = (location) => {
+accountTotalsByLocation = (location) => {
   return [{
     '$project': {
       '_investor': 1,
@@ -106,13 +107,66 @@ accountTotals = (location) => {
     }
   }, {
     '$match': {
-      'location': location
+      'location': location,
+      'total': {
+        '$gt': 0
+      }
     }
   }]
 }
 
 
+
+calculateTotalCashAvailable = (accTotals) => {
+  return accTotals.reduce((acc, e) => {
+    return acc + e.total
+  }, 0)
+}
+calculateAccountPcts = (accs, totalCash) => {
+  let accounts = accs.map(e => {
+    return {
+      ...e,
+      pct: (e.total / totalCash)
+    }
+  })
+  return accounts
+}
+
+generateInvestments = (loanAmount, loanId, currency, investors) => {
+  let investments = []
+
+  investors.forEach(e => {
+    investments.push({
+      _investor: e.investor,
+      _loan: loanId,
+      currency: currency,
+      pct: e.pct,
+      amount: e.pct * loanAmount,
+      cashAccount: e.account
+    })
+  })
+
+  return investments
+
+}
+
+investmentDistributor = async (Model, location, loanAmount, loanId, currency) => {
+  let accounts = await Model.aggregate(accountTotalsByLocation(location))
+  let totalCashAvailable = await calculateTotalCashAvailable(accounts)
+  let investors = await calculateAccountPcts(accounts, totalCashAvailable)
+  let investments = await generateInvestments(loanAmount, loanId, currency, investors)
+
+  return investments
+
+
+}
+
+
+
 module.exports = {
   conceptAggregates,
-  accountTotals
+  accountTotalsByLocation,
+  calculateTotalCashAvailable,
+  calculateAccountPcts,
+  investmentDistributor
 }

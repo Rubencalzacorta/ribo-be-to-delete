@@ -11,6 +11,7 @@ const Loan = require("../models/Loan")
 const User = require("../models/User")
 const transactionPlacer = require('./helpers/transactionPlacer')
 const { loanSelector } = require('./helpers/loanSchedule')
+const {investmentDistributor} =require('./helpers/investorAggregates')
 const {
     countryPaidQuery,
     countryAllLoansQuery,
@@ -26,12 +27,23 @@ const {
 
 
 
+router.get('/proportional-pmts', (req, res, next) => {
+    let location = "USA"
+    investmentDistributor(Transaction, location, 1000, 1, "USD")
+
+})
+
 
 router.post('/create',(req,res,next) => {
     let notUsedPaths = ['_id','updated_at','created_at','__v'];
     let paths = Object.keys(Loan.schema.paths).filter(e => !notUsedPaths.includes(e));
     const loanInitDetails = _.pickBy(req.body, (e,k) => paths.includes(k));
     let { _borrower, loanDetails, toInvest} = req.body 
+    console.log("-------==============---------")
+    console.log(toInvest)
+    console.log("-------==============---------")
+    console.log(loanDetails)
+    console.log("-------==============---------")
     let {currency} = loanInitDetails
     Loan.create({...loanInitDetails, ...loanDetails})
         .then( obj => {
