@@ -57,6 +57,62 @@ conceptAggregates = (concept, id) => {
   ]
 }
 
+accountTotals = (location) => {
+  return [{
+    '$project': {
+      '_investor': 1,
+      'cashAccount': 1,
+      'dayBalance': {
+        '$subtract': [
+          '$debit', '$credit'
+        ]
+      }
+    }
+  }, {
+    '$group': {
+      '_id': {
+        'account': '$cashAccount',
+        'investor': '$_investor'
+      },
+      'total': {
+        '$sum': '$dayBalance'
+      }
+    }
+  }, {
+    '$project': {
+      '_id': 0,
+      'account': '$_id.account',
+      'investor': '$_id.investor',
+      'total': 1
+    }
+  }, {
+    '$lookup': {
+      'from': 'users',
+      'localField': 'investor',
+      'foreignField': '_id',
+      'as': 'investord'
+    }
+  }, {
+    '$unwind': {
+      'path': '$investord'
+    }
+  }, {
+    '$project': {
+      'total': 1,
+      'account': 1,
+      'investor': 1,
+      'location': '$investord.location',
+      'fullName': 1
+    }
+  }, {
+    '$match': {
+      'location': location
+    }
+  }]
+}
+
+
 module.exports = {
-  conceptAggregates
+  conceptAggregates,
+  accountTotals
 }
