@@ -1,9 +1,9 @@
 const mongoose = require('mongoose')
+
 conceptAggregates = (concept, id) => {
-    return [
-    {
+  return [{
       '$match': {
-        '_investor': mongoose.Types.ObjectId(id), 
+        '_investor': mongoose.Types.ObjectId(id),
         'concept': concept
       }
     }, {
@@ -12,15 +12,15 @@ conceptAggregates = (concept, id) => {
           '$subtract': [
             '$debit', '$credit'
           ]
-        }, 
-        'date': 1, 
-        'credit': 1, 
-        'debit': 1, 
-        'comment': 1, 
-        'created_at': 1, 
-        'updated_at': 1, 
-        '_investor': 1, 
-        'cashAccount': 1, 
+        },
+        'date': 1,
+        'credit': 1,
+        'debit': 1,
+        'comment': 1,
+        'created_at': 1,
+        'updated_at': 1,
+        '_investor': 1,
+        'cashAccount': 1,
         'concept': 1
       }
     }, {
@@ -28,25 +28,26 @@ conceptAggregates = (concept, id) => {
         '_id': {
           'month': {
             '$month': '$date'
-          }, 
+          },
           'year': {
             '$year': '$date'
           }
-        }, 
+        },
         'available': {
           '$sum': '$available'
         }
       }
     },
-    {'$project': {
-        '_id': 0, 
+    {
+      '$project': {
+        '_id': 0,
         'date': {
           '$dateFromParts': {
-            'year': '$_id.year', 
+            'year': '$_id.year',
             'month': '$_id.month'
           }
-        }, 
-        'available': 1, 
+        },
+        'available': 1,
       }
     }, {
       '$sort': {
@@ -56,6 +57,6 @@ conceptAggregates = (concept, id) => {
   ]
 }
 
-module.exports ={
-    conceptAggregates
+module.exports = {
+  conceptAggregates
 }
