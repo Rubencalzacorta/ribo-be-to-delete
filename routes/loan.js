@@ -24,9 +24,6 @@ const {
 } = require('./helpers/aggregates')
 
 
-
-
-
 router.post('/create/all-active-invest', (req, res, next) => {
     let notUsedPaths = ['_id', 'updated_at', 'created_at', '__v'];
     let paths = Object.keys(Loan.schema.paths).filter(e => !notUsedPaths.includes(e));
@@ -34,7 +31,6 @@ router.post('/create/all-active-invest', (req, res, next) => {
     let {
         _borrower,
         loanDetails,
-        toInvest,
         country
     } = req.body
 
