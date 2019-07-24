@@ -17,7 +17,6 @@ const investmentSchema = new Schema({
   },
   pct: Number,
   amount: Number,
-  cashAccount: String
 }, {
   timestamps: {
     createdAt: 'created_at',

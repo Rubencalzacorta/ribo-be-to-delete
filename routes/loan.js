@@ -27,18 +27,126 @@ const {
 
 
 
-router.get('/proportional-pmts', (req, res, next) => {
-    let location = "USA"
-    investmentDistributor(Transaction, location, 1000, 1, "USD")
+router.post('/create/all-active-invest', (req, res, next) => {
+    let notUsedPaths = ['_id', 'updated_at', 'created_at', '__v'];
+    let paths = Object.keys(Loan.schema.paths).filter(e => !notUsedPaths.includes(e));
+    const loanInitDetails = _.pickBy(req.body, (e, k) => paths.includes(k));
+    let {
+        _borrower,
+        loanDetails,
+        toInvest,
+        country
+    } = req.body
+
+    let {
+        currency,
+    } = loanInitDetails
+
+      Loan.create({
+            ...loanInitDetails,
+            ...loanDetails
+        })
+        .then(obj => {
+
+            let loanId = obj._id
+            let schedule = loanSelector(loanId, loanDetails, currency)
+            schedule.forEach(e => {
+                LoanSchedule.create(e)
+                    .then((schedule_t) => {
+                        Loan.findByIdAndUpdate(loanId, {
+                            $push: {
+                                loanSchedule: schedule_t._id
+                            }
+                        }, {
+                            safe: true,
+                            upsert: true
+                        }).exec()
+                    })
+                    .catch(e => next(e))
+            })
+            return obj;
+        })
+        .then( async obj => {
+            let loanId = obj._id
+            investments = await investmentDistributor(Transaction, country, 1000, loanId, currency)
+            console.log('Investments: '+investments)
+            investments.forEach(e => {
+                Investment.create(e)
+                    .then((investment_x) => {
+                   
+                        User.findByIdAndUpdate(e._investor, {
+                            $push: {
+                                investments: investment_x._id
+                            }
+                        }, {
+                            safe: true,
+                            upsert: true
+                        }).exec()
+                        return investment_x
+                    })
+                    .then((investment_x) => {
+
+                        Loan.findByIdAndUpdate(loanId, {
+                            $push: {
+                                investors: investment_x._id
+                            }
+                        }, {
+                            safe: true,
+                            upsert: true
+                        }).exec()
+                    })
+            })
+            return obj
+        })
+        .then(obj => {
+            let loanId = obj._id
+
+            User.findByIdAndUpdate(_borrower, {
+                $push: {
+                    loans: loanId
+                }
+            }, {
+                safe: true,
+                upsert: true
+            }).exec()
+
+            return obj
+        })
+        .then(async obj => {
+            let loanId = obj._id
+            let investments = await investmentDistributor(Transaction, country, 1000, loanId, currency)
+            pendingTransactions = []
+            investments.forEach(e => {
+                let credit = e.amount
+                let transaction = {
+                    _loan: e._loan,
+                    _investor: mongoose.Types.ObjectId(e._investor),
+                    date: loanDetails.startDate,
+                    cashAccount: e.cashAccount,
+                    concept: 'INVESTMENT',
+                    credit: credit,
+                    currency: currency
+                }
+                pendingTransactions.push(transaction)
+            })
+            Transaction.insertMany(pendingTransactions).then(console.log)
+            return obj
+        })
+        .then(obj => {
+            res.status(200).json(obj)
+        })
+        .catch(e => {
+            res.status(500).json(e)
+        })
 
 })
-
 
 router.post('/create',(req,res,next) => {
     let notUsedPaths = ['_id','updated_at','created_at','__v'];
     let paths = Object.keys(Loan.schema.paths).filter(e => !notUsedPaths.includes(e));
     const loanInitDetails = _.pickBy(req.body, (e,k) => paths.includes(k));
     let { _borrower, loanDetails, toInvest} = req.body 
+    console.log(req.body)
     console.log("-------==============---------")
     console.log(toInvest)
     console.log("-------==============---------")
@@ -63,6 +171,7 @@ router.post('/create',(req,res,next) => {
         .then( obj => {
             let loanId = obj._id
             let investments = toInvest.map( e => ({_loan: loanId, ...e, currency}))
+            console.log(investments)
             investments.forEach( e => { 
                 Investment.create(e)
                 .then( (investment_x) => {

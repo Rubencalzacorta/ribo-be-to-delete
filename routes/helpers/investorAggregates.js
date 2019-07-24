@@ -58,8 +58,43 @@ conceptAggregates = (concept, id) => {
   ]
 }
 
-accountTotalsByLocation = (location) => {
+accountTotalsByLocation = (country) => {
   return [{
+    '$project': {
+      '_investor': 1,
+      'cashAccount': 1,
+      'debit': {
+        '$divide': [{
+            '$subtract': [{
+                '$multiply': ['$debit', 100]
+              },
+              {
+                '$mod': [{
+                  '$multiply': ['$debit', 100]
+                }, 1]
+              }
+            ]
+          },
+          100
+        ]
+      },
+      'credit': {
+        '$divide': [{
+            '$subtract': [{
+                '$multiply': ['$credit', 100]
+              },
+              {
+                '$mod': [{
+                  '$multiply': ['$credit', 100]
+                }, 1]
+              }
+            ]
+          },
+          100
+        ]
+      }
+    }
+  }, {
     '$project': {
       '_investor': 1,
       'cashAccount': 1,
@@ -72,8 +107,8 @@ accountTotalsByLocation = (location) => {
   }, {
     '$group': {
       '_id': {
-        'account': '$cashAccount',
-        'investor': '$_investor'
+        'cashAccount': '$cashAccount',
+        '_investor': '$_investor'
       },
       'total': {
         '$sum': '$dayBalance'
@@ -82,14 +117,14 @@ accountTotalsByLocation = (location) => {
   }, {
     '$project': {
       '_id': 0,
-      'account': '$_id.account',
-      'investor': '$_id.investor',
+      'cashAccount': '$_id.cashAccount',
+      '_investor': '$_id._investor',
       'total': 1
     }
   }, {
     '$lookup': {
       'from': 'users',
-      'localField': 'investor',
+      'localField': '_investor',
       'foreignField': '_id',
       'as': 'investord'
     }
@@ -100,14 +135,14 @@ accountTotalsByLocation = (location) => {
   }, {
     '$project': {
       'total': 1,
-      'account': 1,
-      'investor': 1,
+      'cashAccount': 1,
+      '_investor': 1,
       'location': '$investord.location',
       'fullName': 1
     }
   }, {
     '$match': {
-      'location': location,
+      'location': country,
       'total': {
         '$gt': 0
       }
@@ -137,12 +172,12 @@ generateInvestments = (loanAmount, loanId, currency, investors) => {
 
   investors.forEach(e => {
     investments.push({
-      _investor: e.investor,
+      _investor: e._investor,
       _loan: loanId,
       currency: currency,
       pct: e.pct,
       amount: e.pct * loanAmount,
-      cashAccount: e.account
+      cashAccount: e.cashAccount
     })
   })
 
