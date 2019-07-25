@@ -73,26 +73,31 @@
              '$or': accounts
          }
      }, {
-         '$project': {
-             'diff': {
-                 '$subtract': [
-                     '$debit', '$credit'
-                 ]
-             }
-         }
-     }, {
-         '$group': {
-             '_id': null,
-             'total': {
-                 '$sum': '$diff'
-             }
-         }
-     }, {
-         '$project': {
-             '_id': 0,
-             'total': 1
-         }
-     }]
+    '$project': {
+      'cashAccount': 1, 
+      'diff': {
+        '$subtract': [
+          '$debit', '$credit'
+        ]
+      }
+    }
+  }, {
+    '$group': {
+      '_id': {
+        'cashAccount': '$cashAccount'
+      }, 
+      'total': {
+        '$sum': '$diff'
+      }
+    }
+  }, {
+    '$project': {
+      '_id': 0, 
+      'cashAccount': '$_id.cashAccount', 
+      'total': 1
+    }
+  }
+]
  }
 
  module.exports = {

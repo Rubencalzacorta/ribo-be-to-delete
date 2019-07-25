@@ -28,11 +28,14 @@ const companyCrud = (Model, extensionFn) => {
         rdAccounts = Model.aggregate(cashAvailable(rdCashAccounts))
 
         Promise.all([usAccounts, peruAccounts, rdAccounts])
-            .then(objList => res.status(200).json({
-                'US': parseFloat(objList[0][0].total),
-                'PERU': parseFloat(objList[1][0].total),
-                'RD:': parseFloat(objList[2][0].total)
-            }))
+            .then(objList => 
+                res.status(200).json({
+                'US': objList[0],
+               'PERU': objList[1],
+                'RD:': objList[2]
+            }
+            )
+            )
             .catch(e => next(e))
     })
 
