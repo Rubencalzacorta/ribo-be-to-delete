@@ -157,6 +157,7 @@ calculateTotalCashAvailable = (accTotals) => {
     return acc + e.total
   }, 0)
 }
+
 calculateAccountPcts = (accs, totalCash) => {
   let accounts = accs.map(e => {
     return {
@@ -192,7 +193,6 @@ investmentDistributor = async (Model, location, loanAmount, loanId, currency) =>
   let investments = await generateInvestments(loanAmount, loanId, currency, investors)
 
   return investments
-
 
 }
 

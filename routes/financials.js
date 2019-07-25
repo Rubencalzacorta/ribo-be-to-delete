@@ -5,6 +5,9 @@ const {
     currencyCashFlow
 } = require('./helpers/financialsAggregates')
 const LoanSchedule = require('../models/LoanSchedule')
+const {
+    getCountryAccounts
+} = require('./helpers/financialHelper')
 
 
 const companyCrud = (Model, extensionFn) => {
@@ -18,23 +21,18 @@ const companyCrud = (Model, extensionFn) => {
         router = extensionFn(router);
     }
 
-    router.get('/cash-available', async (req, res, next) => {
-        let usCashAccounts = ['GFUS', 'GCUS']
-        let peruCashAccounts = ['REMPERU', 'PLPERU']
-        let rdCashAccounts = ['GCDR']
+    router.get('/cash-available/accounts/:country', async (req, res, next) => {
+        let {
+            country
+        } = req.params
 
-        usAccounts = Model.aggregate(cashAvailable(usCashAccounts))
-        peruAccounts = Model.aggregate(cashAvailable(peruCashAccounts))
-        rdAccounts = Model.aggregate(cashAvailable(rdCashAccounts))
+        let accounts = getCountryAccounts(country)
 
-        Promise.all([usAccounts, peruAccounts, rdAccounts])
-            .then(objList => 
-                res.status(200).json({
-                'US': objList[0],
-               'PERU': objList[1],
-                'RD:': objList[2]
-            }
-            )
+        Model.aggregate(cashAvailable(accounts))
+            .then(objList =>
+                res.status(200).json(
+                    objList
+                )
             )
             .catch(e => next(e))
     })
