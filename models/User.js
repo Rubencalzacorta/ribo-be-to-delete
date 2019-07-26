@@ -34,6 +34,10 @@ const userSchema = new Schema({
     type: Boolean,
     default: false
   },
+  isActiveInvestor: {
+    type: Boolean,
+    default: false
+  },
   gender: String,
   civilStatus: String,
   nationalId: String,
