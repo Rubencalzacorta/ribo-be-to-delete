@@ -1,26 +1,66 @@
  var round = require('mongo-round');
 
- const currencyCashFlow = (currency, date) => {
+ const countryCashFlow = (country) => {
 
-     let dt = new Date(date)
+     let dt = new Date()
      let startDate = new Date(dt.getFullYear(), dt.getMonth(), 1);
      let endDate = new Date(dt.getFullYear(), dt.getMonth() + 12, 1);
 
 
      return [{
+         '$lookup': {
+             'from': 'loans',
+             'localField': '_loan',
+             'foreignField': '_id',
+             'as': 'loan'
+         }
+     }, {
+         '$unwind': {
+             'path': '$loan'
+         }
+     }, {
+         '$project': {
+             'date': 1,
+             'interest': 1,
+             'principal': 1,
+             'currency': 1,
+             '_borrower': '$loan._borrower'
+         }
+     }, {
+         '$lookup': {
+             'from': 'users',
+             'localField': '_borrower',
+             'foreignField': '_id',
+             'as': 'borrower'
+         }
+     }, {
+         '$unwind': {
+             'path': '$borrower'
+         }
+     }, {
+         '$project': {
+             'date': 1,
+             'interest': 1,
+             'principal': 1,
+             'currency': 1,
+             'country': '$borrower.country'
+         }
+     }, {
          '$match': {
-             'currency': currency,
+             'country': country,
              'date': {
                  '$gte': startDate,
-                 '$lte': endDate
+                 '$lt': endDate
              }
          }
      }, {
          '$group': {
              '_id': {
-                 //  'week': {
-                 //      '$week': '$date'
-                 //  },
+                 'country': '$country',
+                 'currency': '$currency',
+                 'week': {
+                     '$week': '$week'
+                 },
                  'month': {
                      '$month': '$date'
                  },
@@ -44,9 +84,9 @@
      }, {
          '$project': {
              '_id': 0,
-             //  'week': '$_id.week',
              'month': '$_id.month',
              'year': '$_id.year',
+             'country': '$_id.country',
              'interest': 1,
              'principal': 1,
              'payment': 1,
@@ -73,34 +113,33 @@
              '$or': accounts
          }
      }, {
-    '$project': {
-      'cashAccount': 1, 
-      'diff': {
-        '$subtract': [
-          '$debit', '$credit'
-        ]
-      }
-    }
-  }, {
-    '$group': {
-      '_id': {
-        'cashAccount': '$cashAccount'
-      }, 
-      'total': {
-        '$sum': '$diff'
-      }
-    }
-  }, {
-    '$project': {
-      '_id': 0, 
-      'cashAccount': '$_id.cashAccount', 
-      'total': 1
-    }
-  }
-]
+         '$project': {
+             'cashAccount': 1,
+             'diff': {
+                 '$subtract': [
+                     '$debit', '$credit'
+                 ]
+             }
+         }
+     }, {
+         '$group': {
+             '_id': {
+                 'cashAccount': '$cashAccount'
+             },
+             'total': {
+                 '$sum': '$diff'
+             }
+         }
+     }, {
+         '$project': {
+             '_id': 0,
+             'cashAccount': '$_id.cashAccount',
+             'total': 1
+         }
+     }]
  }
 
  module.exports = {
-     currencyCashFlow,
+     countryCashFlow,
      cashAvailable
  }

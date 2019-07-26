@@ -2,9 +2,10 @@ const express = require('express');
 const _ = require('lodash')
 const {
     cashAvailable,
-    currencyCashFlow
+    countryCashFlow
 } = require('./helpers/financialsAggregates')
 const LoanSchedule = require('../models/LoanSchedule')
+const User = require('../models/User')
 const {
     getCountryAccounts
 } = require('./helpers/financialHelper')
@@ -37,14 +38,34 @@ const companyCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
 
-    router.get('/cash-flow', async (req, res, next) => {
-        usdCF = LoanSchedule.aggregate(currencyCashFlow('USD', new Date()))
-        domCF = LoanSchedule.aggregate(currencyCashFlow('DOP', new Date()))
-        console.log(LoanSchedule)
-        Promise.all([usdCF, domCF]).then(objList => res.status(200).json({
-                'US': objList[0],
-                'RD': objList[1]
-            }))
+    router.get('/cashflow/:country', async (req, res, next) => {
+        let countries = User.schema.path('country').enumValues;
+        let {
+            country
+        } = req.params
+
+        cashFlows = []
+
+        if (country !== 'WORLD') {
+            let countryCF = await LoanSchedule.aggregate(countryCashFlow(country))
+            cashFlows = [{
+                [country]: countryCF
+            }]
+        } else {
+            cashFlows = countries.map(async (country) => {
+                return {
+                    [country]: await LoanSchedule.aggregate(countryCashFlow(country))
+                }
+
+                // let countryCF = await LoanSchedule.aggregate(countryCashFlow(country))
+            })
+        }
+
+        // usdCF = LoanSchedule.aggregate(currencyCashFlow('USD', new Date()))
+        // domCF = LoanSchedule.aggregate(currencyCashFlow('DOP', new Date()))
+        // console.log(LoanSchedule)
+        Promise.all(cashFlows)
+            .then(objList => res.status(200).json(objList))
             .catch(e => next(e))
     })
 
@@ -56,8 +77,6 @@ const companyCrud = (Model, extensionFn) => {
             .then(obj => res.status(200).json(obj))
             .catch(e => next(e))
     })
-
-
 
     // CRUD: CREATE
     router.post('/', (req, res, next) => {

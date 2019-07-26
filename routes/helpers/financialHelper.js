@@ -14,5 +14,5 @@ const getCountryAccounts = (country) => {
 }
 
 module.exports = {
-    getCountryAccounts
+    getCountryAccounts,
 }
