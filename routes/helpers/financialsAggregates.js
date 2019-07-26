@@ -24,6 +24,7 @@
              'interest': 1,
              'principal': 1,
              'currency': 1,
+             'status': 1,
              '_borrower': '$loan._borrower'
          }
      }, {
@@ -43,10 +44,14 @@
              'interest': 1,
              'principal': 1,
              'currency': 1,
+             'status': 1,
              'country': '$borrower.country'
          }
      }, {
          '$match': {
+             'status': {
+                 '$in': ['PENDING', 'DUE', 'OVERDUE', 'PAID', 'OUTSTANDING']
+             },
              'country': country,
              'date': {
                  '$gte': startDate,
