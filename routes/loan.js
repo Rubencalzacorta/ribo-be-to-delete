@@ -64,7 +64,7 @@ router.post('/create/all-active-invest', (req, res, next) => {
         })
         .then( async obj => {
             let loanId = obj._id
-            investments = await investmentDistributor(Transaction, country, 1000, loanId, currency)
+            investments = await investmentDistributor(Transaction, country, obj.capital, loanId, currency)
             console.log('Investments: '+investments)
             investments.forEach(e => {
                 Investment.create(e)
