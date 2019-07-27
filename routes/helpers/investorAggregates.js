@@ -142,6 +142,7 @@ accountTotalsByLocation = (country) => {
     }
   }, {
     '$match': {
+      'isAutoInvesting': true,
       'location': country,
       'total': {
         '$gt': 0
