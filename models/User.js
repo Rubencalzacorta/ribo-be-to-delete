@@ -34,7 +34,7 @@ const userSchema = new Schema({
     type: Boolean,
     default: false
   },
-  isActiveInvestor: {
+  isAutoInvesting: {
     type: Boolean,
     default: false
   },

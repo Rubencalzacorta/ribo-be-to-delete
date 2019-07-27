@@ -142,12 +142,6 @@ router.post('/create',(req,res,next) => {
     let paths = Object.keys(Loan.schema.paths).filter(e => !notUsedPaths.includes(e));
     const loanInitDetails = _.pickBy(req.body, (e,k) => paths.includes(k));
     let { _borrower, loanDetails, toInvest} = req.body 
-    console.log(req.body)
-    console.log("-------==============---------")
-    console.log(toInvest)
-    console.log("-------==============---------")
-    console.log(loanDetails)
-    console.log("-------==============---------")
     let {currency} = loanInitDetails
     Loan.create({...loanInitDetails, ...loanDetails})
         .then( obj => {
