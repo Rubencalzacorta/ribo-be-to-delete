@@ -500,6 +500,20 @@ router.patch('/update-status-database', async (req, res, next) => {
     await LoanSchedule.updateMany(query, update1).then( resp => console.log({updated1: resp})) 
 })
 
+router.patch('/update-investor-auto', async (req, res, next) => {
+    update1 = {
+        $set: {
+            isAutoInvesting: true
+        }
+    }
+
+    query = {
+        investor: true
+    }
+    await User.updateMany(query, update1).then(resp => console.log({
+        updated1: resp
+    }))
+})
 
 
 router.patch('/payment-fix', async (req, res, next) => {
