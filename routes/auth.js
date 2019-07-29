@@ -169,13 +169,12 @@ router.get('/currentUser', (req, res, next) => {
 
 router.get('/logout', (req, res) => {
 
-  req.logout()
-  if (!req.user) {
-    console.log('logged out')
+  req.session.destroy(function (err) {
+    req.logout()
     res.status(200).json({
       message: 'success'
-    })
-  }
+    }) //Inside a callback… bulletproof!
+  });
 });
 
 
