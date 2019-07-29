@@ -2,12 +2,15 @@ const express = require('express');
 const _ = require('lodash')
 const {
     cashAvailable,
-    countryCashFlow
+    countryCashFlow,
+    countryAllocation
 } = require('./helpers/financialsAggregates')
 const LoanSchedule = require('../models/LoanSchedule')
 const User = require('../models/User')
+const Loan = require('../models/Loan')
 const {
-    getCountryAccounts
+    getCountryAccounts,
+    getCountry
 } = require('./helpers/financialHelper')
 
 
@@ -37,6 +40,34 @@ const companyCrud = (Model, extensionFn) => {
             )
             .catch(e => next(e))
     })
+
+    router.get('/allocations/:country', async (req, res, next) => {
+        let {
+            country
+        } = req.params
+
+        let countries = getCountry(country)
+        Loan.aggregate(countryAllocation(countries))
+            .then(console.log)
+
+    })
+
+    router.get('/general/stats/:country', async (req, res, next) => {
+        let {
+            country
+        } = req.params
+
+        let countries = getCountry(country)
+        Loan.aggregate(generalStats(countries))
+            .then(objList =>
+                res.status(200).json(
+                    objList
+                )
+            )
+            .catch(e => next(e))
+    })
+
+
 
     router.get('/cashflow/:country', async (req, res, next) => {
         let countries = User.schema.path('country').enumValues;

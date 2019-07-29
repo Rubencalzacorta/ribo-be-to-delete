@@ -13,6 +13,17 @@ const getCountryAccounts = (country) => {
     }
 }
 
+const getCountry = (country) => {
+    if (country === "WORLD") {
+        return [
+            'PERU', 'VENEZUELA', 'DOMINICAN_REPUBLIC'
+        ]
+    } else {
+        return [country]
+    }
+}
+
 module.exports = {
     getCountryAccounts,
+    getCountry
 }
