@@ -138,6 +138,7 @@ accountTotalsByLocation = (country) => {
       'cashAccount': 1,
       '_investor': 1,
       'location': '$investord.location',
+      'isAutoInvesting': '$investord.isAutoInvesting',
       'fullName': 1
     }
   }, {
