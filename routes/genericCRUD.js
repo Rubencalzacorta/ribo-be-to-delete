@@ -129,7 +129,47 @@ const simpleCrud = (Model, extensionFn) => {
 
         Model.find(querym)
             .populate({
-                path: 'loans'
+                path: 'loans',
+                match: {
+                    status: 'OPEN',
+                },
+                select: {
+                    loanSchedule: 1,
+                    totalPaid: 1,
+                    capitalRemaining: 1,
+                    capital: 1,
+                    investors: 0,
+                    _borrower: 0
+                }
+            })
+            .select({
+                firstName: 1,
+                lastName: 1,
+                country: 1,
+                businessName: 1,
+                loans: 1
+            })
+            .then(objList => {
+                return objList.map((e) => {
+                    return {
+                        _id: e._id,
+                        firstNamea: e.firstName,
+                        lastName: e.lastName,
+                        country: e.country,
+                        businessName: e.businessName,
+                        loans: e.loans.map((j) => {
+                            return {
+                                _id: j._id,
+                                totalPaid: j.totalPaid,
+                                capital: j.capital,
+                                capitalRemaining: j.capitalRemaining,
+                                nextPayment: _.pick(j.loanSchedule.filter(e => e.status === 'DUE').sort(compare = (a, b) => {
+                                    return a.date > b.date ? 1 : b.date > a.date ? -1 : 0;
+                                })[0], ['interest', 'principal', 'date'])
+                            }
+                        })
+                    }
+                })
             })
             .then(objList => res.status(200).json(objList))
             .catch(e => console.log(e))
