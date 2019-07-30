@@ -153,7 +153,7 @@ const simpleCrud = (Model, extensionFn) => {
                 return objList.map((e) => {
                     return {
                         _id: e._id,
-                        firstNamea: e.firstName,
+                        firstName: e.firstName,
                         lastName: e.lastName,
                         country: e.country,
                         businessName: e.businessName,
