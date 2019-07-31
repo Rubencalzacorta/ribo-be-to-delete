@@ -358,9 +358,66 @@
      }]
  }
 
+ cashAccountMovements = (cashAccount) => {
+     return [{
+         '$match': {
+             'cashAccount': cashAccount,
+             'concept': {
+                 '$ne': 'FEE'
+             }
+         }
+     }, {
+         '$sort': {
+             'date': -1
+         }
+     }, {
+         '$project': {
+             'debit': 1,
+             'credit': 1,
+             'concept': 1,
+             'date': 1,
+             '_loan': 1,
+             '_loanSchedule': 1,
+             '_investor': 1
+         }
+     }, {
+         '$group': {
+             '_id': {
+                 '_loanSchedule': '$_loanSchedule',
+                 '_loan': '$loan',
+                 'concept': '$concept',
+                 'date': '$date'
+             },
+             'debit': {
+                 '$sum': '$debit'
+             },
+             'credit': {
+                 '$sum': '$credit'
+             },
+             'date': {
+                 '$first': '$date'
+             },
+             '_investor': {
+                 '$first': '$_investor'
+             },
+             '_loan': {
+                 '$first': '$_loan'
+             },
+             'concept': {
+                 '$first': '$concept'
+             }
+         }
+     }, {
+         '$project': {
+             '_id': 0
+         }
+     }]
+ }
+
  module.exports = {
      countryCashFlow,
      cashAvailable,
      countryAllocation,
-     generalStats
+     generalStats,
+     cashAccountMovements
  }
