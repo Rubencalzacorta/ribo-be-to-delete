@@ -6,6 +6,11 @@ const passport = require('passport');
 const sendMail = require("../mail/mail");
 const hbs = require("handlebars");
 const fs = require("fs");
+const {
+  makeBody,
+  sendMessage,
+  gmailSender
+} = require("../mail")
 
 
 const login = (req, user) => {
@@ -69,9 +74,10 @@ router.post('/signup', (req, res, next) => {
             firstName,
             lastName
           });
-          const sub = "Confirmación de cuenta - RIBO";
 
-          sendMail(email, sub, html)
+          let body = makeBody(email, 'prestamo@ribocapital.com', 'RIBO - confirmación de cuenta', html)
+          let sendMessage1 = sendMessage(body)
+          gmailSender(sendMessage1)
           return savedUser
 
         })
