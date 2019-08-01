@@ -25,6 +25,8 @@ const loanSchema = new Schema({
     type: Number,
     default: 0
   },
+  IRR: Number,
+  PaybackPeriod: Number,
   capitalRemaining: Number,
   interest: Number,
   duration: Number,

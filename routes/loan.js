@@ -1,5 +1,6 @@
 const express = require('express');
 const router  = express.Router();
+const Finance = require('financejs')
 const mongoose   = require('mongoose')
 const _ = require('lodash');
 const moment = require('moment')
@@ -526,8 +527,66 @@ router.patch('/payment-fix', async (req, res, next) => {
                 await LoanSchedule.findByIdAndUpdate(e._id, {payment: update}, {new: true})
                 .then(console.log)
         }).catch(e => console.log(e))
-
 })})
+
+
+router.get('/all-loans/list', async (req, res, next) => {
+    let finance = new Finance()
+
+    items = await Loan.find({
+            // loanType: {
+            //     $in: ['linear',
+            //         'linearIntFirst',
+            //         'amort'
+            //     ]
+            // }
+        }).select({
+        "_id": 1,
+        "loanSchedule": 1,
+        "duration": 1,
+        "_borrower": 0,
+        "investors": 0
+    })
+    
+    Promise.all([items])
+        .then( async items => {
+            let loans = await items[0].map( e => {
+                return {
+                    _id: e._id,
+                    duration: e.duration,
+                    loanSchedule: e.loanSchedule.sort(compare = (a, b) => {
+                                return a.date > b.date ? 1 : b.date > a.date ? -1 : 0;
+                })
+            }})
+            pIRR = []
+            loans.forEach( (e) => {
+                let cf = []
+                e.loanSchedule.forEach((j, i) => {
+                    if (i === 0) {
+                        cf.push(j.balance*-1)
+                    } else (
+                        cf.push(j.principal+j.interest)
+                    )
+                })
+
+                console.log(e)
+                let IRR = finance.IRR(...cf)
+                let PP = finance.PP(e.duration, ...cf)
+                Loan.findByIdAndUpdate(e._id, {IRR: IRR, PaybackPeriod: PP})
+                    .then(() => console.log('done'))
+
+                pIRR.push({
+                    IRR: IRR,
+                    PP: PP,
+                    DUR: e.duration,
+                    _id: e._id
+                })
+            })
+            return pIRR
+        })
+        .then(pIRR => res.status(200).json(pIRR))
+        .catch(error => next(error))
+})
 
 router.patch('/update-database', async (req, res, next) => {
     
