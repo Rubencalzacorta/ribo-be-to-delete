@@ -144,6 +144,8 @@ router.get('/resend-confirmation', (req, res, next) => {
         firstName,
         lastName
       } = user
+
+
       const templateStr = fs.readFileSync("./mail/template.hbs").toString();
       const template = hbs.compile(templateStr);
       const html = template({
@@ -151,10 +153,12 @@ router.get('/resend-confirmation', (req, res, next) => {
         firstName,
         lastName
       });
-      const sub = "Activación de cuenta - RIBO";
 
-      sendMail(email, sub, html)
+      let body = makeBody(email, 'prestamo@ribocapital.com', 'RIBO - confirmación de cuenta', html)
+      let sendMessage1 = sendMessage(body)
+      gmailSender(sendMessage1)
       return user
+
     })
     .then(user => res.status(200).json({
       status: 'success',
