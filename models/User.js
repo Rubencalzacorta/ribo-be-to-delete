@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const Schema   = mongoose.Schema;
+const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
   name: String,
@@ -8,17 +8,43 @@ const userSchema = new Schema({
   fullName: String,
   username: String,
   password: String,
-  location: {type: String, enum:['PERU', 'DOMINICAN REPUBLIC', 'VENEZUELA', 'DOMINICAN_REPUBLIC', 'WORLD']},
-  investments: [{ type: Schema.ObjectId, ref: 'Investment' }],
+  location: {
+    type: String,
+    enum: ['PERU', 'VENEZUELA', 'DOMINICAN_REPUBLIC', 'WORLD', 'USA']
+  },
+  investments: [{
+    type: Schema.ObjectId,
+    ref: 'Investment'
+  }],
   username: String,
   password: String,
-  superAdmin: {type: Boolean, default: false},
-  admin: {type: Boolean, default: false},
-  borrower: {type: Boolean, default: true},
-  investor: {type: Boolean, default: false},
+  superAdmin: {
+    type: Boolean,
+    default: false
+  },
+  admin: {
+    type: Boolean,
+    default: false
+  },
+  borrower: {
+    type: Boolean,
+    default: true
+  },
+  investor: {
+    type: Boolean,
+    default: false
+  },
+  isAutoInvesting: {
+    type: Boolean,
+    default: false
+  },
   gender: String,
   civilStatus: String,
   nationalId: String,
+  nationalIdType: {
+    type: String,
+    enum: ['PASSPORT', 'DRIVING_LICENCE', 'ID', 'IMMIGRATION_CERTIFICATE']
+  },
   nationality: String,
   otherNationalities: String,
   placeOfBirth: String,
@@ -31,22 +57,40 @@ const userSchema = new Schema({
   spouseDOB: Date,
   spousePlaceOfBirth: String,
   street: String,
+  address: String,
   residenceName: String,
   residenceNumber: String,
   city: String,
-  country: {type: String, enum: ['PERU', 'VENEZUELA', 'DOMINICAN_REPUBLIC']},
+  country: {
+    type: String,
+    enum: ['PERU', 'VENEZUELA', 'DOMINICAN_REPUBLIC']
+  },
   cellphoneNumber: String,
   email: String,
+  zipCode: String,
   employmentStatus: String,
   businessName: String,
   businessAddress: String,
   businessPosition: String,
   startDate: Date,
+  documentID: String,
+  documentIncomeOrPayslip: String,
   businessPhoneNumber: Number,
   businessEmail: String,
+  bank: String,
+  accountNumber: String,
   monthlyIncome: Number,
   otherIncome: Number,
-  loans: [{ type: Schema.ObjectId, ref: 'Loan' }]
+  loans: [{
+    type: Schema.ObjectId,
+    ref: 'Loan'
+  }],
+  status: {
+    type: String,
+    enum: ["PENDING", "ACTIVE", 'VERIFIED'],
+    default: "PENDING"
+  },
+  confirmationCode: String
 }, {
   timestamps: {
     createdAt: 'created_at',

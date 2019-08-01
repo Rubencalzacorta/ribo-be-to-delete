@@ -1,16 +1,24 @@
 const express = require('express');
-const router  = express.Router();
+const router = express.Router();
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
 const passport = require('passport');
+const sendMail = require("../mail/mail");
+const hbs = require("handlebars");
+const fs = require("fs");
+const {
+  makeBody,
+  sendMessage,
+  gmailSender
+} = require("../mail")
 
 
 const login = (req, user) => {
-  return new Promise((resolve,reject) => {
+  return new Promise((resolve, reject) => {
     req.login(user, err => {
-      if(err) {
+      if (err) {
         reject(new Error('Something went wrong --- aqui'))
-      }else{
+      } else {
         resolve(user);
       }
     })
@@ -21,37 +29,93 @@ const login = (req, user) => {
 // SIGNUP
 router.post('/signup', (req, res, next) => {
 
-  const {username, password} = req.body;
+  const {
+    email,
+    password,
+    firstName,
+    lastName
+  } = req.body;
+
+
 
   // Check for non empty user or password
-  if (!username || !password){
+  if (!email || !password) {
     next(new Error('You must provide valid credentials'));
   }
 
   // Check if user exists in DB
-  User.findOne({ username })
-  .then( foundUser => {
-    if (foundUser) throw new Error('Username already exists');
+  User.findOne({
+      email
+    })
+    .then(foundUser => {
+      if (foundUser) throw new Error('Email already exists');
 
-    const salt     = bcrypt.genSaltSync(10);
-    const hashPass = bcrypt.hashSync(password, salt);
+      const salt = bcrypt.genSaltSync(10);
+      const hashPass = bcrypt.hashSync(password, salt);
+      const confirmationCode = encodeURIComponent(bcrypt.hashSync(email, salt));
 
-    return new User({
-      username,
-      password: hashPass
-    }).save();
-  })
-  .then( savedUser => login(req, savedUser)) // Login the user using passport
-  .then( user => res.json({status: 'signup & login successfully', user})) // Answer JSON
-  .catch(e => next(e));
+
+
+      return new User({
+          email,
+          password: hashPass,
+          firstName,
+          lastName,
+          confirmationCode
+        })
+        .save()
+        .then((savedUser) => {
+
+          let confirmationCode = savedUser.confirmationCode
+          const templateStr = fs.readFileSync("./mail/template.hbs").toString();
+          const template = hbs.compile(templateStr);
+          const html = template({
+            confirmationCode,
+            firstName,
+            lastName
+          });
+
+          let body = makeBody(email, 'prestamo@ribocapital.com', 'RIBO - confirmación de cuenta', html)
+          let sendMessage1 = sendMessage(body)
+          gmailSender(sendMessage1)
+          return savedUser
+
+        })
+    })
+    .then(savedUser => login(req, savedUser)) // Login the user using passport
+    .then(newUser => res.status(200).json(newUser)) // Answer JSON
+    .catch(e => next(e));
 });
+
+router.post('/confirmation', (req, res, next) => {
+  let {
+    confirmationCode
+  } = req.body
+
+  User.findOneAndUpdate({
+      confirmationCode: confirmationCode
+    }, {
+      status: "ACTIVE"
+    }).then((user) => {
+      if (user.status === 'ACTIVE') {
+        res.status(200).json({
+          confirmed: true
+        })
+      } else {
+        res.status(304).json({
+          confirmed: false
+        })
+      }
+    })
+    .catch(e => next(e));
+})
 
 
 router.post('/login', (req, res, next) => {
   passport.authenticate('local', (err, theUser, failureDetails) => {
-    
+
     // Check for errors
-    if (err) next(new Error('Something went wrong')); 
+    if (err) next(new Error('Something went wrong'));
     if (!theUser) next(failureDetails)
 
     // Return user and logged in
@@ -60,28 +124,76 @@ router.post('/login', (req, res, next) => {
   })(req, res, next);
 });
 
+router.get('/resend-confirmation', (req, res, next) => {
+  let {
+    email,
+    _id
+  } = req.user
 
-router.get('/currentuser', (req,res,next) => {
+  const salt = bcrypt.genSaltSync(10);
+  const confirmationCode = encodeURIComponent(bcrypt.hashSync(email, salt))
+  let update = {
+    confirmationCode: confirmationCode
+  };
+  User.findByIdAndUpdate(_id, update, {
+      new: true
+    })
+    .then(user => {
+      let {
+        confirmationCode,
+        firstName,
+        lastName
+      } = user
 
-  if(req.user){
+
+      const templateStr = fs.readFileSync("./mail/template.hbs").toString();
+      const template = hbs.compile(templateStr);
+      const html = template({
+        confirmationCode,
+        firstName,
+        lastName
+      });
+
+      let body = makeBody(email, 'prestamo@ribocapital.com', 'RIBO - confirmación de cuenta', html)
+      let sendMessage1 = sendMessage(body)
+      gmailSender(sendMessage1)
+      return user
+
+    })
+    .then(user => res.status(200).json({
+      status: 'success',
+      user
+    }))
+    .catch(e => next(e));
+})
+
+router.get('/currentUser', (req, res, next) => {
+
+  if (req.user) {
     res.status(200).json(req.user);
-
-  }else{
+  } else {
     next(new Error('Not logged in'))
   }
 })
 
 
-router.get('/logout', (req,res) => {
-  req.logout();
-  res.status(200).json({message:'logged out'})
+router.get('/logout', (req, res) => {
+
+  req.session.destroy(function (err) {
+    req.logout()
+    res.status(200).json({
+      message: 'success'
+    }) //Inside a callback… bulletproof!
+  });
 });
 
 
 
 
 router.use((err, req, res, next) => {
-  res.status(500).json({ message: err.message });
+  res.status(500).json({
+    message: err.message
+  });
 })
 
 module.exports = router;

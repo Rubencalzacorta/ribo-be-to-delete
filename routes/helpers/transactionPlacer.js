@@ -1,8 +1,6 @@
-const mongoose   = require('mongoose')
+const mongoose = require('mongoose')
 
-
-const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_pmt, date_pmt, id) => {
-    console.log("aqui")
+const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_pmt, date_pmt, currency, id) => {
     pendingTransactions = []
 
     if ((investors.length === 2) &&
@@ -20,6 +18,7 @@ const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_
                 _loanSchedule: mongoose.Types.ObjectId(id),
                 date: date_pmt,
                 cashAccount: cashAccount,
+                currency: currency,
                 concept: "INTEREST",
                 debit: interest_pmt * 1,
             }
@@ -38,10 +37,10 @@ const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_
                 _loanSchedule: mongoose.Types.ObjectId(id),
                 date: date_pmt,
                 cashAccount: cashAccount,
+                currency: currency,
                 concept: "INTEREST",
                 debit: interest_pmt * e.pct,
             }
-
             pendingTransactions.push(interestTransaction)
         })
     }
@@ -53,6 +52,7 @@ const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_
             _loanSchedule: mongoose.Types.ObjectId(id),
             date: date_pmt,
             cashAccount: cashAccount,
+            currency: currency,
             concept: "CAPITAL",
             debit: principal_pmt * e.pct,
         }
@@ -71,28 +71,30 @@ const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_
             interestPmt = interest_pmt
 
             fee.forEach(f => {
-                    feeCharge = interestPmt * f.fee
-                    creditTransaction = {
-                        _loan: mongoose.Types.ObjectId(e._loan),
-                        _investor: mongoose.Types.ObjectId(e._investor._id),
-                        _loanSchedule: mongoose.Types.ObjectId(id),
-                        date: date_pmt,
-                        cashAccount: cashAccount,
-                        concept: "FEE",
-                        credit: feeCharge
-                    }
-                    pendingTransactions.push(creditTransaction)
-                    debitTransaction = {
-                        _loan: mongoose.Types.ObjectId(e._loan),
-                        _investor: mongoose.Types.ObjectId(f.admin),
-                        _loanSchedule: mongoose.Types.ObjectId(id),
-                        date: date_pmt,
-                        cashAccount: cashAccount,
-                        concept: "FEE",
-                        debit: feeCharge
-                    }
-                    pendingTransactions.push(debitTransaction)
-                    
+                feeCharge = interestPmt * f.fee
+                creditTransaction = {
+                    _loan: mongoose.Types.ObjectId(e._loan),
+                    _investor: mongoose.Types.ObjectId(e._investor._id),
+                    _loanSchedule: mongoose.Types.ObjectId(id),
+                    date: date_pmt,
+                    cashAccount: cashAccount,
+                    currency: currency,
+                    concept: "FEE",
+                    credit: feeCharge
+                }
+                pendingTransactions.push(creditTransaction)
+                debitTransaction = {
+                    _loan: mongoose.Types.ObjectId(e._loan),
+                    _investor: mongoose.Types.ObjectId(f.admin),
+                    _loanSchedule: mongoose.Types.ObjectId(id),
+                    date: date_pmt,
+                    cashAccount: cashAccount,
+                    currency: currency,
+                    concept: "FEE",
+                    debit: feeCharge
+                }
+                pendingTransactions.push(debitTransaction)
+
             })
         })
 
@@ -104,28 +106,30 @@ const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_
             fee.forEach(f => {
 
                 if (e._investor._id != f.admin) {
-                feeCharge = interestPmt * f.fee
-                creditTransaction = {
-                    _loan: mongoose.Types.ObjectId(e._loan),
-                    _investor: mongoose.Types.ObjectId(e._investor._id),
-                    _loanSchedule: mongoose.Types.ObjectId(id),
-                    date: date_pmt,
-                    cashAccount: cashAccount,
-                    concept: "FEE",
-                    credit: feeCharge
+                    feeCharge = interestPmt * f.fee
+                    creditTransaction = {
+                        _loan: mongoose.Types.ObjectId(e._loan),
+                        _investor: mongoose.Types.ObjectId(e._investor._id),
+                        _loanSchedule: mongoose.Types.ObjectId(id),
+                        date: date_pmt,
+                        cashAccount: cashAccount,
+                        currency: currency,
+                        concept: "FEE",
+                        credit: feeCharge
+                    }
+                    pendingTransactions.push(creditTransaction)
+                    debitTransaction = {
+                        _loan: mongoose.Types.ObjectId(e._loan),
+                        _investor: mongoose.Types.ObjectId(f.admin),
+                        _loanSchedule: mongoose.Types.ObjectId(id),
+                        date: date_pmt,
+                        cashAccount: cashAccount,
+                        currency: currency,
+                        concept: "FEE",
+                        debit: feeCharge
+                    }
+                    pendingTransactions.push(debitTransaction)
                 }
-                pendingTransactions.push(creditTransaction)
-                debitTransaction = {
-                    _loan: mongoose.Types.ObjectId(e._loan),
-                    _investor: mongoose.Types.ObjectId(f.admin),
-                    _loanSchedule: mongoose.Types.ObjectId(id),
-                    date: date_pmt,
-                    cashAccount: cashAccount,
-                    concept: "FEE",
-                    debit: feeCharge
-                }
-                pendingTransactions.push(debitTransaction)
-            }
             })
         })
     }

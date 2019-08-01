@@ -12,20 +12,14 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
 const cors = require('cors');
 
-const { DBURL } = process.env;
-mongoose.Promise = Promise;
-mongoose
-  .connect(DBURL, { useNewUrlParser: true })
-  .then(() => {
-    console.log(`Connected to Mongo on ${DBURL}`)
-  }).catch(err => {
-    console.error('Error connecting to mongo', err)
-  });
-
 const app_name = require('./package.json').name;
 const debug = require('debug')(`${app_name}:${path.basename(__filename).split('.')[0]}`);
 
 const app = express();
+
+// DB start
+require('./db')
+
 
 // Middleware Setup
 var whitelist = [
@@ -35,12 +29,12 @@ var whitelist = [
   'https://ribo-cap.herokuapp.com',
   'http://ribo-cap.herokuapp.com',
   'http://www.ribocapital.com'
-  
 ];
+
 var corsOptions = {
-  origin: function(origin, callback){
-      var originIsWhitelisted = whitelist.indexOf(origin) !== -1;
-      callback(null, originIsWhitelisted);
+  origin: function (origin, callback) {
+    var originIsWhitelisted = whitelist.indexOf(origin) !== -1;
+    callback(null, originIsWhitelisted);
   },
   credentials: true
 };
@@ -69,10 +63,13 @@ app.use(session({
   saveUninitialized: true,
   cookie: {
     httpOnly: true,
-    maxAge: 2419200000
+    maxAge: 7200000
   },
-  store: new MongoStore({ mongooseConnection: mongoose.connection })
+  store: new MongoStore({
+    mongooseConnection: mongoose.connection
+  })
 }));
+
 require('./passport')(app);
 
 
@@ -91,11 +88,15 @@ const loanRouter = require('./routes/loan');
 const summaryRouter = require('./routes/summary');
 const transactionRouter = require('./routes/transaction');
 const genericCrud = require('./routes/genericCRUD');
+const companyCrud = require('./routes/company');
+const financialsRouter = require('./routes/financials');
 
 app.use('/api/auth', authRouter);
 app.use('/api/test/loan', loanRouter);
 app.use('/api/test/transaction', transactionRouter);
 app.use('/api/test/summary', summaryRouter);
+app.use('/api/company', companyCrud(require('./models/Company')));
+app.use('/api/financials', financialsRouter(require('./models/Transaction')));
 app.use('/api/test/loan', genericCrud(require('./models/Loan')));
 app.use('/api/test/client', genericCrud(require('./models/User')));
 app.use('/api/test/investment', genericCrud(require('./models/Investment')));
