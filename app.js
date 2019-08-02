@@ -28,7 +28,8 @@ var whitelist = [
   'http://ribodev.com:3000',
   'https://ribo-cap.herokuapp.com',
   'http://ribo-cap.herokuapp.com',
-  'http://www.ribocapital.com'
+  'http://www.ribocapital.com',
+  'https://www.ribocapital.com'
 ];
 
 var corsOptions = {
