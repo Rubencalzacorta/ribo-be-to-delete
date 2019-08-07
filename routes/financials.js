@@ -3,11 +3,13 @@ const _ = require('lodash')
 const {
     cashAvailable,
     countryCashFlow,
-    countryAllocation
+    countryAllocation,
+    cashAccountMovements
 } = require('./helpers/financialsAggregates')
 const LoanSchedule = require('../models/LoanSchedule')
 const User = require('../models/User')
 const Loan = require('../models/Loan')
+const Transaction = require('../models/Transaction')
 const {
     getCountryAccounts,
     getCountry
@@ -67,7 +69,19 @@ const companyCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
 
+    router.get('/cash-movements/account/:account', async (req, res, next) => {
+        let {
+            account
+        } = req.params
 
+        Transaction.aggregate(cashAccountMovements(account))
+            .then(objList =>
+                res.status(200).json(
+                    objList
+                )
+            )
+            .catch(e => next(e))
+    })
 
     router.get('/cashflow/:country', async (req, res, next) => {
         let countries = User.schema.path('country').enumValues;
