@@ -227,15 +227,27 @@ router.patch('/installmentpmt/:id',(req,res,next) => {
 
     LoanSchedule.findByIdAndUpdate(id, updates, {new:true})
         .then( obj => {
-            return Investment.find({_loan: obj._loan}).populate('_investor').exec()
+            return Investment.find({_loan: obj._loan}).populate({path: '_investor', populate: {path: 'managementFee'}}).exec()
         })
         .then( investors => {
-            let pendingTransactions = transactionPlacer(investors, cashAccount, fee, interest_pmt, principal_pmt, date_pmt, currency, id)
+
+            let transactionDetails = {
+                investors, 
+                cashAccount, 
+                fee, 
+                interest_pmt, 
+                principal_pmt, 
+                date_pmt, 
+                currency, 
+                id
+            }
+
+            let pendingTransactions = transactionPlacer(transactionDetails)
             Transaction.insertMany(pendingTransactions)
             return investors
         })
         .then( () => res.status(200).json({status: 'success', message: 'Loan Payment Recorded Successfully'}))
-        .catch(e => next(e))
+        .catch(e => console.log(e))
 })
 
 router.delete('/deletepmt/:id',(req,res,next) => {
@@ -267,7 +279,7 @@ router.delete('/deletepmt/:id',(req,res,next) => {
     .then( (updates) => { LoanSchedule.findByIdAndUpdate(id, updates, {new:true}).exec()})
     .then( async () => { await Transaction.deleteMany({_loanSchedule: mongoose.Types.ObjectId(id)})})
     .then( () => res.status(200).json({status: "Success", message: "Removed Successfully"}))
-    .catch(e => next(e))
+    .catch(e => console.log(e))
 })
 
 router.get('/',(req,res,next) => {

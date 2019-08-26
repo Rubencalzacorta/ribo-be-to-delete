@@ -1,52 +1,102 @@
 const mongoose = require('mongoose')
 
-const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_pmt, date_pmt, currency, id) => {
+const transactionPlacer = (transactionDetails) => {
     pendingTransactions = []
-
-    if ((investors.length === 2) &&
-        (investors[0]._investor.firstName === "Gabriel" || investors[1]._investor.firstName === "Gabriel") &&
-        (investors[0]._investor.firstName === "Patricia" || investors[1]._investor.firstName === "Patricia")) {
-        let investorf = investors.filter(e => {
-            return e._investor.firstName === "Gabriel"
-        })
-
-        investorf.forEach(e => {
-
-            interestTransaction = {
-                _loan: mongoose.Types.ObjectId(e._loan),
-                _investor: mongoose.Types.ObjectId(e._investor._id),
-                _loanSchedule: mongoose.Types.ObjectId(id),
-                date: date_pmt,
-                cashAccount: cashAccount,
-                currency: currency,
-                concept: "INTEREST",
-                debit: interest_pmt * 1,
-            }
-
-            pendingTransactions.push(interestTransaction)
-
-        })
-
-    } else {
-
-        investors.forEach(e => {
-
-            interestTransaction = {
-                _loan: mongoose.Types.ObjectId(e._loan),
-                _investor: mongoose.Types.ObjectId(e._investor._id),
-                _loanSchedule: mongoose.Types.ObjectId(id),
-                date: date_pmt,
-                cashAccount: cashAccount,
-                currency: currency,
-                concept: "INTEREST",
-                debit: interest_pmt * e.pct,
-            }
-            pendingTransactions.push(interestTransaction)
-        })
-    }
+    // console.log(transactionDetails)
+    let {
+        investors,
+        cashAccount,
+        interest_pmt,
+        principal_pmt,
+        date_pmt,
+        _loan,
+        currency,
+        id
+    } = transactionDetails
+    // console.log(investors)
+    // loan = Loan.findById(_loan).populate('salesPeople')
+    // let {
+    //     salesPeople
+    // } = loan
 
     investors.forEach(e => {
-        principalTransaction = {
+
+        console.log('aaaaaaaaaaa', e)
+        e._investor.managementFee.forEach(j => {
+            if (e._investor.investorType === 'FIX_INTEREST') {
+                let managementTransaction = {
+                    _loan: mongoose.Types.ObjectId(e._loan),
+                    _investor: mongoose.Types.ObjectId(j.managementAccount),
+                    _loanSchedule: mongoose.Types.ObjectId(id),
+                    date: date_pmt,
+                    cashAccount: cashAccount,
+                    currency: currency,
+                    concept: "MANAGEMENT_INTEREST",
+                    debit: e.pct * interest_pmt * (j.pct),
+                }
+
+                pendingTransactions.push(managementTransaction)
+                console.log(pendingTransactions, '1')
+            } else {
+                let interestTransaction = {
+                    _loan: mongoose.Types.ObjectId(e._loan),
+                    _investor: mongoose.Types.ObjectId(e._investor._id),
+                    _loanSchedule: mongoose.Types.ObjectId(id),
+                    date: date_pmt,
+                    cashAccount: cashAccount,
+                    currency: currency,
+                    concept: "INTEREST",
+                    debit: e.pct * interest_pmt * (1 - j.pct),
+                }
+
+                pendingTransactions.push(interestTransaction)
+                console.log(pendingTransactions, '2')
+
+                let managementTransaction = {
+                    _loan: mongoose.Types.ObjectId(e._loan),
+                    _investor: mongoose.Types.ObjectId(j.managementAccount),
+                    _loanSchedule: mongoose.Types.ObjectId(id),
+                    date: date_pmt,
+                    cashAccount: cashAccount,
+                    currency: currency,
+                    concept: "MANAGEMENT_FEE",
+                    debit: e.pct * interest_pmt * (1 - j.pct),
+                }
+
+                pendingTransactions.push(managementTransaction)
+                console.log(pendingTransactions, '3')
+            }
+
+
+
+            if (salesPeople) {
+                salesPeople.forEach(k => {
+                    let commissionTransaction = [{
+                        _loan: mongoose.Types.ObjectId(e._loan),
+                        _investor: mongoose.Types.ObjectId(k._salesman),
+                        _loanSchedule: mongoose.Types.ObjectId(id),
+                        date: date_pmt,
+                        cashAccount: cashAccount,
+                        currency: currency,
+                        concept: "COMMISSION",
+                        debit: interest_pmt * k.pct,
+                    }, {
+                        _loan: mongoose.Types.ObjectId(e._loan),
+                        _investor: mongoose.Types.ObjectId(j.managementAccount),
+                        _loanSchedule: mongoose.Types.ObjectId(id),
+                        date: date_pmt,
+                        cashAccount: cashAccount,
+                        currency: currency,
+                        concept: "COMMISSION",
+                        credit: interest_pmt * k.pct,
+                    }]
+                    pendingTransactions.push(commissionTransaction)
+                    console.log(pendingTransactions, '4')
+                })
+            }
+        })
+
+        let principalTransaction = {
             _loan: mongoose.Types.ObjectId(e._loan),
             _investor: mongoose.Types.ObjectId(e._investor._id),
             _loanSchedule: mongoose.Types.ObjectId(id),
@@ -56,86 +106,155 @@ const transactionPlacer = (investors, cashAccount, fee, interest_pmt, principal_
             concept: "CAPITAL",
             debit: principal_pmt * e.pct,
         }
-
         pendingTransactions.push(principalTransaction)
+
+
     })
-
-    if ((investors.length === 2) &&
-        (investors[0]._investor.firstName === "Gabriel" || investors[1]._investor.firstName === "Gabriel") &&
-        (investors[0]._investor.firstName === "Patricia" || investors[1]._investor.firstName === "Patricia")) {
-        let investorf = investors.filter(e => {
-            return e._investor.firstName === "Gabriel"
-        })
-
-        investorf.forEach(e => {
-            interestPmt = interest_pmt
-
-            fee.forEach(f => {
-                feeCharge = interestPmt * f.fee
-                creditTransaction = {
-                    _loan: mongoose.Types.ObjectId(e._loan),
-                    _investor: mongoose.Types.ObjectId(e._investor._id),
-                    _loanSchedule: mongoose.Types.ObjectId(id),
-                    date: date_pmt,
-                    cashAccount: cashAccount,
-                    currency: currency,
-                    concept: "FEE",
-                    credit: feeCharge
-                }
-                pendingTransactions.push(creditTransaction)
-                debitTransaction = {
-                    _loan: mongoose.Types.ObjectId(e._loan),
-                    _investor: mongoose.Types.ObjectId(f.admin),
-                    _loanSchedule: mongoose.Types.ObjectId(id),
-                    date: date_pmt,
-                    cashAccount: cashAccount,
-                    currency: currency,
-                    concept: "FEE",
-                    debit: feeCharge
-                }
-                pendingTransactions.push(debitTransaction)
-
-            })
-        })
-
-    } else {
-
-        investors.forEach(e => {
-            interestPmt = interest_pmt * e.pct
-
-            fee.forEach(f => {
-
-                if (e._investor._id != f.admin) {
-                    feeCharge = interestPmt * f.fee
-                    creditTransaction = {
-                        _loan: mongoose.Types.ObjectId(e._loan),
-                        _investor: mongoose.Types.ObjectId(e._investor._id),
-                        _loanSchedule: mongoose.Types.ObjectId(id),
-                        date: date_pmt,
-                        cashAccount: cashAccount,
-                        currency: currency,
-                        concept: "FEE",
-                        credit: feeCharge
-                    }
-                    pendingTransactions.push(creditTransaction)
-                    debitTransaction = {
-                        _loan: mongoose.Types.ObjectId(e._loan),
-                        _investor: mongoose.Types.ObjectId(f.admin),
-                        _loanSchedule: mongoose.Types.ObjectId(id),
-                        date: date_pmt,
-                        cashAccount: cashAccount,
-                        currency: currency,
-                        concept: "FEE",
-                        debit: feeCharge
-                    }
-                    pendingTransactions.push(debitTransaction)
-                }
-            })
-        })
-    }
 
     return pendingTransactions;
 
 }
 
 module.exports = transactionPlacer
+
+// TENDREMOS 2 TIPOS DE INVERSIONISTAS
+// FIX_INTEREST
+// LOS INVERSIONISTAS CON FIX INTEREST, SOLO INGRESARAN A FINAL DE MES EL MONTO CORRESPONDIENTE A SU 
+// VARIABLE_INTEREST
+
+// A PARTIR DE AHORA EL INVERSIONISTA VERA EN SU CUENTA SOLO EL INGRESO POR CONCEPTO DE INTERESES
+// NO PODRA VISUALIZAR CUANTO HA PAGADO POR CONCEPTO DE FEES DE GESTION O COMISIONES.
+// SIEMPRE SE VISUALIZARA EL NETO
+// LA CUENTA DE RIBO INGRESARA DIRECTAMENTE SU  
+
+
+// if ((investors.length === 2) &&
+//     (investors[0]._investor.firstName === "Gabriel" || investors[1]._investor.firstName === "Gabriel") &&
+//     (investors[0]._investor.firstName === "Patricia" || investors[1]._investor.firstName === "Patricia")) {
+//     let investorf = investors.filter(e => {
+//         return e._investor.firstName === "Gabriel"
+//     })
+
+//     investorf.forEach(e => {
+
+//         interestTransaction = {
+//             _loan: mongoose.Types.ObjectId(e._loan),
+//             _investor: mongoose.Types.ObjectId(e._investor._id),
+//             _loanSchedule: mongoose.Types.ObjectId(id),
+//             date: date_pmt,
+//             cashAccount: cashAccount,
+//             currency: currency,
+//             concept: "INTEREST",
+//             debit: interest_pmt * 1,
+//         }
+
+//         pendingTransactions.push(interestTransaction)
+
+//     })
+
+// } else {
+
+//     investors.forEach(e => {
+
+//         interestTransaction = {
+//             _loan: mongoose.Types.ObjectId(e._loan),
+//             _investor: mongoose.Types.ObjectId(e._investor._id),
+//             _loanSchedule: mongoose.Types.ObjectId(id),
+//             date: date_pmt,
+//             cashAccount: cashAccount,
+//             currency: currency,
+//             concept: "INTEREST",
+//             debit: interest_pmt * e.pct,
+//         }
+//         pendingTransactions.push(interestTransaction)
+//     })
+// }
+
+// investors.forEach(e => {
+//     principalTransaction = {
+//         _loan: mongoose.Types.ObjectId(e._loan),
+//         _investor: mongoose.Types.ObjectId(e._investor._id),
+//         _loanSchedule: mongoose.Types.ObjectId(id),
+//         date: date_pmt,
+//         cashAccount: cashAccount,
+//         currency: currency,
+//         concept: "CAPITAL",
+//         debit: principal_pmt * e.pct,
+//     }
+
+//     pendingTransactions.push(principalTransaction)
+// })
+
+// if ((investors.length === 2) &&
+//     (investors[0]._investor.firstName === "Gabriel" || investors[1]._investor.firstName === "Gabriel") &&
+//     (investors[0]._investor.firstName === "Patricia" || investors[1]._investor.firstName === "Patricia")) {
+//     let investorf = investors.filter(e => {
+//         return e._investor.firstName === "Gabriel"
+//     })
+
+//     investorf.forEach(e => {
+//         interestPmt = interest_pmt
+
+//         fee.forEach(f => {
+//             feeCharge = interestPmt * f.fee
+//             creditTransaction = {
+//                 _loan: mongoose.Types.ObjectId(e._loan),
+//                 _investor: mongoose.Types.ObjectId(e._investor._id),
+//                 _loanSchedule: mongoose.Types.ObjectId(id),
+//                 date: date_pmt,
+//                 cashAccount: cashAccount,
+//                 currency: currency,
+//                 concept: "FEE",
+//                 credit: feeCharge
+//             }
+//             pendingTransactions.push(creditTransaction)
+//             debitTransaction = {
+//                 _loan: mongoose.Types.ObjectId(e._loan),
+//                 _investor: mongoose.Types.ObjectId(f.admin),
+//                 _loanSchedule: mongoose.Types.ObjectId(id),
+//                 date: date_pmt,
+//                 cashAccount: cashAccount,
+//                 currency: currency,
+//                 concept: "FEE",
+//                 debit: feeCharge
+//             }
+//             pendingTransactions.push(debitTransaction)
+
+//         })
+//     })
+
+// } else {
+
+//     investors.forEach(e => {
+//         interestPmt = interest_pmt * e.pct
+
+//         fee.forEach(f => {
+
+//             if (e._investor._id != f.admin) {
+//                 feeCharge = interestPmt * f.fee
+//                 creditTransaction = {
+//                     _loan: mongoose.Types.ObjectId(e._loan),
+//                     _investor: mongoose.Types.ObjectId(e._investor._id),
+//                     _loanSchedule: mongoose.Types.ObjectId(id),
+//                     date: date_pmt,
+//                     cashAccount: cashAccount,
+//                     currency: currency,
+//                     concept: "FEE",
+//                     credit: feeCharge
+//                 }
+//                 pendingTransactions.push(creditTransaction)
+//                 debitTransaction = {
+//                     _loan: mongoose.Types.ObjectId(e._loan),
+//                     _investor: mongoose.Types.ObjectId(f.admin),
+//                     _loanSchedule: mongoose.Types.ObjectId(id),
+//                     date: date_pmt,
+//                     cashAccount: cashAccount,
+//                     currency: currency,
+//                     concept: "FEE",
+//                     debit: feeCharge
+//                 }
+//                 pendingTransactions.push(debitTransaction)
+//             }
+//         })
+//     })
+// }

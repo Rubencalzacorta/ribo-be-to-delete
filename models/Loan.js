@@ -17,6 +17,10 @@ const loanSchema = new Schema({
     type: Schema.ObjectId,
     ref: 'LoanSchedule'
   }],
+  salesPeople: [{
+    type: Schema.ObjectId,
+    ref: 'SalesPeople'
+  }],
   collateralType: String,
   collateralValue: Number,
   collateralDescription: String,
