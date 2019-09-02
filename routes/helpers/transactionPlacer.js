@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const Loan = require('../../models/Loan')
 
 const transactionPlacer = (transactionDetails) => {
     pendingTransactions = []
@@ -14,16 +15,20 @@ const transactionPlacer = (transactionDetails) => {
         id
     } = transactionDetails
     // console.log(investors)
-    // loan = Loan.findById(_loan).populate('salesPeople')
-    // let {
-    //     salesPeople
-    // } = loan
+    loan = Loan.findById(_loan).populate('salesPeople')
+
+    let {
+        salesPeople
+    } = loan
+
+
 
     investors.forEach(e => {
 
-        console.log('aaaaaaaaaaa', e)
+
         e._investor.managementFee.forEach(j => {
-            if (e._investor.investorType === 'FIX_INTEREST') {
+            if (e._investor.investorType === 'FIXED_INTEREST') {
+
                 let managementTransaction = {
                     _loan: mongoose.Types.ObjectId(e._loan),
                     _investor: mongoose.Types.ObjectId(j.managementAccount),
@@ -36,7 +41,6 @@ const transactionPlacer = (transactionDetails) => {
                 }
 
                 pendingTransactions.push(managementTransaction)
-                console.log(pendingTransactions, '1')
             } else {
                 let interestTransaction = {
                     _loan: mongoose.Types.ObjectId(e._loan),
@@ -46,13 +50,13 @@ const transactionPlacer = (transactionDetails) => {
                     cashAccount: cashAccount,
                     currency: currency,
                     concept: "INTEREST",
-                    debit: e.pct * interest_pmt * (1 - j.pct),
+                    debit: e.pct * interest_pmt,
                 }
 
                 pendingTransactions.push(interestTransaction)
-                console.log(pendingTransactions, '2')
+                console.log(pendingTransactions[pendingTransactions.length - 1], '2')
 
-                let managementTransaction = {
+                let managementTransaction = [{
                     _loan: mongoose.Types.ObjectId(e._loan),
                     _investor: mongoose.Types.ObjectId(j.managementAccount),
                     _loanSchedule: mongoose.Types.ObjectId(id),
@@ -61,10 +65,21 @@ const transactionPlacer = (transactionDetails) => {
                     currency: currency,
                     concept: "MANAGEMENT_FEE",
                     debit: e.pct * interest_pmt * (1 - j.pct),
-                }
+                }, {
+                    _loan: mongoose.Types.ObjectId(e._loan),
+                    _investor: mongoose.Types.ObjectId(e._investor._id),
+                    _loanSchedule: mongoose.Types.ObjectId(id),
+                    date: date_pmt,
+                    cashAccount: cashAccount,
+                    currency: currency,
+                    concept: "MANAGEMENT_FEE",
+                    credit: e.pct * interest_pmt * (1 - j.pct),
+                }]
+                managementTransaction.forEach(e => {
+                    pendingTransactions.push(e)
+                })
 
-                pendingTransactions.push(managementTransaction)
-                console.log(pendingTransactions, '3')
+                console.log(pendingTransactions[pendingTransactions.length - 1], '3')
             }
 
 
@@ -114,6 +129,8 @@ const transactionPlacer = (transactionDetails) => {
     return pendingTransactions;
 
 }
+
+
 
 module.exports = transactionPlacer
 

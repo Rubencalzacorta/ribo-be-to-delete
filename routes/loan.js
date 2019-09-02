@@ -70,7 +70,6 @@ router.post('/create/all-active-invest', (req, res, next) => {
             investments.forEach(e => {
                 Investment.create(e)
                     .then((investment_x) => {
-                   
                         User.findByIdAndUpdate(e._investor, {
                             $push: {
                                 investments: investment_x._id
@@ -162,7 +161,6 @@ router.post('/create',(req,res,next) => {
         .then( obj => {
             let loanId = obj._id
             let investments = toInvest.map( e => ({_loan: loanId, ...e, currency}))
-            console.log(investments)
             investments.forEach( e => { 
                 Investment.create(e)
                 .then( (investment_x) => {
@@ -219,35 +217,48 @@ router.patch('/installmentpmt/:id',(req,res,next) => {
         
     let notUsedPaths = ['_id','updated_at','created_at','__v'];
     let paths = Object.keys(LoanSchedule.schema.paths).filter(e => !notUsedPaths.includes(e));
-    
+    console.log('aqui')
     const {id} = req.params;
-    const { cashAccount, fee, interest_pmt, principal_pmt, date_pmt, currency } = req.body.payment
-    const object = _.pickBy(req.body.payment, (e,k) => paths.includes(k));
+    const { cashAccount, interest_pmt, principal_pmt, date_pmt, currency } = req.body
+    const object = _.pickBy(req.body, (e,k) => paths.includes(k));
     const updates = _.pickBy(object, _.identity);
+
+
+
 
     LoanSchedule.findByIdAndUpdate(id, updates, {new:true})
         .then( obj => {
+            // console.log(obj)
             return Investment.find({_loan: obj._loan}).populate({path: '_investor', populate: {path: 'managementFee'}}).exec()
         })
-        .then( investors => {
-
+        .then( investments => {
             let transactionDetails = {
-                investors, 
-                cashAccount, 
-                fee, 
-                interest_pmt, 
-                principal_pmt, 
-                date_pmt, 
-                currency, 
-                id
+                        investors: investments,
+                        cashAccount: cashAccount,
+                        interest_pmt: interest_pmt,
+                        principal_pmt: principal_pmt,
+                        date_pmt: date_pmt,
+                        _loan: investments[0]._loan,
+                        currency: currency,
+                        installment: id,
             }
-
+ 
             let pendingTransactions = transactionPlacer(transactionDetails)
-            Transaction.insertMany(pendingTransactions)
-            return investors
+            // Transaction.insertMany(pendingTransactions)
+            return pendingTransactions
         })
-        .then( () => res.status(200).json({status: 'success', message: 'Loan Payment Recorded Successfully'}))
-        .catch(e => console.log(e))
+        .then((pendingTransactions) => {
+
+        let totalAmount = pendingTransactions.reduce((acc, e) => { return acc + e.debit},0)
+
+        res.status(200).json({
+            status: 'success', 
+            message: 'Loan Payment and Distribution Recorded Successfully', 
+            total: totalAmount,
+            data: pendingTransactions
+        })
+        })
+        .catch(e => next(e))
 })
 
 router.delete('/deletepmt/:id',(req,res,next) => {
@@ -279,7 +290,7 @@ router.delete('/deletepmt/:id',(req,res,next) => {
     .then( (updates) => { LoanSchedule.findByIdAndUpdate(id, updates, {new:true}).exec()})
     .then( async () => { await Transaction.deleteMany({_loanSchedule: mongoose.Types.ObjectId(id)})})
     .then( () => res.status(200).json({status: "Success", message: "Removed Successfully"}))
-    .catch(e => console.log(e))
+    .catch(e => next(e))
 })
 
 router.get('/',(req,res,next) => {
