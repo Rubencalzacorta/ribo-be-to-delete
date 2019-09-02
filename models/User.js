@@ -91,10 +91,15 @@ const userSchema = new Schema({
     enum: ["PENDING", "ACTIVE", 'VERIFIED'],
     default: "PENDING"
   },
+  investorType: {
+    type: String,
+    enum: ["FIX_INTEREST", "VARIABLE_INTEREST"],
+    default: "VARIABLE_INTEREST"
+  },
   confirmationCode: String,
   managementFee: [{
     type: Schema.ObjectId,
-    ref: ManagementFee.modelName
+    ref: 'ManagementFee'
   }]
 }, {
   timestamps: {
