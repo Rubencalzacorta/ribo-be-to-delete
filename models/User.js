@@ -93,7 +93,7 @@ const userSchema = new Schema({
   },
   investorType: {
     type: String,
-    enum: ["FIX_INTEREST", "VARIABLE_INTEREST"],
+    enum: ["FIXED_INTEREST", "VARIABLE_INTEREST"],
     default: "VARIABLE_INTEREST"
   },
   confirmationCode: String,

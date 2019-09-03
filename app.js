@@ -104,7 +104,7 @@ app.use('/api/test/loan', genericCrud(require('./models/Loan')));
 app.use('/api/test/client', genericCrud(require('./models/User')));
 app.use('/api/test/investment', genericCrud(require('./models/Investment')));
 app.use('/api/test/borrower', genericCrud(require('./models/User')));
-app.use('/api/test/investor', genericCrud(require('./models/User')));
+// app.use('/api/test/investor', genericCrud(require('./models/User')));
 app.use('/api/test/loanSchedule', genericCrud(require('./models/LoanSchedule')));
 app.use('/api/user', genericCrud(require('./models/User')));
 
