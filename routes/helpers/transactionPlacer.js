@@ -27,7 +27,6 @@ const transactionPlacer = (transactionDetails) => {
 
 
         e._investor.managementFee.forEach(j => {
-            console.log(j)
             if (e._investor.investorType === 'FIXED_INTEREST') {
                 let managementTransaction = {
                     _loan: e._loan,
