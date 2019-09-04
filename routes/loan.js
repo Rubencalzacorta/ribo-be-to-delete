@@ -219,11 +219,11 @@ router.patch('/installmentpmt/:id',(req,res,next) => {
     let paths = Object.keys(LoanSchedule.schema.paths).filter(e => !notUsedPaths.includes(e));
     console.log('aqui')
     const {id} = req.params;
-    const { cashAccount, interest_pmt, principal_pmt, date_pmt, currency } = req.body
-    const object = _.pickBy(req.body, (e,k) => paths.includes(k));
+    const { cashAccount, interest_pmt, principal_pmt, date_pmt, currency } = req.body.payment
+    const object = _.pickBy(req.body.payment, (e,k) => paths.includes(k));
     const updates = _.pickBy(object, _.identity);
 
-
+    console.log(req.body.payment)
 
 
     LoanSchedule.findByIdAndUpdate(id, updates, {new:true})
@@ -244,17 +244,28 @@ router.patch('/installmentpmt/:id',(req,res,next) => {
             }
  
             let pendingTransactions = transactionPlacer(transactionDetails)
-            // Transaction.insertMany(pendingTransactions)
+            Transaction.insertMany(pendingTransactions)
             return pendingTransactions
         })
-        .then((pendingTransactions) => {
+        .then(async (pendingTransactions) => {
 
-        let totalAmount = pendingTransactions.reduce((acc, e) => { return acc + e.debit},0)
+        // let totalAmount = await pendingTransactions.reduce((acc, {debit}) => { 
+        //     debit = debit ? debit : 0;
+        //     return acc + debit 
+        // },0)
 
+        // let totalCredit = await pendingTransactions.reduce((acc, {credit}) => { 
+        //     credit = credit ? credit : 0;
+        //     return acc + credit 
+        // },0)
+
+        
+
+        // console.log(totalAmount, totalCredit)
         res.status(200).json({
             status: 'success', 
             message: 'Loan Payment and Distribution Recorded Successfully', 
-            total: totalAmount,
+            // total: totalAmount,
             data: pendingTransactions
         })
         })
@@ -272,19 +283,22 @@ router.delete('/deletepmt/:id',(req,res,next) => {
             return {
                 interest_pmt: 0,
                 principal_pmt: 0,
-                status: 'PENDING'
+                status: 'PENDING',
+                cashAccount: null
             }
         } else if (moment(resp.date) <= moment() && moment(resp.date) > moment().subtract(7, 'd')) {
             return {
                 interest_pmt: 0,
                 principal_pmt: 0,
-                status: 'DUE'
+                status: 'DUE',
+                cashAccount: null
             }
         } else {
             return {
                 interest_pmt: 0,
                 principal_pmt: 0,
-                status: 'OVERDUE'
+                status: 'OVERDUE',
+                cashAccount: null
             }
         }})
     .then( (updates) => { LoanSchedule.findByIdAndUpdate(id, updates, {new:true}).exec()})
