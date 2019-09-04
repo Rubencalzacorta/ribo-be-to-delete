@@ -12,7 +12,7 @@ const transactionPlacer = (transactionDetails) => {
         date_pmt,
         _loan,
         currency,
-        id
+        installment
     } = transactionDetails
     // console.log(investors)
     loan = Loan.findById(_loan).populate('salesPeople')
@@ -27,12 +27,12 @@ const transactionPlacer = (transactionDetails) => {
 
 
         e._investor.managementFee.forEach(j => {
+            console.log(j)
             if (e._investor.investorType === 'FIXED_INTEREST') {
-
                 let managementTransaction = {
-                    _loan: mongoose.Types.ObjectId(e._loan),
-                    _investor: mongoose.Types.ObjectId(j.managementAccount),
-                    _loanSchedule: mongoose.Types.ObjectId(id),
+                    _loan: e._loan,
+                    _investor: j._managementAccount,
+                    _loanSchedule: mongoose.Types.ObjectId(installment),
                     date: date_pmt,
                     cashAccount: cashAccount,
                     currency: currency,
@@ -43,9 +43,9 @@ const transactionPlacer = (transactionDetails) => {
                 pendingTransactions.push(managementTransaction)
             } else {
                 let interestTransaction = {
-                    _loan: mongoose.Types.ObjectId(e._loan),
-                    _investor: mongoose.Types.ObjectId(e._investor._id),
-                    _loanSchedule: mongoose.Types.ObjectId(id),
+                    _loan: e._loan,
+                    _investor: e._investor._id,
+                    _loanSchedule: mongoose.Types.ObjectId(installment),
                     date: date_pmt,
                     cashAccount: cashAccount,
                     currency: currency,
@@ -54,32 +54,31 @@ const transactionPlacer = (transactionDetails) => {
                 }
 
                 pendingTransactions.push(interestTransaction)
-                console.log(pendingTransactions[pendingTransactions.length - 1], '2')
 
                 let managementTransaction = [{
-                    _loan: mongoose.Types.ObjectId(e._loan),
-                    _investor: mongoose.Types.ObjectId(j.managementAccount),
-                    _loanSchedule: mongoose.Types.ObjectId(id),
+                    _loan: e._loan,
+                    _investor: j._managementAccount,
+                    _loanSchedule: mongoose.Types.ObjectId(installment),
                     date: date_pmt,
                     cashAccount: cashAccount,
                     currency: currency,
                     concept: "MANAGEMENT_FEE",
                     debit: e.pct * interest_pmt * (1 - j.pct),
                 }, {
-                    _loan: mongoose.Types.ObjectId(e._loan),
-                    _investor: mongoose.Types.ObjectId(e._investor._id),
-                    _loanSchedule: mongoose.Types.ObjectId(id),
+                    _loan: e._loan,
+                    _investor: e._investor._id,
+                    _loanSchedule: mongoose.Types.ObjectId(installment),
                     date: date_pmt,
                     cashAccount: cashAccount,
                     currency: currency,
                     concept: "MANAGEMENT_FEE",
                     credit: e.pct * interest_pmt * (1 - j.pct),
                 }]
+
                 managementTransaction.forEach(e => {
                     pendingTransactions.push(e)
                 })
 
-                console.log(pendingTransactions[pendingTransactions.length - 1], '3')
             }
 
 
@@ -87,18 +86,18 @@ const transactionPlacer = (transactionDetails) => {
             if (salesPeople) {
                 salesPeople.forEach(k => {
                     let commissionTransaction = [{
-                        _loan: mongoose.Types.ObjectId(e._loan),
-                        _investor: mongoose.Types.ObjectId(k._salesman),
-                        _loanSchedule: mongoose.Types.ObjectId(id),
+                        _loan: e._loan,
+                        _investor: k._salesman,
+                        _loanSchedule: mongoose.Types.ObjectId(installment),
                         date: date_pmt,
                         cashAccount: cashAccount,
                         currency: currency,
                         concept: "COMMISSION",
                         debit: interest_pmt * k.pct,
                     }, {
-                        _loan: mongoose.Types.ObjectId(e._loan),
-                        _investor: mongoose.Types.ObjectId(j.managementAccount),
-                        _loanSchedule: mongoose.Types.ObjectId(id),
+                        _loan: e._loan,
+                        _investor: j._managementAccount,
+                        _loanSchedule: mongoose.Types.ObjectId(installment),
                         date: date_pmt,
                         cashAccount: cashAccount,
                         currency: currency,
@@ -112,9 +111,9 @@ const transactionPlacer = (transactionDetails) => {
         })
 
         let principalTransaction = {
-            _loan: mongoose.Types.ObjectId(e._loan),
-            _investor: mongoose.Types.ObjectId(e._investor._id),
-            _loanSchedule: mongoose.Types.ObjectId(id),
+            _loan: e._loan,
+            _investor: e._investor._id,
+            _loanSchedule: mongoose.Types.ObjectId(installment),
             date: date_pmt,
             cashAccount: cashAccount,
             currency: currency,
