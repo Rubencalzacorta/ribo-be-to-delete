@@ -62,7 +62,7 @@ const transactionPlacer = (transactionDetails) => {
                     cashAccount: cashAccount,
                     currency: currency,
                     concept: "MANAGEMENT_FEE",
-                    debit: e.pct * interest_pmt * (1 - j.pct),
+                    debit: e.pct * interest_pmt * (j.pct),
                 }, {
                     _loan: e._loan,
                     _investor: e._investor._id,
@@ -71,7 +71,7 @@ const transactionPlacer = (transactionDetails) => {
                     cashAccount: cashAccount,
                     currency: currency,
                     concept: "MANAGEMENT_FEE",
-                    credit: e.pct * interest_pmt * (1 - j.pct),
+                    credit: e.pct * interest_pmt * (j.pct),
                 }]
 
                 managementTransaction.forEach(e => {
