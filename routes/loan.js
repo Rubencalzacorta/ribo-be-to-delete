@@ -338,8 +338,10 @@ router.get('/complete-details/:id', async (req,res,next) => {
 
     let Investors = await Investment.find({_loan: id}).populate('_investor')
     let LoanDetails = await Loan.findById(id)
-    let Transactions = await Transaction.find({_loan: id})
-    
+    let Transactions = await Transaction.find({
+        _loan: id
+    }).populate('_investor', 'firstName lastName')
+    console.log(Transactions)
     Promise.all([Investors,LoanDetails,Transactions])
         .then( objList => 
             res.status(200).json
