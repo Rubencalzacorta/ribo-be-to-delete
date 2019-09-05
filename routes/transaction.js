@@ -164,11 +164,18 @@ router.get('/list/:id', (req, res, next) => {
     .populate({
       path: '_investor'
     })
-    .then(obj => {
+    .then(async obj => {
+
+      return await investorDetails(obj)
+
+    }).then(obj => {
+
       res.status(200).json(obj)
     })
     .catch(e => next(e))
 })
+
+
 
 
 
@@ -281,5 +288,131 @@ router.post('/', (req, res, next) => {
     .catch(e => next(e))
 })
 
+
+const investorDetails = (transactions) => {
+
+  let paidBackCapital = transactions.filter((e) => {
+    return (e.concept === 'CAPITAL')
+  }).reduce((acc, e) => {
+    return acc + e.debit
+  }, 0)
+
+  let interestReceived = transactions.filter((e) => {
+    return (e.concept === 'INTEREST')
+  }).reduce((acc, e) => {
+    return acc + e.debit
+  }, 0)
+
+  let feeExpenses = transactions.filter((e) => {
+    return (e.concept === 'FEE')
+  }).reduce((acc, e) => {
+    return acc + e.credit
+  }, 0)
+
+  let feeIncome = transactions.filter((e) => {
+    return (e.concept === 'FEE')
+  }).reduce((acc, e) => {
+    return acc + e.debit
+  }, 0)
+
+  let totalDeposits = transactions.filter((e) => {
+    return (e.concept === 'DEPOSIT')
+  }).reduce((acc, e) => {
+    return acc + e.debit
+  }, 0)
+
+  let totalWithdrawals = transactions.filter((e) => {
+    return (e.concept === 'WITHDRAWAL')
+  }).reduce((acc, e) => {
+    return acc + e.credit
+  }, 0)
+
+  let totalCosts = transactions.filter((e) => {
+    return (e.concept === 'COST')
+  }).reduce((acc, e) => {
+    return acc + e.credit
+  }, 0)
+
+  let totalInvestments = transactions.filter((e) => {
+    return (e.concept === 'INVESTMENT')
+  }).reduce((acc, e) => {
+    return acc + e.credit
+  }, 0)
+
+  const cashAccountReducer = (transactions) => {
+    let accountList = []
+    let totals = []
+
+    _.map(_.uniqBy(transactions, 'cashAccount'), _.partial(_.pick, _, ['cashAccount'])).forEach(e => {
+      accountList.push(e.cashAccount)
+    })
+
+    accountList.forEach(e => {
+      let total = transactions.filter((j) => {
+          return (j.cashAccount === e)
+        })
+        .reduce((acc, k) => {
+          return acc + k.debit - k.credit
+        }, 0)
+
+      let cashAccountTotal = {
+        cashAccount: e,
+        total: total
+      }
+      totals.push(cashAccountTotal)
+    })
+    return totals
+  }
+
+
+
+  // const feesReducer = (transactions) => {
+  //   let accountList = []
+  //   let totals = []
+
+  //   let fees = transactions.filter((e) => {
+  //     return (e.concept === 'FEE')
+  //   })
+
+
+
+  //   _.map(_.uniqBy(fees, '_investor'), _.partial(_.pick, _, ['_investor'])).forEach(e => { accountList.push(e._investor.firstName) })
+
+
+  //   accountList.forEach(e => {
+  //     let total = fees.filter((j) => { return (j._investor.firstName === e) })
+  //       .reduce((acc, k) => { return acc + k.debit - k.credit }, 0)
+
+  //     let cashAccountTotal = { cashAccount: e, total: total }
+  //     totals.push(cashAccountTotal)
+  //   })
+  //   return totals
+  // }
+
+  let totals = cashAccountReducer(transactions)
+
+  let debitTotal = transactions.reduce((acc, e) => {
+    return acc + e.debit
+  }, 0)
+  let creditTotal = transactions.reduce((acc, e) => {
+    return acc + e.credit
+  }, 0)
+
+  return {
+    transactions: transactions,
+    paidBackCapital: paidBackCapital,
+    interestReceived: interestReceived,
+    totalInvestments: totalInvestments,
+    totalCosts: totalCosts,
+    feeExpenses: feeExpenses,
+    feeIncome: feeIncome,
+    totalDeposits: totalDeposits,
+    totalWithdrawals: totalWithdrawals,
+    debitTotal: debitTotal,
+    creditTotal: creditTotal,
+    cashAvailable: debitTotal - creditTotal,
+    cashAccounts: totals
+  }
+}
 
 module.exports = router;
