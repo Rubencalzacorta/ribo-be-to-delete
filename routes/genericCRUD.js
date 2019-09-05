@@ -241,6 +241,8 @@ const simpleCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
 
+    
+
 
 
     // CRUD: CREATE

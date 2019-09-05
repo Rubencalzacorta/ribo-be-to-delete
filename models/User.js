@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const ManagementFee = require('./ManagementFee')
 
 const userSchema = new Schema({
   name: String,
@@ -90,7 +91,16 @@ const userSchema = new Schema({
     enum: ["PENDING", "ACTIVE", 'VERIFIED'],
     default: "PENDING"
   },
-  confirmationCode: String
+  investorType: {
+    type: String,
+    enum: ["FIXED_INTEREST", "VARIABLE_INTEREST"],
+    default: "VARIABLE_INTEREST"
+  },
+  confirmationCode: String,
+  managementFee: [{
+    type: Schema.ObjectId,
+    ref: 'ManagementFee'
+  }]
 }, {
   timestamps: {
     createdAt: 'created_at',
