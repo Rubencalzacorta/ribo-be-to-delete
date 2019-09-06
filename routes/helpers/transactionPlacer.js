@@ -16,7 +16,7 @@ const transactionPlacer = async (transactionDetails) => {
     } = transactionDetails
     // console.log(investors)
     loan = await Loan.findById(_loan).populate('commission')
-    console.log(loan)
+
     let {
         commission
     } = loan
@@ -83,34 +83,7 @@ const transactionPlacer = async (transactionDetails) => {
 
 
 
-            if (commission) {
-                commission.forEach(k => {
-                    let commissionTransaction = [{
-                        _loan: e._loan,
-                        _investor: k._salesman,
-                        _loanSchedule: mongoose.Types.ObjectId(installment),
-                        date: date_pmt,
-                        cashAccount: cashAccount,
-                        currency: currency,
-                        concept: "COMMISSION",
-                        debit: e.pct * interest_pmt * (j.pct) * k.pct,
-                    }, {
-                        _loan: e._loan,
-                        _investor: j._managementAccount,
-                        _loanSchedule: mongoose.Types.ObjectId(installment),
-                        date: date_pmt,
-                        cashAccount: cashAccount,
-                        currency: currency,
-                        concept: "COMMISSION",
-                        credit: e.pct * interest_pmt * (j.pct) * k.pct,
-                    }]
 
-                    commissionTransaction.forEach(e => {
-                        pendingTransactions.push(e)
-                    })
-
-                })
-            }
         })
 
         let principalTransaction = {
@@ -127,6 +100,35 @@ const transactionPlacer = async (transactionDetails) => {
 
 
     })
+
+    if (commission) {
+        commission.forEach(k => {
+            let commissionTransaction = [{
+                _loan: e._loan,
+                _investor: k._salesman,
+                _loanSchedule: mongoose.Types.ObjectId(installment),
+                date: date_pmt,
+                cashAccount: cashAccount,
+                currency: currency,
+                concept: "COMMISSION",
+                debit: interest_pmt * k.pct,
+            }, {
+                _loan: e._loan,
+                _investor: j._managementAccount,
+                _loanSchedule: mongoose.Types.ObjectId(installment),
+                date: date_pmt,
+                cashAccount: cashAccount,
+                currency: currency,
+                concept: "COMMISSION",
+                credit: interest_pmt * k.pct,
+            }]
+
+            commissionTransaction.forEach(e => {
+                pendingTransactions.push(e)
+            })
+
+        })
+    }
 
     return pendingTransactions;
 
