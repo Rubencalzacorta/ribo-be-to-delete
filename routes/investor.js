@@ -168,34 +168,7 @@ const investorCrud = (Model, extensionFn) => {
     })
 
 
-    router.delete('/management-fee/:managementFeeId', async (req, res, next) => {
-        let {
-            managementFeeId,
-        } = req.params
 
-        let MF = await ManagementFee.findById(managementFeeId)
-        console.log(MF)
-        try {
-            if (!MF) {
-                throw new Error('ManagementFee does not exist')
-            } else {
-                ManagementFee.findByIdAndDelete(managementFeeId)
-                    .then(async deletedItem => {
-                        let UF = await User.findById(deletedItem._investor)
-                        UF.managementFee.pull(deletedItem._id)
-                        UF.save()
-                    })
-                    .then(resp => {
-                        res.status(200).json({
-                            status: "success",
-                            data: resp
-                        })
-                    }).catch(e => next(e))
-            }
-        } catch (e) {
-            next(e)
-        }
-    })
 
     router.put('/type', async (req, res, next) => {
         let {

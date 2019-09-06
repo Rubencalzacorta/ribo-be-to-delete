@@ -35,6 +35,10 @@ const userSchema = new Schema({
     type: Boolean,
     default: false
   },
+  isSalesman: {
+    type: Boolean,
+    default: false
+  },
   isAutoInvesting: {
     type: Boolean,
     default: false

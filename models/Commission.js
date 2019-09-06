@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const salesPeopleSchema = new Schema({
+const commissionSchema = new Schema({
     _loan: {
         type: Schema.ObjectId,
         ref: 'Loan'
@@ -18,5 +18,5 @@ const salesPeopleSchema = new Schema({
     }
 });
 
-const SalesPeople = mongoose.model('SalesPeopleSchema', salesPeopleSchema);
-module.exports = SalesPeople;
+const Commission = mongoose.model('Commission', commissionSchema);
+module.exports = Commission;

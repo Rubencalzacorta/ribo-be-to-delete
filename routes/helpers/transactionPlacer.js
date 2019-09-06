@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const Loan = require('../../models/Loan')
 
-const transactionPlacer = (transactionDetails) => {
+const transactionPlacer = async (transactionDetails) => {
     pendingTransactions = []
     // console.log(transactionDetails)
     let {
@@ -15,11 +15,12 @@ const transactionPlacer = (transactionDetails) => {
         installment
     } = transactionDetails
     // console.log(investors)
-    loan = Loan.findById(_loan).populate('salesPeople')
-
+    loan = await Loan.findById(_loan).populate('commission')
+    console.log(loan)
     let {
-        salesPeople
+        commission
     } = loan
+
 
 
 
@@ -82,8 +83,8 @@ const transactionPlacer = (transactionDetails) => {
 
 
 
-            if (salesPeople) {
-                salesPeople.forEach(k => {
+            if (commission) {
+                commission.forEach(k => {
                     let commissionTransaction = [{
                         _loan: e._loan,
                         _investor: k._salesman,
@@ -92,7 +93,7 @@ const transactionPlacer = (transactionDetails) => {
                         cashAccount: cashAccount,
                         currency: currency,
                         concept: "COMMISSION",
-                        debit: interest_pmt * k.pct,
+                        debit: e.pct * interest_pmt * (j.pct) * k.pct,
                     }, {
                         _loan: e._loan,
                         _investor: j._managementAccount,
@@ -101,10 +102,13 @@ const transactionPlacer = (transactionDetails) => {
                         cashAccount: cashAccount,
                         currency: currency,
                         concept: "COMMISSION",
-                        credit: interest_pmt * k.pct,
+                        credit: e.pct * interest_pmt * (j.pct) * k.pct,
                     }]
-                    pendingTransactions.push(commissionTransaction)
-                    console.log(pendingTransactions, '4')
+
+                    commissionTransaction.forEach(e => {
+                        pendingTransactions.push(e)
+                    })
+
                 })
             }
         })

@@ -7,6 +7,7 @@ const moment = require('moment')
 const path = require('path');
 const LoanSchedule = require("../models/LoanSchedule")
 const Transaction = require("../models/Transaction")
+const Commission = require("../models/Commission")
 const Investment = require("../models/Investment")
 const Loan = require("../models/Loan")
 const User = require("../models/User")
@@ -66,7 +67,6 @@ router.post('/create/all-active-invest', (req, res, next) => {
         .then( async obj => {
             let loanId = obj._id
             investments = await investmentDistributor(Transaction, country, obj.capital, loanId, currency)
-            console.log('Investments: '+investments)
             investments.forEach(e => {
                 Investment.create(e)
                     .then((investment_x) => {
@@ -125,7 +125,7 @@ router.post('/create/all-active-invest', (req, res, next) => {
                 }
                 pendingTransactions.push(transaction)
             })
-            Transaction.insertMany(pendingTransactions).then(console.log)
+            Transaction.insertMany(pendingTransactions)
             return obj
         })
         .then(obj => {
@@ -217,21 +217,19 @@ router.patch('/installmentpmt/:id',(req,res,next) => {
         
     let notUsedPaths = ['_id','updated_at','created_at','__v'];
     let paths = Object.keys(LoanSchedule.schema.paths).filter(e => !notUsedPaths.includes(e));
-    console.log('aqui')
+
     const {id} = req.params;
     const { cashAccount, interest_pmt, principal_pmt, date_pmt, currency } = req.body.payment
     const object = _.pickBy(req.body.payment, (e,k) => paths.includes(k));
     const updates = _.pickBy(object, _.identity);
 
-    console.log(req.body.payment)
 
 
     LoanSchedule.findByIdAndUpdate(id, updates, {new:true})
         .then( obj => {
-            // console.log(obj)
             return Investment.find({_loan: obj._loan}).populate({path: '_investor', populate: {path: 'managementFee'}}).exec()
         })
-        .then( investments => {
+        .then( async investments => {
             let transactionDetails = {
                         investors: investments,
                         cashAccount: cashAccount,
@@ -243,34 +241,125 @@ router.patch('/installmentpmt/:id',(req,res,next) => {
                         installment: id,
             }
  
-            let pendingTransactions = transactionPlacer(transactionDetails)
+            let pendingTransactions = await transactionPlacer(transactionDetails)
             Transaction.insertMany(pendingTransactions)
             return pendingTransactions
         })
-        .then(async (pendingTransactions) => {
+        .then( () => {
 
-        // let totalAmount = await pendingTransactions.reduce((acc, {debit}) => { 
-        //     debit = debit ? debit : 0;
-        //     return acc + debit 
-        // },0)
-
-        // let totalCredit = await pendingTransactions.reduce((acc, {credit}) => { 
-        //     credit = credit ? credit : 0;
-        //     return acc + credit 
-        // },0)
-
-        
-
-        // console.log(totalAmount, totalCredit)
         res.status(200).json({
             status: 'success', 
-            message: 'Loan Payment and Distribution Recorded Successfully', 
-            // total: totalAmount,
-            data: pendingTransactions
+            message: 'Loan Payment and Distribution Recorded Successfully'
+            })
         })
-        })
+
         .catch(e => next(e))
 })
+
+router.post('/commission', async (req, res, next) => {
+
+    let {
+        _loan,
+        _salesmen,
+        pct
+    } = req.body
+
+    let CF = await Commission.findOne({
+        _loan: _loan,
+        _salesmen: _salesmen
+    })
+
+    try {
+        if (CF) {
+            throw new Error('Relationship already exist')
+        } else {
+            Commission.create({
+                _loan: mongoose.Types.ObjectId(_loan),
+                _salesman: mongoose.Types.ObjectId(_salesmen),
+                pct: pct
+            }).then(async commissionStructure => {
+                let L = await Loan.findById(_loan)
+                await L.commission.push(commissionStructure._id)
+                return L.save()
+            }).then(loan => {
+                res.status(200).json({
+                    status: "success",
+                    data: loan.commission
+                })
+            }).catch(e => next(e))
+        }
+    } catch (e) {
+        next(e)
+    }
+})
+
+router.get('/commission/salesmen', (req, res, next) => {
+    try {
+        User.find({isSalesman: true})
+            .then(resp => {
+                console.log(resp)
+                res.status(200).json({
+                    status: "success",
+                    data: resp
+                })
+            }).catch(e => console.log(e))
+    } catch (e) {
+        next(e)
+    }
+})
+
+router.get('/commission/:loanId', async (req, res, next) => {
+    let {
+        loanId,
+    } = req.params
+    try {
+
+        loan = await Loan.findById(loanId).populate({
+            path: 'commission',
+            populate: {
+                path: '_salesman'
+            }
+        })
+        res.status(200).json({
+            status: "success",
+            data: loan.commission
+        })
+
+    } catch (e) {
+        next(e)
+    }
+})
+
+router.delete('/commission/:commissionId', async (req, res, next) => {
+    let {
+        commissionId,
+    } = req.params
+    
+    let C = await Commission.findById(commissionId)
+
+    try {
+        if (!C) {
+            throw new Error('Commission does not exist')
+        } else {
+            Commission.findByIdAndDelete(commissionId)
+                .then(async deletedItem => {
+                    let L = await Loan.findById(deletedItem._loan)
+                    L.commission.pull(deletedItem._id)
+                    L.save()
+                })
+                .then(resp => {
+                    res.status(200).json({
+                        status: "success",
+                        data: resp
+                    })
+                })
+        }
+    } catch (e) {
+        next(e)
+    }
+})
+
+
 
 router.delete('/deletepmt/:id',(req,res,next) => {
         
@@ -341,7 +430,6 @@ router.get('/complete-details/:id', async (req,res,next) => {
     let Transactions = await Transaction.find({
         _loan: id
     }).populate('_investor', 'firstName lastName')
-    console.log(Transactions)
     Promise.all([Investors,LoanDetails,Transactions])
         .then( objList => 
             res.status(200).json
