@@ -297,7 +297,6 @@ router.get('/commission/salesmen', (req, res, next) => {
     try {
         User.find({isSalesman: true})
             .then(resp => {
-                console.log(resp)
                 res.status(200).json({
                     status: "success",
                     data: resp
