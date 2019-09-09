@@ -1,9 +1,15 @@
 const express = require('express');
 const _ = require('lodash')
 const router = express.Router();
+const {
+  investorDetails,
+  investorInvestmentsDetails
+} = require('./helpers/investorAggregates')
 const Transaction = require("../models/Transaction")
 const LoanSchedule = require("../models/LoanSchedule")
+
 var ObjectID = require('mongodb').ObjectID
+
 
 router.get('/totals', (req, res, next) => {
   Transaction.aggregate([{
@@ -141,42 +147,14 @@ router.get('/list/:id', async (req, res, next) => {
   let {
     id
   } = req.params
-  // console.log(id)
 
   investorDetails(id)
     .then(result => {
-      // console.log(result)
       res.status(200).json(result)
     })
     .catch(e => {
-      console.log(e)
       next(e)
     })
-  // Transaction.find({
-  //     '_investor': new ObjectID(id)
-  //   }, null, {
-  //     sort: {
-  //       date: 1
-  //     }
-  //   })
-  //   .populate({
-  //     path: '_loan',
-  //     populate: {
-  //       path: '_borrower'
-  //     }
-  //   })
-  //   .populate({
-  //     path: '_investor'
-  //   })
-  //   .then(async obj => {
-
-  //     return await investorDetails(obj)
-
-  //   }).then(obj => {
-
-  //     res.status(200).json(obj)
-  //   })
-  //   .catch(e => next(e))
 })
 
 
@@ -187,64 +165,12 @@ router.get('/loaninvestordetails/:id', (req, res, next) => {
   let {
     id
   } = req.params
-  let investor = new ObjectID(id)
-  Transaction.find({
-      '_investor': investor
-    }, null, {
-      sort: {
-        date: 1
-      }
-    })
-    .populate({
-      path: '_loan',
-      populate: {
-        path: '_borrower'
-      }
-    })
-    .populate({
-      path: '_investor'
-    })
-    .then(async baseData => {
 
-      let result = await Object.values(baseData.reduce((c, {
-        _loan,
-        concept,
-        credit,
-        debit
-      }) => {
-        if (!_loan) {
-          return c
-        } else {
-          c[_loan._id] = c[_loan._id] || {
-            loan: _loan._id,
-            amount: _loan.capital,
-            name: _loan._borrower.firstName + " " + _loan._borrower.lastName,
-            feeIncome: 0,
-            feeExpense: 0,
-            interest: 0,
-            capital: 0,
-            investment: 0,
-            ownership: 0
-          };
-          if (concept == 'FEE' && debit > 0) {
-            c[_loan._id].feeIncome += debit;
-          } else if (concept == 'FEE' && credit > 0) {
-            c[_loan._id].feeExpense += credit;
-          } else if (concept == 'INTEREST') {
-            c[_loan._id].interest += parseFloat(debit) - parseFloat(credit);
-          } else if (concept == 'CAPITAL') {
-            c[_loan._id].capital += parseFloat(debit) - parseFloat(credit);
-          } else if (concept == 'INVESTMENT') {
-            c[_loan._id].investment += parseFloat(debit) - parseFloat(credit);
-            c[_loan._id].ownership += -1 * (parseFloat(debit) - parseFloat(credit)) / c[_loan._id].amount;
-          }
-          return c;
-        }
-      }, {}));
-      return result
-    })
+  investorInvestmentsDetails(id)
     .then(result => res.status(200).json(result))
-    .catch(e => next(e))
+    .catch(e => {
+      return next(e)
+    })
 
 })
 
@@ -293,278 +219,5 @@ router.post('/', (req, res, next) => {
 })
 
 
-const transactionTypeTotal = async (id, type, concept) => {
-  let investor = new ObjectID(id)
-  let total = await Transaction.aggregate([{
-      '$match': {
-        '_investor': investor,
-        'concept': concept
-      }
-    }, {
-      '$group': {
-        '_id': null,
-        'total': {
-          '$sum': `$${type}`
-        }
-      }
-    },
-    {
-      '$project': {
-        '_id': 0,
-        'total': 1
-      }
-    }
-  ])
-  total = total.length > 0 ? total[0].total : 0
-  return total
-}
-
-const cashAvailableInvestor = async (id) => {
-  let total = await Transaction.aggregate([{
-    '$match': {
-      '_investor': new ObjectID(id)
-    }
-  }, {
-    '$group': {
-      '_id': null,
-      'total': {
-        '$sum': {
-          '$subtract': [
-            '$debit', '$credit'
-          ]
-        }
-      }
-    }
-  }, {
-    '$project': {
-      'total': 1,
-      '_id': 0
-    }
-  }])
-
-  total = total.length > 0 ? total[0].total : 0
-  return total
-}
-
-const investorTransactions = async (id) => {
-  return Transaction.find({
-      '_investor': new ObjectID(id)
-    }, null, {
-      sort: {
-        date: 1
-      }
-    })
-    .populate({
-      path: '_loan',
-      populate: {
-        path: '_borrower'
-      }
-    })
-    .populate({
-      path: '_investor'
-    })
-}
-const cashAccountTotals = async (id) => {
-  return Transaction.aggregate([{
-    '$match': {
-      '_investor': new ObjectID(id)
-    }
-  }, {
-    '$group': {
-      '_id': {
-        'cashAccount': '$cashAccount'
-      },
-      'total': {
-        '$sum': {
-          '$subtract': [
-            '$debit', '$credit'
-          ]
-        }
-      }
-    }
-  }, {
-    '$project': {
-      'cashAccount': '$_id.cashAccount',
-      'total': 1,
-      '_id': 0
-    }
-  }])
-}
-
-let investorDetails = async (id) => {
-  let transactions = await investorTransactions(id)
-  let paidBackCapital = await transactionTypeTotal(id, 'debit', 'CAPITAL')
-  let interestReceived = await transactionTypeTotal(id, 'debit', 'INTEREST')
-  let totalInvestments = await transactionTypeTotal(id, 'credit', 'INVESTMENT')
-  let totalCosts = await transactionTypeTotal(id, 'credit', 'COST')
-  let feeExpenses = await transactionTypeTotal(id, 'credit', 'FEE')
-  let feeIncome = await transactionTypeTotal(id, 'debit', 'FEE')
-  let totalDeposits = await transactionTypeTotal(id, 'debit', 'DEPOSIT')
-  let totalWithdrawals = await transactionTypeTotal(id, 'credit', 'WITHDRAWAL')
-  let cashAvailable = await cashAvailableInvestor(id)
-  let cashAccounts = await cashAccountTotals(id)
-
-
-  return Promise.all([transactions,
-    paidBackCapital,
-    interestReceived,
-    totalInvestments,
-    totalCosts,
-    feeExpenses,
-    feeIncome,
-    totalDeposits,
-    totalWithdrawals,
-    cashAvailable,
-    cashAccounts
-  ]).then(calc => {
-    console.log(calc)
-    return {
-
-      transactions: calc[0],
-      paidBackCapital: calc[1],
-      interestReceived: calc[2],
-      totalInvestments: calc[3],
-      totalCosts: calc[4],
-      feeExpenses: calc[5],
-      feeIncome: calc[6],
-      totalDeposits: calc[7],
-      totalWithdrawals: calc[8],
-      cashAvailable: calc[9],
-      cashAccounts: calc[10]
-    }
-  })
-}
-
-
-
-
-
-
-// const investorDetails = (transactions) => {
-
-//   let paidBackCapital = transactions.filter((e) => {
-//     return (e.concept === 'CAPITAL')
-//   }).reduce((acc, e) => {
-//     return acc + e.debit
-//   }, 0)
-
-//   let interestReceived = transactions.filter((e) => {
-//     return (e.concept === 'INTEREST')
-//   }).reduce((acc, e) => {
-//     return acc + e.debit
-//   }, 0)
-
-//   let feeExpenses = transactions.filter((e) => {
-//     return (e.concept === 'FEE')
-//   }).reduce((acc, e) => {
-//     return acc + e.credit
-//   }, 0)
-
-//   let feeIncome = transactions.filter((e) => {
-//     return (e.concept === 'FEE')
-//   }).reduce((acc, e) => {
-//     return acc + e.debit
-//   }, 0)
-
-//   let totalDeposits = transactions.filter((e) => {
-//     return (e.concept === 'DEPOSIT')
-//   }).reduce((acc, e) => {
-//     return acc + e.debit
-//   }, 0)
-
-//   let totalWithdrawals = transactions.filter((e) => {
-//     return (e.concept === 'WITHDRAWAL')
-//   }).reduce((acc, e) => {
-//     return acc + e.credit
-//   }, 0)
-
-//   let totalCosts = transactions.filter((e) => {
-//     return (e.concept === 'COST')
-//   }).reduce((acc, e) => {
-//     return acc + e.credit
-//   }, 0)
-
-//   let totalInvestments = transactions.filter((e) => {
-//     return (e.concept === 'INVESTMENT')
-//   }).reduce((acc, e) => {
-//     return acc + e.credit
-//   }, 0)
-
-//   const cashAccountReducer = (transactions) => {
-//     let accountList = []
-//     let totals = []
-
-//     _.map(_.uniqBy(transactions, 'cashAccount'), _.partial(_.pick, _, ['cashAccount'])).forEach(e => {
-//       accountList.push(e.cashAccount)
-//     })
-
-//     accountList.forEach(e => {
-//       let total = transactions.filter((j) => {
-//           return (j.cashAccount === e)
-//         })
-//         .reduce((acc, k) => {
-//           return acc + k.debit - k.credit
-//         }, 0)
-
-//       let cashAccountTotal = {
-//         cashAccount: e,
-//         total: total
-//       }
-//       totals.push(cashAccountTotal)
-//     })
-//     return totals
-//   }
-
-
-
-
-//   // const feesReducer = (transactions) => {
-//   //   let accountList = []
-//   //   let totals = []
-
-//   //   let fees = transactions.filter((e) => {
-//   //     return (e.concept === 'FEE')
-//   //   })
-
-
-
-//   //   _.map(_.uniqBy(fees, '_investor'), _.partial(_.pick, _, ['_investor'])).forEach(e => { accountList.push(e._investor.firstName) })
-
-
-//   //   accountList.forEach(e => {
-//   //     let total = fees.filter((j) => { return (j._investor.firstName === e) })
-//   //       .reduce((acc, k) => { return acc + k.debit - k.credit }, 0)
-
-//   //     let cashAccountTotal = { cashAccount: e, total: total }
-//   //     totals.push(cashAccountTotal)
-//   //   })
-//   //   return totals
-//   // }
-
-//   let totals = cashAccountReducer(transactions)
-
-//   let debitTotal = transactions.reduce((acc, e) => {
-//     return acc + e.debit
-//   }, 0)
-//   let creditTotal = transactions.reduce((acc, e) => {
-//     return acc + e.credit
-//   }, 0)
-
-//   return {
-//     transactions: transactions,
-//     paidBackCapital: paidBackCapital,
-//     interestReceived: interestReceived,
-//     totalInvestments: totalInvestments,
-//     totalCosts: totalCosts,
-//     feeExpenses: feeExpenses,
-//     feeIncome: feeIncome,
-//     totalDeposits: totalDeposits,
-//     totalWithdrawals: totalWithdrawals,
-//     debitTotal: debitTotal,
-//     creditTotal: creditTotal,
-//     cashAvailable: debitTotal - creditTotal,
-//     cashAccounts: totals
-//   }
-// }
 
 module.exports = router;
