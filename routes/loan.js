@@ -242,6 +242,7 @@ router.patch('/installmentpmt/:id',(req,res,next) => {
             }
  
             let pendingTransactions = await transactionPlacer(transactionDetails)
+            
             Transaction.insertMany(pendingTransactions)
             return pendingTransactions
         })
@@ -253,7 +254,9 @@ router.patch('/installmentpmt/:id',(req,res,next) => {
             })
         })
 
-        .catch(e => next(e))
+        .catch(e => {
+            console.log(e)
+            next(e)})
 })
 
 router.post('/commission', async (req, res, next) => {

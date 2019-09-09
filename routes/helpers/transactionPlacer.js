@@ -81,7 +81,34 @@ const transactionPlacer = async (transactionDetails) => {
 
             }
 
+            if (commission) {
+                commission.forEach(k => {
+                    let commissionTransaction = [{
+                        _loan: e._loan,
+                        _investor: k._salesman,
+                        _loanSchedule: mongoose.Types.ObjectId(installment),
+                        date: date_pmt,
+                        cashAccount: cashAccount,
+                        currency: currency,
+                        concept: "COMMISSION",
+                        debit: e.pct * j.pct * interest_pmt * k.pct,
+                    }, {
+                        _loan: e._loan,
+                        _investor: j._managementAccount,
+                        _loanSchedule: mongoose.Types.ObjectId(installment),
+                        date: date_pmt,
+                        cashAccount: cashAccount,
+                        currency: currency,
+                        concept: "COMMISSION",
+                        credit: e.pct * j.pct * interest_pmt * k.pct,
+                    }]
 
+                    commissionTransaction.forEach(e => {
+                        pendingTransactions.push(e)
+                    })
+
+                })
+            }
 
 
         })
@@ -99,36 +126,10 @@ const transactionPlacer = async (transactionDetails) => {
         pendingTransactions.push(principalTransaction)
 
 
+
     })
 
-    if (commission) {
-        commission.forEach(k => {
-            let commissionTransaction = [{
-                _loan: e._loan,
-                _investor: k._salesman,
-                _loanSchedule: mongoose.Types.ObjectId(installment),
-                date: date_pmt,
-                cashAccount: cashAccount,
-                currency: currency,
-                concept: "COMMISSION",
-                debit: interest_pmt * k.pct,
-            }, {
-                _loan: e._loan,
-                _investor: j._managementAccount,
-                _loanSchedule: mongoose.Types.ObjectId(installment),
-                date: date_pmt,
-                cashAccount: cashAccount,
-                currency: currency,
-                concept: "COMMISSION",
-                credit: interest_pmt * k.pct,
-            }]
 
-            commissionTransaction.forEach(e => {
-                pendingTransactions.push(e)
-            })
-
-        })
-    }
 
     return pendingTransactions;
 
