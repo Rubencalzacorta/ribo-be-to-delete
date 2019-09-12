@@ -214,8 +214,14 @@ router.get('/', (req, res, next) => {
 
 router.post('/', (req, res, next) => {
   Transaction.create(req.body)
-    .then(obj => res.status(200).json(obj))
-    .catch(e => next(e))
+    .then(obj => {
+      console.log(obj)
+      res.status(200).json(obj)
+    })
+    .catch(e => {
+      console.log(e)
+      next(e)
+    })
 })
 
 
