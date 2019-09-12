@@ -6,7 +6,12 @@ const Loan = require('../models/Loan')
 const ManagementFee = require('../models/ManagementFee')
 const Transaction = require('../models/Transaction')
 const Investment = require('../models/Investment')
-
+let {
+    investorCashDetails,
+    investorInvestmentDetails,
+    investorPLDetails,
+    investorCashMovements
+} = require('./helpers/investorAggregates')
 
 
 const investorCrud = (Model, extensionFn) => {
@@ -226,6 +231,42 @@ const investorCrud = (Model, extensionFn) => {
             })
             .then(objList => {
                 res.status(200).json(objList)
+            })
+            .catch(e => next(e))
+    })
+
+    router.get('/cash-details/:id', async (req, res, next) => {
+
+        investorCashDetails(req.params.id)
+            .then(obj => {
+                res.status(200).json(obj)
+            })
+            .catch(e => next(e))
+    })
+
+    router.get('/investment-details/:id', async (req, res, next) => {
+
+        investorInvestmentDetails(req.params.id)
+            .then(obj => {
+                res.status(200).json(obj)
+            })
+            .catch(e => next(e))
+    })
+
+    router.get('/pl/:id', async (req, res, next) => {
+
+        investorPLDetails(req.params.id)
+            .then(obj => {
+                res.status(200).json(obj)
+            })
+            .catch(e => next(e))
+    })
+
+    router.get('/cash-movements/:id', async (req, res, next) => {
+
+        investorCashMovements(req.params.id)
+            .then(obj => {
+                res.status(200).json(obj)
             })
             .catch(e => next(e))
     })

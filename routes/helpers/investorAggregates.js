@@ -297,6 +297,78 @@ const cashAccountTotals = async (id) => {
   }])
 }
 
+
+let investorCashDetails = async (id) => {
+  let cashAvailable = await cashAvailableInvestor(id)
+  let cashAccounts = await cashAccountTotals(id)
+
+  return Promise.all([cashAvailable, cashAccounts]).then(cashDetails => {
+    return {
+      cashAvailable: cashDetails[0],
+      cashAccounts: cashDetails[1],
+    }
+  })
+}
+
+let investorInvestmentDetails = async (id) => {
+  let totalInvestments = await transactionTypeTotal(id, 'credit', 'INVESTMENT')
+  let paidBackCapital = await transactionTypeTotal(id, 'debit', 'CAPITAL')
+  let divestments = await transactionTypeTotal(id, 'debit', 'DIVESTMENT')
+
+  return Promise.all([
+    totalInvestments,
+    paidBackCapital,
+    divestments
+  ]).then(investmentDetails => {
+    return {
+      totalInvestments: investmentDetails[0],
+      paidBackCapital: investmentDetails[1],
+      divestments: investmentDetails[2]
+    }
+  })
+}
+
+let investorPLDetails = async (id) => {
+
+  let interestReceived = await transactionTypeTotal(id, 'debit', 'INTEREST')
+  let totalCosts = await transactionTypeTotal(id, 'credit', 'COST')
+  let feeExpenses = await transactionTypeTotal(id, 'credit', 'FEE')
+  let feeIncome = await transactionTypeTotal(id, 'debit', 'FEE')
+
+  return Promise.all([
+    interestReceived,
+    totalCosts,
+    feeExpenses,
+    feeIncome
+  ]).then(PLDetails => {
+    return {
+      interestReceived: PLDetails[0],
+      totalCosts: PLDetails[1],
+      feeExpenses: PLDetails[2],
+      feeIncome: PLDetails[3]
+    }
+  })
+
+}
+
+let investorCashMovements = async (id) => {
+  let totalDeposits = await transactionTypeTotal(id, 'debit', 'DEPOSIT')
+  let totalWithdrawals = await transactionTypeTotal(id, 'credit', 'WITHDRAWAL')
+
+  return Promise.all([
+    totalDeposits,
+    totalWithdrawals,
+  ]).then(cashDetails => {
+    return {
+      totalDeposits: cashDetails[0],
+      totalWithdrawals: cashDetails[1],
+    }
+  })
+
+}
+
+
+
 let investorDetails = async (id) => {
   let transactions = await investorTransactions(id)
   let paidBackCapital = await transactionTypeTotal(id, 'debit', 'CAPITAL')
@@ -479,5 +551,9 @@ module.exports = {
   investorTransactions,
   cashAccountTotals,
   investorDetails,
-  investorInvestmentsDetails
+  investorInvestmentsDetails,
+  investorCashDetails,
+  investorInvestmentDetails,
+  investorPLDetails,
+  investorCashMovements
 }
