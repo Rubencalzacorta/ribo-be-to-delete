@@ -169,6 +169,7 @@ router.get('/loaninvestordetails/:id', (req, res, next) => {
   investorInvestmentsDetails(id)
     .then(result => res.status(200).json(result))
     .catch(e => {
+      console.log(e)
       return next(e)
     })
 
