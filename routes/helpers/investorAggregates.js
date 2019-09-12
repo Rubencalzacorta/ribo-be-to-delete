@@ -306,6 +306,7 @@ let investorDetails = async (id) => {
   let feeExpenses = await transactionTypeTotal(id, 'credit', 'FEE')
   let feeIncome = await transactionTypeTotal(id, 'debit', 'FEE')
   let totalDeposits = await transactionTypeTotal(id, 'debit', 'DEPOSIT')
+  let divestments = await transactionTypeTotal(id, 'debit', 'DIVESTMENT')
   let totalWithdrawals = await transactionTypeTotal(id, 'credit', 'WITHDRAWAL')
   let cashAvailable = await cashAvailableInvestor(id)
   let cashAccounts = await cashAccountTotals(id)
@@ -321,7 +322,8 @@ let investorDetails = async (id) => {
     totalDeposits,
     totalWithdrawals,
     cashAvailable,
-    cashAccounts
+    cashAccounts,
+    divestments
   ]).then(calc => {
     return {
       transactions: calc[0],
@@ -334,7 +336,8 @@ let investorDetails = async (id) => {
       totalDeposits: calc[7],
       totalWithdrawals: calc[8],
       cashAvailable: calc[9],
-      cashAccounts: calc[10]
+      cashAccounts: calc[10],
+      divestments: calc[11]
     }
   })
 }
@@ -382,6 +385,15 @@ const investorInvestmentsDetails = async (id) => {
               '$concept', 'INVESTMENT'
             ]
           }, '$credit', 0]
+        }
+      },
+      'divestment': {
+        '$sum': {
+          '$cond': [{
+            '$eq': [
+              '$concept', 'DIVESTMENT'
+            ]
+          }, '$debit', 0]
         }
       },
       'capital': {
@@ -446,9 +458,11 @@ const investorInvestmentsDetails = async (id) => {
       'capital': 1,
       'investment': 1,
       'ownership': {
-        '$divide': [
-          '$investment', '$amount'
-        ]
+        '$divide': [{
+          '$subtract': [
+            '$investment', '$divestment'
+          ]
+        }, '$amount']
       }
     }
   }])

@@ -18,6 +18,7 @@ const {
 const User = require("../models/User")
 const Loan = require("../models/Loan")
 const Transaction = require("../models/Transaction")
+const Investment = require("../models/Investment")
 var ObjectID = require('mongodb').ObjectID
 const moment = require('moment')
 
@@ -185,6 +186,229 @@ router.get('/portfolioAggregates', (req, res, next) => {
         .catch(e => next(e))
 })
 
+router.post('/julieta/update', async (req, res, next) => {
+    let jmpId = '5cb6cad93472683c4543c22a'
+    let gcpId = '5c8103cdcf81366c6c0f1338'
+    let gfpId = '5c8103dfcf81366c6c0f133a'
+
+    let newInvestors = [gcpId, gfpId]
+    findInvestments = async (id) => {
+        return await Investment.aggregate([{
+                '$match': {
+                    '_investor': new ObjectID(id)
+                }
+            }, {
+                '$lookup': {
+                    'from': 'loans',
+                    'localField': '_loan',
+                    'foreignField': '_id',
+                    'as': 'loan'
+                }
+            }, {
+                '$unwind': {
+                    'path': '$loan'
+                }
+            }, {
+                '$match': {
+                    'loan.status': 'OPEN'
+                }
+            }, {
+                '$project': {
+                    '_id': 1,
+                    '_loan': 1,
+                    '_investor': 1,
+                    'pct': 1,
+                    'amount': 1,
+                    'status': '$loan.status',
+                    'capitalRemaining': '$loan.capitalRemaining',
+                    'capital': '$loan.capital',
+                    'paidCapital': '$loan.totalPaid'
+                }
+            },
+            //  {
+            //     '$limit': 5
+            // }
+        ])
+    }
+
+
+
+
+    findInvestments(jmpId).then(async currentInvestments => {
+
+
+            let iAdj = await currentInvestments.map(e => {
+                return {
+                    amount: e.amount * 0.495667864232,
+                    pct: e.pct * 0.495667864232
+                }
+            })
+
+            let aAdj = await currentInvestments.map(e => {
+                return {
+                    amount: e.amount * (1 - 0.495667864232),
+                    pct: e.pct * (1 - 0.495667864232)
+                }
+            })
+
+            let currentTotalInv = currentInvestments.reduce((acc, e) => {
+                return acc + e.amount
+            }, 0)
+
+
+            let newTotalInvJ = iAdj.reduce((acc, e) => {
+                return acc + e.amount
+            }, 0)
+
+            let newTotalInvA = aAdj.reduce((acc, e) => {
+                return acc + e.amount
+            }, 0)
+
+            let adj = []
+            await currentInvestments.map(e => {
+                Investment.findByIdAndUpdate({
+                        _id: e._id
+                    }, {
+                        amount: e.amount * 0.495667864232,
+                        pct: e.pct * 0.495667864232
+                    }, {
+                        new: true
+                    })
+                    .then(e => adj.push(e))
+            })
+
+
+
+            let newInvestments = []
+            await newInvestors.forEach(async investor => {
+                await currentInvestments.forEach(investment => {
+                    let {
+                        _id,
+                        ...d
+                    } = investment
+
+                    let b = {
+                        ...d,
+                        _investor: investor,
+                        amount: d.amount * 0.25216606788,
+                        pct: d.pct * 0.25216606788
+                    }
+                    newInvestments.push(b)
+                })
+            })
+
+            // console.log(newInvestments)
+
+            let newInvTotal = newInvestments.reduce((acc, e) => {
+                return acc + e.amount
+            }, 0)
+
+            addNewInvestments = (newInvestments) => {
+                newInvestments.forEach(async e => {
+                    let NI = new Investment(e)
+                    NI.save().then(async savedInvestment => {
+
+                        let {
+                            _loan,
+                            _id,
+                            _investor
+                        } = savedInvestment
+
+                        await User.findByIdAndUpdate(_investor, {
+                            $push: {
+                                investments: _id
+                            }
+                        })
+                        await Loan.findByIdAndUpdate(_loan, {
+                            $push: {
+                                investors: _id
+                            }
+                        })
+                    })
+
+                })
+            }
+
+
+            await addNewInvestments(newInvestments)
+
+            let divestituresTx = await currentInvestments.map(e => {
+                return {
+                    _loan: e._loan,
+                    _investor: e._investor,
+                    date: new Date(2019, 09, 11, 00, 00, 00, 00),
+                    cashAccount: 'PLPERU',
+                    currency: 'USD',
+                    concept: 'DIVESTMENT',
+                    debit: e.capitalRemaining * e.pct * (1 - 0.495667864232),
+                }
+            })
+
+            let investmentTx = await newInvestments.map(e => {
+                return {
+                    _loan: e._loan,
+                    _investor: e._investor,
+                    date: new Date(2019, 09, 11, 16, 00, 00, 00),
+                    cashAccount: 'PLPERU',
+                    currency: 'USD',
+                    concept: 'INVESTMENT',
+                    credit: e.capitalRemaining * e.pct,
+                }
+            })
+
+
+            div = await Transaction.insertMany(divestituresTx) 
+            inv = await Transaction.insertMany(investmentTx)
+
+            let totalDivest = divestituresTx.reduce((acc, e) => {
+                return acc + e.debit
+            }, 0)
+
+            let totalInvest = investmentTx.reduce((acc, e) => {
+                return acc + e.credit
+            }, 0)
+            // let totalAfter = adj.reduce((acc, e) => {
+            //     return acc + e.amount
+            // }, 0)
+
+            // let totalNew = newInvestments.reduce((acc, e) => {
+            //     return acc + e.capitalRemaining
+            // }, 0)
+
+            return {
+                currentTotalInv,
+                newTotalInvJ,
+                newTotalInvA,
+                totalChanges: newTotalInvJ + newTotalInvA,
+                newInvTotal,
+                totalDivest,
+                totalInvest
+            }
+        }).then(
+            result => res.status(200).json({
+                result
+            })
+        )
+        .catch(e => {
+            console.log(e)
+            res.status(500).json(e.message)
+        })
+
+})
+
+
+function roundNumber(num, scale) {
+    if (!("" + num).includes("e")) {
+        return +(Math.round(num + "e+" + scale) + "e-" + scale);
+    } else {
+        var arr = ("" + num).split("e");
+        var sig = ""
+        if (+arr[1] + scale > 0) {
+            sig = "+";
+        }
+        return +(Math.round(+arr[0] + "e" + sig + (+arr[1] + scale)) + "e-" + scale);
+    }
+}
 router.get('/investorAggregates/:id', async (req, res, next) => {
     let {
         id
