@@ -3,7 +3,8 @@ const _ = require('lodash')
 const router = express.Router();
 const {
   investorDetails,
-  investorInvestmentsDetails
+  investorInvestmentsDetails,
+  investorTransactions
 } = require('./helpers/investorAggregates')
 const Transaction = require("../models/Transaction")
 const LoanSchedule = require("../models/LoanSchedule")
@@ -149,6 +150,34 @@ router.get('/list/:id', async (req, res, next) => {
   } = req.params
 
   investorDetails(id)
+    .then(result => {
+      res.status(200).json(result)
+    })
+    .catch(e => {
+      next(e)
+    })
+})
+
+router.get('/list/:id', async (req, res, next) => {
+  let {
+    id
+  } = req.params
+
+  investorDetails(id)
+    .then(result => {
+      res.status(200).json(result)
+    })
+    .catch(e => {
+      next(e)
+    })
+})
+
+router.get('/transaction-list/:id', async (req, res, next) => {
+  let {
+    id
+  } = req.params
+
+  investorTransactions(id)
     .then(result => {
       res.status(200).json(result)
     })

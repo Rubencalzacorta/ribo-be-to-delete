@@ -370,7 +370,6 @@ let investorCashMovements = async (id) => {
 
 
 let investorDetails = async (id) => {
-  let transactions = await investorTransactions(id)
   let paidBackCapital = await transactionTypeTotal(id, 'debit', 'CAPITAL')
   let interestReceived = await transactionTypeTotal(id, 'debit', 'INTEREST')
   let totalInvestments = await transactionTypeTotal(id, 'credit', 'INVESTMENT')
@@ -384,7 +383,7 @@ let investorDetails = async (id) => {
   let cashAccounts = await cashAccountTotals(id)
 
 
-  return Promise.all([transactions,
+  return Promise.all([
     paidBackCapital,
     interestReceived,
     totalInvestments,
@@ -398,18 +397,17 @@ let investorDetails = async (id) => {
     divestments
   ]).then(calc => {
     return {
-      transactions: calc[0],
-      paidBackCapital: calc[1],
-      interestReceived: calc[2],
-      totalInvestments: calc[3],
-      totalCosts: calc[4],
-      feeExpenses: calc[5],
-      feeIncome: calc[6],
-      totalDeposits: calc[7],
-      totalWithdrawals: calc[8],
-      cashAvailable: calc[9],
-      cashAccounts: calc[10],
-      divestments: calc[11]
+      paidBackCapital: calc[0],
+      interestReceived: calc[1],
+      totalInvestments: calc[2],
+      totalCosts: calc[3],
+      feeExpenses: calc[4],
+      feeIncome: calc[5],
+      totalDeposits: calc[6],
+      totalWithdrawals: calc[7],
+      cashAvailable: calc[8],
+      cashAccounts: calc[9],
+      divestments: calc[10]
     }
   })
 }
