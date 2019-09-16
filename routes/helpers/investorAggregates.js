@@ -199,12 +199,14 @@ investmentDistributor = async (Model, location, loanAmount, loanId, currency) =>
 }
 
 
-const transactionTypeTotal = async (id, type, concept) => {
+const transactionTypeTotal = async (id, type, concepts) => {
   let investor = new ObjectID(id)
   let total = await Transaction.aggregate([{
       '$match': {
         '_investor': investor,
-        'concept': concept
+        'concept': {
+          '$in': concepts
+        },
       }
     }, {
       '$group': {
@@ -311,9 +313,9 @@ let investorCashDetails = async (id) => {
 }
 
 let investorInvestmentDetails = async (id) => {
-  let totalInvestments = await transactionTypeTotal(id, 'credit', 'INVESTMENT')
-  let paidBackCapital = await transactionTypeTotal(id, 'debit', 'CAPITAL')
-  let divestments = await transactionTypeTotal(id, 'debit', 'DIVESTMENT')
+  let totalInvestments = await transactionTypeTotal(id, 'credit', ['INVESTMENT'])
+  let paidBackCapital = await transactionTypeTotal(id, 'debit', ['CAPITAL'])
+  let divestments = await transactionTypeTotal(id, 'debit', ['DIVESTMENT'])
 
   return Promise.all([
     totalInvestments,
@@ -330,10 +332,10 @@ let investorInvestmentDetails = async (id) => {
 
 let investorPLDetails = async (id) => {
 
-  let interestReceived = await transactionTypeTotal(id, 'debit', 'INTEREST')
-  let totalCosts = await transactionTypeTotal(id, 'credit', 'COST')
-  let feeExpenses = await transactionTypeTotal(id, 'credit', 'FEE')
-  let feeIncome = await transactionTypeTotal(id, 'debit', 'FEE')
+  let interestReceived = await transactionTypeTotal(id, 'debit', ['INTEREST'])
+  let totalCosts = await transactionTypeTotal(id, 'credit', ['COST'])
+  let feeExpenses = await transactionTypeTotal(id, 'credit', ['FEE', 'MANAGEMENT_INTEREST', 'MANAGEMENT_FEE', 'COMMISSION'])
+  let feeIncome = await transactionTypeTotal(id, 'debit', ['FEE', 'MANAGEMENT_INTEREST', 'MANAGEMENT_FEE', 'COMMISSION'])
 
   return Promise.all([
     interestReceived,
@@ -352,8 +354,8 @@ let investorPLDetails = async (id) => {
 }
 
 let investorCashMovements = async (id) => {
-  let totalDeposits = await transactionTypeTotal(id, 'debit', 'DEPOSIT')
-  let totalWithdrawals = await transactionTypeTotal(id, 'credit', 'WITHDRAWAL')
+  let totalDeposits = await transactionTypeTotal(id, 'debit', ['DEPOSIT'])
+  let totalWithdrawals = await transactionTypeTotal(id, 'credit', ['WITHDRAWAL'])
 
   return Promise.all([
     totalDeposits,
@@ -370,15 +372,15 @@ let investorCashMovements = async (id) => {
 
 
 let investorDetails = async (id) => {
-  let paidBackCapital = await transactionTypeTotal(id, 'debit', 'CAPITAL')
-  let interestReceived = await transactionTypeTotal(id, 'debit', 'INTEREST')
-  let totalInvestments = await transactionTypeTotal(id, 'credit', 'INVESTMENT')
-  let totalCosts = await transactionTypeTotal(id, 'credit', 'COST')
-  let feeExpenses = await transactionTypeTotal(id, 'credit', 'FEE')
-  let feeIncome = await transactionTypeTotal(id, 'debit', 'FEE')
-  let totalDeposits = await transactionTypeTotal(id, 'debit', 'DEPOSIT')
-  let divestments = await transactionTypeTotal(id, 'debit', 'DIVESTMENT')
-  let totalWithdrawals = await transactionTypeTotal(id, 'credit', 'WITHDRAWAL')
+  let paidBackCapital = await transactionTypeTotal(id, 'debit', ['CAPITAL'])
+  let interestReceived = await transactionTypeTotal(id, 'debit', ['INTEREST'])
+  let totalInvestments = await transactionTypeTotal(id, 'credit', ['INVESTMENT'])
+  let totalCosts = await transactionTypeTotal(id, 'credit', ['COST'])
+  let feeExpenses = await transactionTypeTotal(id, 'credit', ['FEE'])
+  let feeIncome = await transactionTypeTotal(id, 'debit', ['FEE'])
+  let totalDeposits = await transactionTypeTotal(id, 'debit', ['DEPOSIT'])
+  let divestments = await transactionTypeTotal(id, 'debit', ['DIVESTMENT'])
+  let totalWithdrawals = await transactionTypeTotal(id, 'credit', ['WITHDRAWAL'])
   let cashAvailable = await cashAvailableInvestor(id)
   let cashAccounts = await cashAccountTotals(id)
 
