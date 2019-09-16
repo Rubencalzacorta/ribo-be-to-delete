@@ -540,6 +540,263 @@ const investorInvestmentsDetails = async (id) => {
   }])
 }
 
+let investorInvestmentsSummary = (id) => {
+  return Investor.aggregate([{
+    '$match': {
+      '_investor': new ObjectID(id)
+    }
+  }, {
+    '$group': {
+      '_id': {
+        '_loan': '$_loan'
+      },
+      '_investor': {
+        '$first': '$_investor'
+      },
+      '_loan': {
+        '$first': '$_loan'
+      },
+      'amount': {
+        '$sum': '$amount'
+      },
+      'pct': {
+        '$sum': '$pct'
+      }
+    }
+  }, {
+    '$lookup': {
+      'from': 'transactions',
+      'let': {
+        'loan': '$_loan',
+        'investor': '$_investor'
+      },
+      'pipeline': [{
+        '$match': {
+          '$expr': {
+            '$and': [{
+              '$eq': [
+                '$_loan', '$$loan'
+              ]
+            }, {
+              '$eq': [
+                '$_investor', '$$investor'
+              ]
+            }]
+          }
+        }
+      }],
+      'as': 'transaction'
+    }
+  }, {
+    '$project': {
+      'investment': {
+        '$reduce': {
+          'input': '$transaction',
+          'initialValue': 0,
+          'in': {
+            '$sum': [
+              '$$value', {
+                '$cond': [{
+                  '$eq': [
+                    '$$this.concept', 'INVESTMENT'
+                  ]
+                }, '$$this.credit', 0]
+              }
+            ]
+          }
+        }
+      },
+      'divestment': {
+        '$reduce': {
+          'input': '$transaction',
+          'initialValue': 0,
+          'in': {
+            '$sum': [
+              '$$value', {
+                '$cond': [{
+                  '$eq': [
+                    '$$this.concept', 'DIVESTMENT'
+                  ]
+                }, '$$this.debit', 0]
+              }
+            ]
+          }
+        }
+      },
+      'interest': {
+        '$reduce': {
+          'input': '$transaction',
+          'initialValue': 0,
+          'in': {
+            '$sum': [
+              '$$value', {
+                '$cond': [{
+                  '$eq': [
+                    '$$this.concept', 'INTEREST'
+                  ]
+                }, '$$this.debit', 0]
+              }
+            ]
+          }
+        }
+      },
+      'capital': {
+        '$reduce': {
+          'input': '$transaction',
+          'initialValue': 0,
+          'in': {
+            '$sum': [
+              '$$value', {
+                '$cond': [{
+                  '$eq': [
+                    '$$this.concept', 'CAPITAL'
+                  ]
+                }, '$$this.debit', 0]
+              }
+            ]
+          }
+        }
+      },
+      'feeExpenses': {
+        '$reduce': {
+          'input': '$transaction',
+          'initialValue': 0,
+          'in': {
+            '$sum': [
+              '$$value', {
+                '$cond': [{
+                  '$eq': [
+                    '$$this.concept', 'FEE'
+                  ]
+                }, '$$this.credit', 0]
+              }
+            ]
+          }
+        }
+      },
+      'feeIncome': {
+        '$reduce': {
+          'input': '$transaction',
+          'initialValue': 0,
+          'in': {
+            '$sum': [
+              '$$value', {
+                '$cond': [{
+                  '$eq': [
+                    '$$this.concept', 'FEE'
+                  ]
+                }, '$$this.debit', 0]
+              }
+            ]
+          }
+        }
+      },
+      'managementFeeExpense': {
+        '$reduce': {
+          'input': '$transaction',
+          'initialValue': 0,
+          'in': {
+            '$sum': [
+              '$$value', {
+                '$cond': [{
+                  '$eq': [
+                    '$$this.concept', 'MANAGEMENT_FEE'
+                  ]
+                }, '$$this.credit', 0]
+              }
+            ]
+          }
+        }
+      },
+      'managementFeeIncome': {
+        '$reduce': {
+          'input': '$transaction',
+          'initialValue': 0,
+          'in': {
+            '$sum': [
+              '$$value', {
+                '$cond': [{
+                  '$eq': [
+                    '$$this.concept', 'MANAGEMENT_FEE'
+                  ]
+                }, '$$this.debit', 0]
+              }
+            ]
+          }
+        }
+      },
+      'managementInterestExpense': {
+        '$reduce': {
+          'input': '$transaction',
+          'initialValue': 0,
+          'in': {
+            '$sum': [
+              '$$value', {
+                '$cond': [{
+                  '$eq': [
+                    '$$this.concept', 'MANAGEMENT_INTEREST'
+                  ]
+                }, '$$this.credit', 0]
+              }
+            ]
+          }
+        }
+      },
+      'managementInterestIncome': {
+        '$reduce': {
+          'input': '$transaction',
+          'initialValue': 0,
+          'in': {
+            '$sum': [
+              '$$value', {
+                '$cond': [{
+                  '$eq': [
+                    '$$this.concept', 'MANAGEMENT_INTEREST'
+                  ]
+                }, '$$this.debit', 0]
+              }
+            ]
+          }
+        }
+      },
+      'commissionIncome': {
+        '$reduce': {
+          'input': '$transaction',
+          'initialValue': 0,
+          'in': {
+            '$sum': [
+              '$$value', {
+                '$cond': [{
+                  '$eq': [
+                    '$$this.concept', 'COMMISION'
+                  ]
+                }, '$$this.debit', 0]
+              }
+            ]
+          }
+        }
+      },
+      'commissionExpense': {
+        '$reduce': {
+          'input': '$transaction',
+          'initialValue': 0,
+          'in': {
+            '$sum': [
+              '$$value', {
+                '$cond': [{
+                  '$eq': [
+                    '$$this.concept', 'COMMISION'
+                  ]
+                }, '$$this.credit', 0]
+              }
+            ]
+          }
+        }
+      }
+    }
+  }])
+}
+
 module.exports = {
   conceptAggregates,
   accountTotalsByLocation,
@@ -555,5 +812,6 @@ module.exports = {
   investorCashDetails,
   investorInvestmentDetails,
   investorPLDetails,
-  investorCashMovements
+  investorCashMovements,
+  investorInvestmentsSummary
 }
