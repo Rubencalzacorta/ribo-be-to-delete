@@ -10,7 +10,8 @@ let {
     investorCashDetails,
     investorInvestmentDetails,
     investorPLDetails,
-    investorCashMovements
+    investorCashMovements,
+    investorInvestmentsSummary
 } = require('./helpers/investorAggregates')
 
 
@@ -270,6 +271,19 @@ const investorCrud = (Model, extensionFn) => {
             })
             .catch(e => next(e))
     })
+
+
+    // Investor details 
+
+    router.get('/investment-summary/:id', async (req, res, next) => {
+
+        investorInvestmentsSummary(req.params.id)
+            .then(obj => {
+                res.status(200).json(obj)
+            })
+            .catch(e => next(e))
+
+    });
 
     router.use((err, req, res, next) => {
         res.status(500).json({
