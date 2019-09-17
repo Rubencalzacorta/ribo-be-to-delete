@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const Transaction = require('../../models/Transaction')
+const Investment = require('../../models/Investment')
 var ObjectID = require('mongodb').ObjectID
 
 conceptAggregates = (concept, id) => {
@@ -540,8 +541,8 @@ const investorInvestmentsDetails = async (id) => {
   }])
 }
 
-let investorInvestmentsSummary = (id) => {
-  return Investor.aggregate([{
+let investorInvestmentsSummary = async (id) => {
+  return await Investment.aggregate([{
     '$match': {
       '_investor': new ObjectID(id)
     }
@@ -589,6 +590,9 @@ let investorInvestmentsSummary = (id) => {
     }
   }, {
     '$project': {
+      '_id': 0,
+      '_loan': '$_id._loan',
+      'pct': 1,
       'investment': {
         '$reduce': {
           'input': '$transaction',
@@ -793,6 +797,71 @@ let investorInvestmentsSummary = (id) => {
           }
         }
       }
+    }
+  }, {
+    '$lookup': {
+      'from': 'loans',
+      'localField': '_loan',
+      'foreignField': '_id',
+      'as': 'loan'
+    }
+  }, {
+    '$unwind': {
+      'path': '$loan'
+    }
+  }, {
+    '$project': {
+      '_loan': 1,
+      '_investor': 1,
+      'pct': 1,
+      'borrower': '$loan._borrower',
+      'status': '$loan.status',
+      'startDate': '$loan.startDate',
+      'investment': 1,
+      'divestment': 1,
+      'capital': 1,
+      'interest': 1,
+      'feeExpenses': 1,
+      'feeIncome': 1,
+      'managementFeeExpense': 1,
+      'managementFeeIncome': 1,
+      'commissionIncome': 1,
+      'commissionExpense': 1
+    }
+  }, {
+    '$lookup': {
+      'from': 'users',
+      'localField': 'borrower',
+      'foreignField': '_id',
+      'as': 'borrower'
+    }
+  }, {
+    '$unwind': {
+      'path': '$borrower'
+    }
+  }, {
+    '$project': {
+      '_loan': 1,
+      '_investor': 1,
+      'pct': 1,
+      'firstName': '$borrower.firstName',
+      'lastName': '$borrower.lastName',
+      'status': 1,
+      'startDate': 1,
+      'investment': 1,
+      'divestment': 1,
+      'capital': 1,
+      'interest': 1,
+      'feeExpenses': 1,
+      'feeIncome': 1,
+      'managementFeeExpense': 1,
+      'managementFeeIncome': 1,
+      'commissionIncome': 1,
+      'commissionExpense': 1
+    }
+  }, {
+    '$sort': {
+      'status': -1
     }
   }])
 }
