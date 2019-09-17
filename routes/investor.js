@@ -285,6 +285,20 @@ const investorCrud = (Model, extensionFn) => {
 
     });
 
+    router.post('/divestment-date', async (req, res, next) => {
+        Transaction.updateMany({
+                concept: 'DIVESTMENT'
+            }, {
+                $set: {
+                    date: new Date('2019-09-10')
+                }
+            }).then(obj => {
+                res.status(200).json(obj)
+            })
+            .catch(e => next(e))
+    })
+
+
     router.use((err, req, res, next) => {
         res.status(500).json({
             error: true,
