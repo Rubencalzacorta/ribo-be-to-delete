@@ -298,6 +298,21 @@ const investorCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
 
+    router.post('/accounts-rename', async (req, res, next) => {
+        Transaction.updateMany({
+                cashAccount: {
+                    $in: ['PLPERU', 'REMPERU']
+                }
+            }, {
+                $set: {
+                    cashAccount: 'RBPERU'
+                }
+            }).then(obj => {
+                res.status(200).json(obj)
+            })
+            .catch(e => next(e))
+    })
+
 
     router.use((err, req, res, next) => {
         res.status(500).json({

@@ -18,7 +18,7 @@ const transactionSchema = new Schema({
   date: Date,
   cashAccount: {
     type: String,
-    enum: ['PLPERU', 'REMPERU', 'GCUS', 'GFUS', 'GCDR']
+    enum: ['RBPERU', 'GCUS', 'GFUS', 'GCDR']
   },
   currency: {
     type: String,

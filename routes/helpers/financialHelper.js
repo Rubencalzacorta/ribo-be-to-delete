@@ -1,5 +1,5 @@
 let accounts = {
-    "PERU": ['REMPERU', 'PLPERU'],
+    "PERU": ['RBPERU'],
     "USA": ['GFUS', 'GCUS'],
     "DOMINICAN_REPUBLIC": ['GCDR']
 }
