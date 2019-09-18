@@ -61,38 +61,38 @@ conceptAggregates = (concept, id) => {
 }
 
 accountTotalsByLocation = (country) => {
-  return [{
+  return Transaction.aggregate([{
     '$project': {
       '_investor': 1,
       'cashAccount': 1,
       'debit': {
         '$divide': [{
             '$subtract': [{
-                '$multiply': ['$debit', 100]
+                '$multiply': ['$debit', 10000]
               },
               {
                 '$mod': [{
-                  '$multiply': ['$debit', 100]
+                  '$multiply': ['$debit', 10000]
                 }, 1]
               }
             ]
           },
-          100
+          10000
         ]
       },
       'credit': {
         '$divide': [{
             '$subtract': [{
-                '$multiply': ['$credit', 100]
+                '$multiply': ['$credit', 10000]
               },
               {
                 '$mod': [{
-                  '$multiply': ['$credit', 100]
+                  '$multiply': ['$credit', 10000]
                 }, 1]
               }
             ]
           },
-          100
+          10000
         ]
       }
     }
@@ -151,13 +151,13 @@ accountTotalsByLocation = (country) => {
         '$gt': 0
       }
     }
-  }]
+  }])
 }
 
 
 calculateTotalCashAvailable = (accTotals) => {
   return accTotals.reduce((acc, e) => {
-    return acc + e.total
+    return acc + parseInt(e.total)
   }, 0)
 }
 
@@ -173,8 +173,10 @@ calculateAccountPcts = (accs, totalCash) => {
 
 generateInvestments = (loanAmount, loanId, currency, investors) => {
   let investments = []
-
+  let a = 0
   investors.forEach(e => {
+    a += e.pct * loanAmount
+    console.log(e.pct, loanAmount, e.pct * loanAmount, a, e._investor)
     investments.push({
       _investor: e._investor,
       _loan: loanId,
@@ -189,15 +191,35 @@ generateInvestments = (loanAmount, loanId, currency, investors) => {
 
 }
 
-investmentDistributor = async (Model, location, loanAmount, loanId, currency) => {
-  let accounts = await Model.aggregate(accountTotalsByLocation(location))
+cashAvailabilityValidator = async (location, loanAmount, next) => {
+
+  let accounts = await accountTotalsByLocation(location)
+  let totalCashAvailable = await calculateTotalCashAvailable(accounts)
+
+  if (parseFloat(loanAmount) > totalCashAvailable) {
+    return {
+      status: false,
+      cash: totalCashAvailable
+    }
+  } else {
+    return {
+      status: true,
+      cash: totalCashAvailable
+    }
+  }
+}
+
+
+investmentDistributor = async (location, loanAmount, loanId, currency) => {
+  let accounts = await accountTotalsByLocation(location)
   let totalCashAvailable = await calculateTotalCashAvailable(accounts)
   let investors = await calculateAccountPcts(accounts, totalCashAvailable)
   let investments = await generateInvestments(loanAmount, loanId, currency, investors)
-
   return investments
 
 }
+
+
 
 
 const transactionTypeTotal = async (id, type, concepts) => {
@@ -876,6 +898,7 @@ module.exports = {
   cashAvailableInvestor,
   investorTransactions,
   cashAccountTotals,
+  cashAvailabilityValidator,
   investorDetails,
   investorInvestmentsDetails,
   investorCashDetails,

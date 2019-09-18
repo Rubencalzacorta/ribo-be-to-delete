@@ -1,3 +1,11 @@
+const mongoose = require('mongoose')
+const LoanSchedule = require('../../models/LoanSchedule')
+const Investment = require('../../models/Investment')
+const User = require('../../models/User')
+const Loan = require('../../models/Loan')
+const Transaction = require('../../models/Transaction')
+
+
 const loansTotalRemaining = (status) => {
   return [{
     '$match': {
@@ -57,6 +65,98 @@ const loansTotalCollateral = (status) => {
   }]
 }
 
+const scheduleRecorder = async (schedule, loanId, next) => {
+  try {
+    schedule.forEach(e => {
+      LoanSchedule.create(e)
+        .then((schedule_t) => {
+          Loan.findByIdAndUpdate(loanId, {
+            $push: {
+              loanSchedule: schedule_t._id
+            }
+          }, {
+            safe: true,
+            upsert: true
+          }).exec()
+        })
+    })
+  } catch (e) {
+    next(e)
+  }
+}
+
+const investmentsRecorder = async (investments, loanId, next) => {
+  try {
+    investments.forEach(e => {
+      Investment.create(e)
+        .then((investment_x) => {
+          User.findByIdAndUpdate(e._investor, {
+            $push: {
+              investments: investment_x._id
+            }
+          }, {
+            safe: true,
+            upsert: true
+          }).exec()
+          return investment_x
+        })
+        .then((investment_x) => {
+
+          Loan.findByIdAndUpdate(loanId, {
+            $push: {
+              investors: investment_x._id
+            }
+          }, {
+            safe: true,
+            upsert: true
+          }).exec()
+        })
+    })
+  } catch {
+    next(e)
+  }
+}
+
+const borrowerLoanRecorder = async (_borrower, loanId, next) => {
+  try {
+    User.findByIdAndUpdate(_borrower, {
+      $push: {
+        loans: loanId
+      }
+    }, {
+      safe: true,
+      upsert: true
+    }).exec()
+
+  } catch (e) {
+    next(e)
+  }
+}
+
+const transactionLoanRecorder = async (investments, loanDetails, currency, next) => {
+  try {
+    pendingTransactions = []
+    investments.forEach(e => {
+      console.log(e)
+      let credit = e.amount
+      let transaction = {
+        _loan: e._loan,
+        _investor: mongoose.Types.ObjectId(e._investor),
+        date: loanDetails.startDate,
+        cashAccount: e.cashAccount,
+        concept: 'INVESTMENT',
+        credit: credit,
+        currency: currency
+      }
+      pendingTransactions.push(transaction)
+    })
+    await Transaction.insertMany(pendingTransactions)
+  } catch (e) {
+    next(e)
+  }
+
+}
+
 
 const loanScheduleTotalsByStatus = (status) => {
   return [{
@@ -87,5 +187,9 @@ module.exports = {
   loansTotalPaid,
   loansTotalNominal,
   loansTotalCollateral,
-  loanScheduleTotalsByStatus
+  loanScheduleTotalsByStatus,
+  scheduleRecorder,
+  investmentsRecorder,
+  borrowerLoanRecorder,
+  transactionLoanRecorder
 }
