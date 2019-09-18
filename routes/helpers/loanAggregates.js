@@ -1,94 +1,85 @@
 const loansTotalRemaining = (status) => {
-    return [{
+  return [{
     '$match': {
-        'status': `${status}`
-      }
-    }, {
-      '$group': {
-        '_id': 'totals', 
-        'totalRemaining': {
-          '$sum': '$capitalRemaining'
-        }
+      'status': `${status}`
+    }
+  }, {
+    '$group': {
+      '_id': 'totals',
+      'totalRemaining': {
+        '$sum': '$capitalRemaining'
       }
     }
-  ]
+  }]
 }
 const loansTotalPaid = (status) => {
-    return [{
+  return [{
     '$match': {
-        'status': `${status}`
-      }
-    }, {
-      '$group': {
-        '_id': 'totals', 
-        'totalPaid': {
-            '$sum': '$totalPaid'
-          }, 
-      }
+      'status': `${status}`
     }
-  ]
+  }, {
+    '$group': {
+      '_id': 'totals',
+      'totalPaid': {
+        '$sum': '$totalPaid'
+      },
+    }
+  }]
 }
 
 const loansTotalNominal = (status) => {
-    return [{
+  return [{
     '$match': {
-        'status': `${status}`
-      }
-    }, {
-      '$group': {
-        '_id': 'totals', 
-        'totalNominal': {
-            '$sum': '$capital'
-          }
+      'status': `${status}`
+    }
+  }, {
+    '$group': {
+      '_id': 'totals',
+      'totalNominal': {
+        '$sum': '$capital'
       }
     }
-  ]
+  }]
 }
 
 const loansTotalCollateral = (status) => {
-    return [{
+  return [{
     '$match': {
-        'status': `${status}`
-      }
-    }, {
-      '$group': {
-        '_id': 'totals', 
-        'totalCollateral': {
-            '$sum': '$collateralValue'
-          }
+      'status': `${status}`
+    }
+  }, {
+    '$group': {
+      '_id': 'totals',
+      'totalCollateral': {
+        '$sum': '$collateralValue'
       }
     }
-  ]
+  }]
 }
 
 
-
-
-
 const loanScheduleTotalsByStatus = (status) => {
-  return [
-    {
-      '$match': {
-        'status': `${status}`
-      }
-    }, {
-      '$group': {
-        '_id': `${status} PAYMENTS`, 
-        'totalPayment': {
-          '$sum': '$payment'
-        }, 
-        'totalInterest': {
-          '$sum': '$interest'
-        }, 
-        'totalCapital': {
-          '$sum': '$principal'
-        }, 
-        'totalQuantity': {
-          '$sum': 1
-        }
+  return [{
+    '$match': {
+      'status': `${status}`
+    }
+  }, {
+    '$group': {
+      '_id': `${status} PAYMENTS`,
+      'totalPayment': {
+        '$sum': '$payment'
+      },
+      'totalInterest': {
+        '$sum': '$interest'
+      },
+      'totalCapital': {
+        '$sum': '$principal'
+      },
+      'totalQuantity': {
+        '$sum': 1
       }
     }
-  ]
+  }]
 }
 
 module.exports = {
