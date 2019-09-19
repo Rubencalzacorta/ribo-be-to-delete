@@ -1,5 +1,9 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const statusUpdater = require('./helpers/statusUpdater')
+
+const statuses = ['DISBURSTMENT', 'PENDING', 'DUE', 'OVERDUE', 'PAID', 'OUTSTANDING', 'CLOSED']
+const currencies = ['DOP', 'USD', 'PEN']
 
 const loanScheduleSchema = new Schema({
   _loan: {
@@ -7,30 +11,31 @@ const loanScheduleSchema = new Schema({
     ref: 'Loan'
   },
   date: Date,
+  date_pmt: Date,
   interest: Number,
-  principal: Number,
-  payment: Number,
-  balance: Number,
-  status: {
-    type: String,
-    enum: ['DISBURSTMENT', 'PENDING', 'DUE', 'OVERDUE', 'PAID', 'OUTSTANDING', 'CLOSED']
-  },
-  currency: {
-    type: String,
-    default: "USD",
-    enum: ['DOP', 'USD', 'PEN']
-  },
-  tracking: String,
-  cashAccount: String,
   interest_pmt: {
     type: Number,
     default: 0
   },
+  principal: Number,
   principal_pmt: {
     type: Number,
     default: 0
   },
-  date_pmt: Date
+  payment: Number,
+  balanceDue: Number,
+  balance: Number,
+  status: {
+    type: String,
+    enum: statuses
+  },
+  currency: {
+    type: String,
+    default: "USD",
+    enum: currencies
+  },
+  tracking: String,
+  cashAccount: String,
 }, {
   timestamps: {
     createdAt: 'created_at',
@@ -39,24 +44,28 @@ const loanScheduleSchema = new Schema({
 });
 
 loanScheduleSchema.post('findOneAndUpdate', function (result) {
-  const statusUpdater = require('./helpers/statusUpdater')
+  const {
+    statusUpdater
+  } = require('./helpers/statusUpdater')
   const Loan = require('./Loan')
 
   Loan.findById({
       _id: result._loan
     })
-    .then((obj) => {
-      Loan.findByIdAndUpdate(result._loan, statusUpdater(obj), {
+    .then(async (obj) => {
+      let updater = await statusUpdater(obj)
+      await Loan.findByIdAndUpdate(result._loan, updater, {
         safe: true,
         upsert: true,
         new: true
-      }).exec()
+      })
     })
-
 })
 
 loanScheduleSchema.post('findByIdAndUpdate', function (result) {
-  const statusUpdater = require('./helpers/statusUpdater')
+  const {
+    statusUpdater
+  } = require('./helpers/statusUpdater')
   const Loan = require('./Loan')
 
   Loan.findById({
