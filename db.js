@@ -32,7 +32,9 @@ db.on('disconnected', function () {
   console.log('MongoDB disconnected!');
   mongoose.connect(DBURL, {
     auto_reconnect: true,
-    useNewUrlParser: true
+    useNewUrlParser: true,
+    useFindAndModify: false
+
   });
 });
 
@@ -46,7 +48,8 @@ process.on('SIGINT', function () {
 
 mongoose.connect(DBURL, {
     auto_reconnect: true,
-    useNewUrlParser: true
+    useNewUrlParser: true,
+    useFindAndModify: false
   })
   .then(() => {
     console.log(`Connected to Mongo on ${DBURL}`)

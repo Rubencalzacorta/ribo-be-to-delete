@@ -25,7 +25,7 @@ const paymentCrud = (Model, extensionFn) => {
     })
 
     // CRUD: CREATE
-    router.post('/loan-schedule/:id', (req, res, next) => {
+    router.post('/installment/:id', (req, res, next) => {
         let {
             id
         } = req.params
@@ -108,6 +108,28 @@ const paymentCrud = (Model, extensionFn) => {
             })
             .catch(e => next(e))
     })
+
+    router.delete('/installment/:id', (req, res, next) => {
+        const {
+            id
+        } = req.params;
+
+        Model.findById(id)
+            .then(obj => obj.remove())
+            .then(obj => {
+                if (obj) {
+                    res.status(200).json({
+                        status: `Removed from db`,
+                        obj: obj
+                    });
+                } else {
+                    throw new Error("Not existing ID");
+                }
+            })
+            .catch(e => next(e))
+    })
+
+
 
     router.use((err, req, res, next) => {
         res.status(500).json({

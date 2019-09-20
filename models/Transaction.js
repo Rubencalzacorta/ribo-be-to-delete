@@ -15,6 +15,10 @@ const transactionSchema = new Schema({
     type: Schema.ObjectId,
     ref: 'loanSchedule'
   },
+  _payment: {
+    type: Schema.ObjectId,
+    ref: 'Payment'
+  },
   date: Date,
   cashAccount: {
     type: String,

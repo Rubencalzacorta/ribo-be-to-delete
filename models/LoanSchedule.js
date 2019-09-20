@@ -48,7 +48,6 @@ loanScheduleSchema.post('findOneAndUpdate', function (result) {
     statusUpdater
   } = require('./helpers/statusUpdater')
   const Loan = require('./Loan')
-
   Loan.findById({
       _id: result._loan
     })
@@ -67,7 +66,6 @@ loanScheduleSchema.post('findByIdAndUpdate', function (result) {
     statusUpdater
   } = require('./helpers/statusUpdater')
   const Loan = require('./Loan')
-
   Loan.findById({
       _id: result._loan
     })
