@@ -58,8 +58,12 @@ const loanCrud = (Model, extensionFn) => {
             currency,
         } = loanInitDetails
 
+        if (country === 'VENEZUELA') {
+            country = 'USA'
+        }
+
         
-        await cashAvailabilityValidator(country, loanDetails.capital,)
+        await cashAvailabilityValidator(country, loanDetails.capital)
             .then(obj => {
                 try {
                     if (obj.status === false) {
