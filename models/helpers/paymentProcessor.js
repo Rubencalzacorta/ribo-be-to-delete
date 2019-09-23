@@ -34,7 +34,7 @@ const interestDistributor = (details) => {
 const capitalTx = (txDetails, investor) => {
     return {
         _loan: txDetails._loan,
-        _investor: investor._id,
+        _investor: investor._investor._id,
         _loanSchedule: txDetails._loanSchedule,
         _payment: txDetails._payment,
         date: txDetails.date,
