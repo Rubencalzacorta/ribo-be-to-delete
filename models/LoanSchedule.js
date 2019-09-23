@@ -47,6 +47,18 @@ const loanScheduleSchema = new Schema({
   }
 });
 
+
+var autoPopulatePayment = function (next) {
+  this.populate('payments');
+  next();
+};
+
+loanScheduleSchema
+  .pre('findOne', autoPopulatePayment)
+  .pre('find', autoPopulatePayment)
+  .pre('findByIdAndUpdate', autoPopulatePayment);
+
+
 loanScheduleSchema.post('findOneAndUpdate', function (result) {
   const {
     statusUpdater
