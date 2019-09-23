@@ -5,8 +5,8 @@ const {
     intAndCapCalc
 } = require("./helpers/statusUpdater");
 const {
-    capitalDistributor,
-    managementFeeCharge
+    txPlacer,
+    txDelete
 } = require("./helpers/paymentProcessor");
 const LoanSchedule = require("./LoanSchedule");
 const Investment = require("./Investment");
@@ -45,7 +45,7 @@ paymentSchema.post("save", function (result) {
 
         let loanSchedule = await LoanSchedule.findById(result._loanSchedule);
         let amountPaid = await amountPaidReducer(payments)
-        let scheduleUpdate = await loanInstallmentUpdate(amountPaid, loanSchedule, result._loanSchedule)
+        await loanInstallmentUpdate(amountPaid, loanSchedule, result._loanSchedule)
         let investors = await Investment.find({
             _loan: result._loan
         }).populate({
@@ -55,31 +55,13 @@ paymentSchema.post("save", function (result) {
             }
         })
 
-        let IandK = await intAndCapCalc(loanSchedule, result.amount)
         let loan = await Loan.findById(result._loan)
+        let IandK = await intAndCapCalc(loanSchedule, result.amount)
 
+        txPlacer(result, investors, loan, IandK)
+            .then(resp => console.log(`status: success, txs_inserted: ${resp.length}`))
+            .catch(e => console.log(`status: failed, error: ${e}`))
 
-        capitalDistributorDetails = {
-            _loan: result._loan,
-            _loanSchedule: result._loanSchedule,
-            investors: investors,
-            _payment: result._id,
-            date: result.date_pmt,
-            cashAccount: result.cashAccount,
-            currency: loan.currency,
-            amount: IandK.principalPayment
-        }
-
-        capitalDistributor(capitalDistributorDetails)
-        managementFeeCharge(capitalDistributorDetails, IandK.interestPayment)
-
-        const results = {
-            amountPaid: amountPaid,
-            loanSchedule: loanSchedule,
-            scheduleUpdate,
-            loan,
-            IandK
-        };
 
     });
 });
@@ -97,7 +79,9 @@ paymentSchema.post('remove', function (result) {
         let amountPaid = await amountPaidReducer(payments)
         let scheduleUpdate = await loanInstallmentUpdate(amountPaid, loanSchedule, result._loanSchedule)
         let IandK = await intAndCapCalc(loanSchedule, result.amount)
-        let loan = await Loan.findById(result._loan)
+        await Loan.findById(result._loan)
+
+        txDelete(result._id).then(response => console.log(`status: success, elements_deleted: ${response.deletedCount}`))
 
         const results = {
             amountPaid: amountPaid,
