@@ -25,6 +25,10 @@ const loanScheduleSchema = new Schema({
   payment: Number,
   balanceDue: Number,
   balance: Number,
+  payments: [{
+    type: Schema.ObjectId,
+    ref: 'Payment'
+  }],
   status: {
     type: String,
     enum: statuses

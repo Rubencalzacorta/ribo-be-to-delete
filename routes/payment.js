@@ -36,7 +36,6 @@ const paymentCrud = (Model, extensionFn) => {
         console.group('Payment placer details')
         Model.create(object)
             .then(obj => {
-
                 return res.status(200).json({
                     status: "success",
                     response: obj

@@ -42,10 +42,9 @@ paymentSchema.post("save", function (result) {
     Payment.find({
         _loanSchedule: result._loanSchedule
     }).then(async payments => {
-
         let loanSchedule = await LoanSchedule.findById(result._loanSchedule);
         let amountPaid = await amountPaidReducer(payments)
-        await loanInstallmentUpdate(amountPaid, loanSchedule, result._loanSchedule)
+        await loanInstallmentPaymentUpdate(amountPaid, loanSchedule, result._loanSchedule, result._id)
         let investors = await Investment.find({
             _loan: result._loan
         }).populate({
@@ -74,10 +73,9 @@ paymentSchema.post('remove', function (result) {
     Payment.find({
         _loanSchedule: result._loanSchedule
     }).then(async payments => {
-
         let loanSchedule = await LoanSchedule.findById(result._loanSchedule);
         let amountPaid = await amountPaidReducer(payments)
-        let scheduleUpdate = await loanInstallmentUpdate(amountPaid, loanSchedule, result._loanSchedule)
+        let scheduleUpdate = await loanInstallmentDeleteUpdate(amountPaid, loanSchedule, result._loanSchedule, result._id)
         let IandK = await intAndCapCalc(loanSchedule, result.amount)
         await Loan.findById(result._loan)
 
@@ -100,11 +98,15 @@ const amountPaidReducer = async (payments) => {
     }, 0);
 }
 
-const loanInstallmentUpdate = async (amountPaid, loanSchedule, id) => {
-
+const loanInstallmentPaymentUpdate = async (amountPaid, loanSchedule, id, payments) => {
     let update = await loanScheduleUpdater(amountPaid, loanSchedule)
 
-    return await LoanSchedule.findByIdAndUpdate(id, update, {
+    return await LoanSchedule.findByIdAndUpdate(id, {
+            $set: update,
+            $push: {
+                payments
+            }
+        }, {
             new: true,
             safe: true,
             upsert: true
@@ -113,6 +115,25 @@ const loanInstallmentUpdate = async (amountPaid, loanSchedule, id) => {
             `status: updated loan schedule payments, amount paid ${update.interest_pmt+update.principal_pmt}`
         ))
 }
+
+
+const loanInstallmentDeleteUpdate = async (amountPaid, loanSchedule, id, payments) => {
+    let update = await loanScheduleUpdater(amountPaid, loanSchedule)
+    return await LoanSchedule.findByIdAndUpdate(id, {
+            $set: update,
+            $pull: {
+                payments
+            }
+        }, {
+            new: true,
+            safe: true,
+            upsert: true
+        })
+        .then(console.log(
+            `status: updated loan schedule payments, amount paid ${update.interest_pmt+update.principal_pmt}`
+        ))
+}
+
 
 const Payment = mongoose.model("Payment", paymentSchema);
 module.exports = Payment;

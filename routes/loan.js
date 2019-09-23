@@ -396,6 +396,7 @@ const loanCrud = (Model, extensionFn) => {
                 ({
                     investors: objList[0],
                     details: objList[1],
+                    payments: objList[1].payments,
                     transactions: objList[2]
                 }))
             .catch(e => next(e))
