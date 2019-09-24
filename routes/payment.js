@@ -32,7 +32,6 @@ const paymentCrud = (Model, extensionFn) => {
 
 
         const object = _.pickBy(req.body, (e, k) => paths.includes(k));
-        // console.log(object)
         console.group('Payment placer details')
         Model.create(object)
             .then(obj => {
@@ -43,20 +42,6 @@ const paymentCrud = (Model, extensionFn) => {
             })
             .catch(e => next(e))
 
-        // LoanSchedule.findById(object._loanSchedule)
-        //     .then(loanSchedule => {
-        //         res.status(200).json({
-        //             status: "success",
-        //             response: {
-        //                 payment: object,
-        //                 loanSchedule: loanSchedule
-        //             }
-        //         })
-        //     })
-        //     .catch(e => next(e))
-
-
-        // ).catch(e => next(e))
     })
 
 

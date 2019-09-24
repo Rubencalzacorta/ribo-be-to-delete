@@ -43,15 +43,16 @@ let statusValidator = async (totalPaid, capital) => {
 }
 
 const loanScheduleUpdater = (amountPaid, loanSchedule) => {
-
+  console.log(loanSchedule)
   let {
     principal,
     interest,
-    status
+    status,
+    date
   } = loanSchedule
 
   let initialBalance = principal + interest
-
+  console.log(amountPaid)
   if (amountPaid >= initialBalance) {
     principal_pmt = principal
     interest_pmt = amountPaid - principal
@@ -61,10 +62,14 @@ const loanScheduleUpdater = (amountPaid, loanSchedule) => {
     if (amountPaid < principal) {
       principal_pmt = amountPaid
       interest_pmt = 0
+
     } else if (amountPaid >= principal) {
       principal_pmt = principal
       interest_pmt = amountPaid - principal
     }
+
+    status = statusSetter(date)
+
     balanceDue = initialBalance - amountPaid
   }
 
@@ -72,10 +77,26 @@ const loanScheduleUpdater = (amountPaid, loanSchedule) => {
     status,
     principal_pmt,
     interest_pmt,
-    balanceDue
+    balanceDue,
   }
 }
 
+const statusSetter = (date) => {
+  todayDate = new Date()
+
+  if (date > todayDate) {
+    return 'PENDING'
+  } else if (dateDiff(todayDate, date) >= 7) {
+    return 'OVERDUE'
+  } else if (dateDiff(todayDate, date) < 7 && dateDiff(todayDate, date) > 0) {
+    return 'DUE'
+  }
+}
+
+const dateDiff = (date1, date2) => {
+  const diffTime = Math.abs(date2 - date1);
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+}
 
 const intAndCapCalc = (loanSchedule, paymentAmount) => {
 

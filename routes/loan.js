@@ -9,6 +9,7 @@ const LoanSchedule = require("../models/LoanSchedule")
 const Transaction = require("../models/Transaction")
 const Commission = require("../models/Commission")
 const Investment = require("../models/Investment")
+const Payment = require("../models/Payment")
 const Loan = require("../models/Loan")
 const User = require("../models/User")
 const transactionPlacer = require('./helpers/transactionPlacer')
@@ -352,6 +353,7 @@ const loanCrud = (Model, extensionFn) => {
             }})
         .then( (updates) => { LoanSchedule.findByIdAndUpdate(id, updates, {new:true}).exec()})
         .then( async () => { await Transaction.deleteMany({_loanSchedule: mongoose.Types.ObjectId(id)})})
+        .then( async () => { await Payment.deleteMany({_loanSchedule: mongoose.Types.ObjectId(id)})})
         .then( () => res.status(200).json({status: "Success", message: "Removed Successfully"}))
         .catch(e => next(e))
     })
@@ -392,13 +394,13 @@ const loanCrud = (Model, extensionFn) => {
         }).populate('_investor', 'firstName lastName')
 
         Promise.all([Investors,LoanDetails,Transactions])
-            .then( objList => 
+            .then( objList => {
                  res.status(200).json
                 ({
                     investors: objList[0],
                     details: objList[1],
                     transactions: objList[2]
-                }))
+                })})
             .catch(e => next(e))
     })
 
@@ -779,6 +781,7 @@ router.get('/all-loans/list', async (req, res, next) => {
     })
 
     router.use((err, req, res, next) => {
+        console.log(err.message)
         res.status(500).json({
             error: true,
             message: err.message

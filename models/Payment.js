@@ -42,6 +42,7 @@ paymentSchema.post("save", function (result) {
     Payment.find({
         _loanSchedule: result._loanSchedule
     }).then(async payments => {
+        console.log(payments)
         let loanSchedule = await LoanSchedule.findById(result._loanSchedule);
         let amountPaid = await amountPaidReducer(payments)
         await loanInstallmentPaymentUpdate(amountPaid, loanSchedule, result._loanSchedule, result._id)
@@ -100,7 +101,7 @@ const amountPaidReducer = async (payments) => {
 
 const loanInstallmentPaymentUpdate = async (amountPaid, loanSchedule, id, payments) => {
     let update = await loanScheduleUpdater(amountPaid, loanSchedule)
-
+    console.log(update)
     return await LoanSchedule.findByIdAndUpdate(id, {
             $set: update,
             $push: {
@@ -119,6 +120,7 @@ const loanInstallmentPaymentUpdate = async (amountPaid, loanSchedule, id, paymen
 
 const loanInstallmentDeleteUpdate = async (amountPaid, loanSchedule, id, payments) => {
     let update = await loanScheduleUpdater(amountPaid, loanSchedule)
+    console.log(update)
     return await LoanSchedule.findByIdAndUpdate(id, {
             $set: update,
             $pull: {
