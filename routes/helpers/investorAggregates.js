@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const Transaction = require('../../models/Transaction')
 const Investment = require('../../models/Investment')
+const User = require('../../models/User')
 var ObjectID = require('mongodb').ObjectID
 
 conceptAggregates = (concept, id) => {
@@ -150,6 +151,20 @@ accountTotalsByLocation = (country) => {
       'total': {
         '$gt': 0
       }
+    }
+  }])
+}
+
+
+investorsAutoInvesting = async (location) => {
+  return await User.aggregate([{
+    '$match': {
+      'isAutoInvesting': true,
+      'location': location
+    }
+  }, {
+    '$project': {
+      '_id': 1
     }
   }])
 }

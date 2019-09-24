@@ -9,6 +9,7 @@ const LoanSchedule = require("../models/LoanSchedule")
 const Transaction = require("../models/Transaction")
 const Commission = require("../models/Commission")
 const Investment = require("../models/Investment")
+const Payment = require("../models/Payment")
 const Loan = require("../models/Loan")
 const User = require("../models/User")
 const transactionPlacer = require('./helpers/transactionPlacer')
@@ -178,7 +179,8 @@ const loanCrud = (Model, extensionFn) => {
             
         let notUsedPaths = ['_id','updated_at','created_at','__v'];
         let paths = Object.keys(LoanSchedule.schema.paths).filter(e => !notUsedPaths.includes(e));
-
+        console.log(req.body)
+        console.log(req.params)
         const {id} = req.params;
         const { cashAccount, interest_pmt, principal_pmt, date_pmt, currency } = req.body.payment
         const object = _.pickBy(req.body.payment, (e,k) => paths.includes(k));
@@ -355,6 +357,7 @@ const loanCrud = (Model, extensionFn) => {
             }})
         .then( (updates) => { LoanSchedule.findByIdAndUpdate(id, updates, {new:true}).exec()})
         .then( async () => { await Transaction.deleteMany({_loanSchedule: mongoose.Types.ObjectId(id)})})
+        .then( async () => { await Payment.deleteMany({_loanSchedule: mongoose.Types.ObjectId(id)})})
         .then( () => res.status(200).json({status: "Success", message: "Removed Successfully"}))
         .catch(e => next(e))
     })
@@ -388,19 +391,20 @@ const loanCrud = (Model, extensionFn) => {
     router.get('/complete-details/:id', async (req,res,next) => {
         let { id } = req.params
 
-        let Investors = await Investment.find({_loan: id}).populate('_investor')
+        let Investors = await Investment.find({_loan: id}).populate('_investor', 'firstName lastName fullName amount pct ')
         let LoanDetails = await Loan.findById(id)
         let Transactions = await Transaction.find({
             _loan: id
         }).populate('_investor', 'firstName lastName')
+
         Promise.all([Investors,LoanDetails,Transactions])
-            .then( objList => 
-                res.status(200).json
+            .then( objList => {
+                 res.status(200).json
                 ({
                     investors: objList[0],
                     details: objList[1],
                     transactions: objList[2]
-                }))
+                })})
             .catch(e => next(e))
     })
 
@@ -609,15 +613,47 @@ router.patch('/update-investor-auto', async (req, res, next) => {
 
 router.patch('/payment-fix', async (req, res, next) => {
     arr = []
-    items = await LoanSchedule.find({}).select({"_id": 1, "interest": 1, "principal": 1})
-    Promise.all([items])
-        .then( items => {
-            items[0].forEach( async e => {
-                let update = parseFloat(e.interest)+parseFloat(e.principal)
-                await LoanSchedule.findByIdAndUpdate(e._id, {payment: update}, {new: true})
-                .then(console.log)
-        }).catch(e => console.log(e))
-})})
+    items = await LoanSchedule.find({}).select({
+        "_id": 1,
+        "interest": 1,
+        "principal": 1,
+        "interest_pmt": 1,
+        "principal_pmt": 1
+    })
+
+
+    await items.forEach( async e => {
+        let update = parseFloat(e.interest) + parseFloat(e.principal)
+
+        let balanceDue = parseFloat(e.interest) +
+            parseFloat(e.principal) -
+            parseFloat(e.interest_pmt) -
+            parseFloat(e.principal_pmt)
+        if (balanceDue < 0) {
+            balanceDue = 0
+        }
+
+        op = LoanSchedule.findByIdAndUpdate(e._id, {
+            payment: update,
+            balanceDue: balanceDue
+        }, {
+            new: true
+        })
+
+        arr.push(op)
+    })
+
+    Promise.all(arr)
+        .then( obj => {
+        res.status(200).json({
+            docs: obj.length,
+            doc1000: obj[1000],
+            done: 'done'
+            })}
+        )
+        .catch(e => console.log(e))
+ 
+})
 
 
 router.get('/all-loans/list', async (req, res, next) => {
@@ -749,6 +785,7 @@ router.get('/all-loans/list', async (req, res, next) => {
     })
 
     router.use((err, req, res, next) => {
+        console.log(err.message)
         res.status(500).json({
             error: true,
             message: err.message
