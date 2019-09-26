@@ -75,7 +75,7 @@ router.post('/signup', (req, res, next) => {
             lastName
           });
 
-          let body = makeBody(email, 'prestamo@ribocapital.com', 'RIBO - confirmación de cuenta', html)
+          let body = makeBody(email, 'prestamo@ribocapital.com', 'RIBO - confirmacion de cuenta', html)
           let sendMessage1 = sendMessage(body)
           gmailSender(sendMessage1)
           return savedUser

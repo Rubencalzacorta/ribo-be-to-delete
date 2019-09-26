@@ -43,7 +43,7 @@ let statusValidator = async (totalPaid, capital) => {
 }
 
 const loanScheduleUpdater = (amountPaid, loanSchedule) => {
-  console.log(loanSchedule)
+
   let {
     principal,
     interest,
@@ -52,7 +52,7 @@ const loanScheduleUpdater = (amountPaid, loanSchedule) => {
   } = loanSchedule
 
   let initialBalance = principal + interest
-  console.log(amountPaid)
+
   if (amountPaid >= initialBalance) {
     principal_pmt = principal
     interest_pmt = amountPaid - principal
