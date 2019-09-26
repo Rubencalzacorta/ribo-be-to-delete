@@ -363,7 +363,7 @@
          '$match': {
              'cashAccount': cashAccount,
              'concept': {
-                 '$ne': 'FEE'
+                 '$nin': ['FEE', 'MANAGEMENT_FEE', 'MANAGEMENT_INTEREST']
              }
          }
      }, {
@@ -375,6 +375,7 @@
              'debit': 1,
              'credit': 1,
              'concept': 1,
+             'date_pmt': 1,
              'date': 1,
              '_loan': 1,
              '_loanSchedule': 1,
@@ -396,6 +397,9 @@
              },
              'date': {
                  '$first': '$date'
+             },
+             'date_pmt': {
+                 '$first': '$date_pmt'
              },
              '_investor': {
                  '$first': '$_investor'
