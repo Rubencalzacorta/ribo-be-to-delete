@@ -49,7 +49,14 @@ const loanScheduleSchema = new Schema({
 
 
 var autoPopulatePayment = function (next) {
-  this.populate('payments');
+  this.populate({
+    path: 'payments',
+    options: {
+      sort: {
+        'date_pmt': 1
+      }
+    }
+  });
   next();
 };
 
