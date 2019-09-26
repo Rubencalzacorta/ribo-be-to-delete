@@ -363,7 +363,7 @@
          '$match': {
              'cashAccount': cashAccount,
              'concept': {
-                 '$nin': ['FEE', 'MANAGEMENT_FEE', 'MANAGEMENT_INTEREST']
+                 '$nin': ['FEE', 'MANAGEMENT_FEE']
              }
          }
      }, {
