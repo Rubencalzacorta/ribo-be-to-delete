@@ -53,7 +53,7 @@ const loanScheduleUpdater = (amountPaid, loanSchedule) => {
 
   let initialBalance = principal + interest
 
-  if (amountPaid >= initialBalance) {
+  if (amountPaid >= initialBalance - 0.5) {
     principal_pmt = principal
     interest_pmt = amountPaid - principal
     balanceDue = 0
