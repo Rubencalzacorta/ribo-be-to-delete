@@ -611,6 +611,181 @@ router.patch('/update-investor-auto', async (req, res, next) => {
 })
 
 
+router.patch('/status-fix', async (req, res, next) => {
+    
+    Loan.find({
+        // _id: '5cbfa4a310da3800174e33a7'
+    })
+    .then( Loans => {
+        let arr = []
+        Loans.forEach( async loan => { 
+            let update = await loanUpdater(loan)
+            arr.push(update)
+        })
+        return arr
+    })
+    .then( obj => { res.status(200).json({status: 'done', obj})})
+    .catch( e => res.status(500).json(e))
+})
+
+const loanUpdater = async (loan) => {
+    let {
+        loanSchedule,
+        capital,
+    } = loan
+
+    let totalPaidLs = await loanSchedule.reduce((acc, j) => {
+        return parseFloat(j.principal_pmt) + acc
+    }, 0)
+
+
+    if (totalPaidLs > (capital - 0.5)) {
+
+        return await Loan.findByIdAndUpdate(loan._id, {
+            status: 'CLOSED',
+            totalPaid: totalPaidLs,
+            capitalRemaining: 0
+        }, {
+            safe: true,
+            upsert: true,
+            new: true
+        }).then( async () => {
+            await loanSchedule.forEach(async schedule => {
+                let newStatus = await loanScheduleUpdater(schedule, 'CLOSED')
+                await LoanSchedule.findByIdAndUpdate(schedule._id, {
+                    status: newStatus.status
+                }, {
+                    safe: true,
+                    upsert: true,
+                    new: true
+                })
+                // .then(() => console.log(`UPDATING STATUS TO ${newStatus.status}`))
+            })
+        }).then(() => {
+            return {
+            id: loan._id,
+            status: 'updated to closed status'
+        }
+        })
+        // .then(console.log('CLOSING'))
+
+    } else {
+
+        return await Loan.findByIdAndUpdate(loan._id, {
+            totalPaid: totalPaidLs,
+            capitalRemaining: (capital - totalPaidLs),
+            status: 'OPEN'
+        }, {
+            safe: true,
+            upsert: true,
+            new: true
+        }).then( async () => {
+            await await loanSchedule.forEach(async schedule => {
+                let newStatus = await loanScheduleUpdater(schedule, 'OPEN')
+                await LoanSchedule.findByIdAndUpdate(schedule._id, {
+                    status: newStatus.status
+                }, {
+                    safe: true,
+                    upsert: true,
+                    new: true
+                })
+                // .then(() =>  console.log(`UPDATING STATUS TO ${newStatus.status}`))
+            })
+        }).then( () => {
+            return {
+                id: loan._id,
+                status: 'updated to open status'
+            }
+        })
+        // .then(() => console.log('OPENING'))
+
+    }
+}
+
+
+router.patch('/schedule/fix', (req, res, next) => {
+    Loan.find({})
+    .then( LS => {
+        arr = []
+        LS.forEach( l => {
+            if (l.status === 'OPEN'){
+                l.loanSchedule.forEach( async S => {
+                        let newStatus = await loanScheduleUpdater(S)
+                        console.log(newStatus)
+                        await LoanSchedule.findByIdAndUpdate(S._id, {status: newStatus.status})
+                        
+                    })
+            } 
+
+            // if (l.status === 'CLOSED'){
+            //     l.loanSchedule.forEach(async S => {
+            //         await LoanSchedule.findByIdAndUpdate(S._id, {
+            //             status: 'CLOSED'
+            //         }).then(() => {
+            //             console.log('UPDATING SCHEDULE STATUS')
+            //         })
+            //     })
+            // }
+        })
+        return arr
+    })
+    .then(obj => {
+        res.status(200).json({
+            status: 'done',
+            obj
+        })
+    })
+    .catch(e => res.status(500).json(e))
+})
+
+
+const loanScheduleUpdater = (loanSchedule, loanStatus) => {
+
+  let {
+    principal,
+    interest,
+    status,
+    date,
+    payment,
+    balanceDue
+  } = loanSchedule
+
+  if (payment === 0 ) {
+    status = 'DISBURSTMENT'
+  } else if (loanStatus === 'CLOSED') {
+    status = 'PAID'
+  } else if (balanceDue < 1 && principal > 0 && loanStatus !== 'CLOSED')  {
+    status = "PAID"
+  }  else if (balanceDue === (principal+interest) && loanStatus !== 'CLOSED') {
+    status = statusSetter(date)
+  } else if (balanceDue >= 1 && loanStatus !== 'CLOSED') {
+      status = "OUTSTANDING"
+  }
+
+  return {
+    status
+  }
+
+}
+
+const dateDiff = (date1, date2) => {
+    const diffTime = Math.abs(date2 - date1);
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+}
+
+const statusSetter = (date) => {
+    todayDate = new Date()
+
+    if (date > todayDate) {
+        return 'PENDING'
+    } else if (dateDiff(todayDate, date) >= 7) {
+        return 'OVERDUE'
+    } else if (dateDiff(todayDate, date) < 7 && dateDiff(todayDate, date) > 0) {
+        return 'DUE'
+    }
+}
+
+
 router.patch('/payment-fix', async (req, res, next) => {
     arr = []
     items = await LoanSchedule.find({}).select({
@@ -629,18 +804,30 @@ router.patch('/payment-fix', async (req, res, next) => {
             parseFloat(e.principal) -
             parseFloat(e.interest_pmt) -
             parseFloat(e.principal_pmt)
-        if (balanceDue < 0) {
+        if (balanceDue < 1 ) {
             balanceDue = 0
+            status = 'PAID'
+            let op = await LoanSchedule.findByIdAndUpdate(e._id, {
+            payment: update,
+            balanceDue: balanceDue,
+            status
+            }, {
+            new: true
+            })
+            arr.push(op)
+        } else {
+            let op = await LoanSchedule.findByIdAndUpdate(e._id, {
+                payment: update,
+                balanceDue: balanceDue
+            }, {
+                new: true
+            })
+        arr.push(op)
         }
 
-        op = LoanSchedule.findByIdAndUpdate(e._id, {
-            payment: update,
-            balanceDue: balanceDue
-        }, {
-            new: true
-        })
+    
 
-        arr.push(op)
+        
     })
 
     Promise.all(arr)

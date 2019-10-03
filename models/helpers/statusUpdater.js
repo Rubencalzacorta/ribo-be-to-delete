@@ -62,14 +62,13 @@ const loanScheduleUpdater = (amountPaid, loanSchedule) => {
     if (amountPaid < principal) {
       principal_pmt = amountPaid
       interest_pmt = 0
-
+      // status = "OUTSTANDING"
     } else if (amountPaid >= principal) {
       principal_pmt = principal
       interest_pmt = amountPaid - principal
     }
-
-    status = statusSetter(date)
-
+    // status = statusSetter(date)
+    status = "OUTSTANDING"
     balanceDue = initialBalance - amountPaid
   }
 
