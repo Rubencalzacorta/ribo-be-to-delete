@@ -72,6 +72,10 @@ const loanScheduleUpdater = (amountPaid, loanSchedule) => {
     balanceDue = initialBalance - amountPaid
   }
 
+  if (amountPaid === 0) {
+    status = statusSetter(date)
+  }
+
   return {
     status,
     principal_pmt,
