@@ -780,7 +780,7 @@ const statusSetter = (date) => {
         return 'PENDING'
     } else if (dateDiff(todayDate, date) >= 7) {
         return 'OVERDUE'
-    } else if (dateDiff(todayDate, date) < 7 && dateDiff(todayDate, date) > 0) {
+    } else if (dateDiff(todayDate, date) < 14 && dateDiff(todayDate, date) > 0) {
         return 'DUE'
     }
 }
