@@ -564,10 +564,10 @@ router.get('/portfolio-status/:country/:fromDate/:toDate', async (req, res, next
                 },
                 outstanding: {
                     interest: objList[4].reduce((acc, e) => {
-                        return acc + e.interest
+                        return acc + (e.interest-e.interest_pmt)
                     }, 0),
                     principal: objList[4].reduce((acc, e) => {
-                        return acc + e.principal
+                        return acc + (e.principal - e.principal_pmt)
                     }, 0),
                     interest_pmt: objList[4].reduce((acc, e) => {
                         return acc + e.interest_pmt
