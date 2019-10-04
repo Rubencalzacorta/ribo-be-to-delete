@@ -639,7 +639,7 @@ const loanUpdater = async (loan) => {
     }, 0)
 
 
-    if (totalPaidLs > (capital - 0.5)) {
+    if (totalPaidLs > (capital - 1)) {
 
         return await Loan.findByIdAndUpdate(loan._id, {
             status: 'CLOSED',
@@ -754,9 +754,9 @@ const loanScheduleUpdater = (loanSchedule, loanStatus) => {
     status = 'DISBURSTMENT'
   } else if (loanStatus === 'CLOSED') {
     status = 'PAID'
-  } else if (balanceDue < 1 && principal > 0 && loanStatus !== 'CLOSED')  {
+  } else if (balanceDue < 1 && loanStatus !== 'CLOSED')  {
     status = "PAID"
-  }  else if (balanceDue === (principal+interest) && loanStatus !== 'CLOSED') {
+  }  else if (balanceDue === payment && loanStatus !== 'CLOSED') {
     status = statusSetter(date)
   } else if (balanceDue >= 1 && loanStatus !== 'CLOSED') {
       status = "OUTSTANDING"
@@ -769,19 +769,20 @@ const loanScheduleUpdater = (loanSchedule, loanStatus) => {
 }
 
 const dateDiff = (date1, date2) => {
-    const diffTime = Math.abs(date2 - date1);
+    const diffTime = date2 - date1;
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
 const statusSetter = (date) => {
     todayDate = new Date()
+    
 
-    if (date > todayDate) {
+    if (dateDiff(todayDate, date) >= 14) {
         return 'PENDING'
-    } else if (dateDiff(todayDate, date) >= 7) {
-        return 'OVERDUE'
-    } else if (dateDiff(todayDate, date) < 14 && dateDiff(todayDate, date) > 0) {
+    } else if (dateDiff(todayDate, date) < 7 && dateDiff(todayDate, date) > -7) {
         return 'DUE'
+    } else if (dateDiff(todayDate, date) < -7) {
+        return 'OVERDUE'
     }
 }
 
