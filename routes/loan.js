@@ -23,6 +23,7 @@ const { loanSelector } = require('./helpers/loanSchedule')
 const {investmentDistributor,
        cashAvailabilityValidator} =require('./helpers/investorAggregates')
 const {
+    countryOutstandingQuery,
     countryPaidQuery,
     countryAllLoansQuery,
     countryDueQuery,
@@ -30,7 +31,8 @@ const {
     allLoansQuery,
     paidQuery,
     dueQuery,
-    overdueQuery
+    overdueQuery,
+    outstandingQuery
 } = require('./helpers/aggregates')
 
 
@@ -496,23 +498,25 @@ router.get('/schedule/:startDate/:endDate/:country', (req,res,next) => {
 router.get('/portfolio-status/:country/:fromDate/:toDate', async (req, res, next) => {
     
     let { country, fromDate, toDate} = req.params
-    let allLoansSearch, paidQuerySearch, dueQuerySearch, overdueQuerySearch
+    let allLoansSearch, paidQuerySearch, dueQuerySearch, overdueQuerySearch, outstandingQuerySearch
     let startOfMonth = moment().startOf('month')
     let endOfMonth = moment().endOf('month')
     
     if (country === 'WORLD') {
         allLoansSearch = await LoanSchedule.aggregate(allLoansQuery(fromDate, toDate))
         paidQuerySearch = await LoanSchedule.aggregate(paidQuery(startOfMonth, endOfMonth))
+        outstandingQuerySearch = await LoanSchedule.aggregate(outstandingQuery(startOfMonth, endOfMonth))
         dueQuerySearch = await LoanSchedule.aggregate(dueQuery(fromDate, toDate))
         overdueQuerySearch = await LoanSchedule.aggregate(overdueQuery())
     } else {
         allLoansSearch = await LoanSchedule.aggregate(countryAllLoansQuery(country, fromDate, toDate))
         paidQuerySearch = await LoanSchedule.aggregate(countryPaidQuery(country, startOfMonth, endOfMonth))
+        outstandingQuerySearch = await LoanSchedule.aggregate(countryOutstandingQuery(country, startOfMonth, endOfMonth))
         dueQuerySearch = await LoanSchedule.aggregate(countryDueQuery(country,fromDate, toDate))
         overdueQuerySearch = await LoanSchedule.aggregate(countryOverdueQuery(country))
     }
     
-    Promise.all([allLoansSearch, paidQuerySearch, dueQuerySearch, overdueQuerySearch])
+    Promise.all([allLoansSearch, paidQuerySearch, dueQuerySearch, overdueQuerySearch, outstandingQuerySearch])
         .then( objList => {
 
             let unique1 = objList[0].map( e => {return (e._id).toString()})
@@ -557,6 +561,22 @@ router.get('/portfolio-status/:country/:fromDate/:toDate', async (req, res, next
                     principal_pmt: objList[3].reduce( (acc, e) =>  {return acc + (e.principal_pmt ? e.principal_pmt : 0 )},0),
                     numberOfInstallments: objList[3].length,
                     installments: objList[3]
+                },
+                outstanding: {
+                    interest: objList[4].reduce((acc, e) => {
+                        return acc + e.interest
+                    }, 0),
+                    principal: objList[4].reduce((acc, e) => {
+                        return acc + e.principal
+                    }, 0),
+                    interest_pmt: objList[4].reduce((acc, e) => {
+                        return acc + e.interest_pmt
+                    }, 0),
+                    principal_pmt: objList[4].reduce((acc, e) => {
+                        return acc + (e.principal_pmt ? e.principal_pmt : 0)
+                    }, 0),
+                    numberOfInstallments: objList[4].length,
+                    installments: objList[4]
                 }
             }
             return periodDetails

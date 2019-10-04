@@ -87,7 +87,6 @@ app.use(favicon(path.join(__dirname, 'public', 'images', 'favicon.ico')));
 app.locals.title = 'Express - Generated with IronGenerator';
 
 const authRouter = require('./routes/auth');
-const loanRouter = require('./routes/loan');
 const summaryRouter = require('./routes/summary');
 const transactionRouter = require('./routes/transaction');
 const genericCrud = require('./routes/genericCRUD');
@@ -98,7 +97,7 @@ const paymentCrud = require('./routes/payment')
 const financialsRouter = require('./routes/financials');
 
 app.use('/api/auth', authRouter);
-app.use('/api/test/loan', loanCrud(require('./models/Loan')));
+app.use('/api/loan', loanCrud(require('./models/Loan')));
 app.use('/api/test/transaction', transactionRouter);
 app.use('/api/test/summary', summaryRouter);
 app.use('/api/payment', paymentCrud(require('./models/Payment')));
