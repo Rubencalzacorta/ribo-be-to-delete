@@ -93,6 +93,7 @@ const genericCrud = require('./routes/genericCRUD');
 const companyCrud = require('./routes/company');
 const investorCrud = require('./routes/investor');
 const loanCrud = require('./routes/loan');
+const collateralCrud = require('./routes/collateral');
 const paymentCrud = require('./routes/payment')
 const financialsRouter = require('./routes/financials');
 
@@ -101,6 +102,7 @@ app.use('/api/loan', loanCrud(require('./models/Loan')));
 app.use('/api/test/transaction', transactionRouter);
 app.use('/api/test/summary', summaryRouter);
 app.use('/api/payment', paymentCrud(require('./models/Payment')));
+app.use('/api/collateral', collateralCrud(require('./models/Collateral')));
 app.use('/api/company', companyCrud(require('./models/Company')));
 app.use('/api/investor', investorCrud(require('./models/User')));
 app.use('/api/financials', financialsRouter(require('./models/Transaction')));
