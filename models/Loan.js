@@ -21,6 +21,10 @@ const loanSchema = new Schema({
     type: Schema.ObjectId,
     ref: 'Commission'
   }],
+  collateral: [{
+    type: Schema.ObjectId,
+    ref: 'Collateral'
+  }],
   collateralType: String,
   collateralValue: Number,
   collateralDescription: String,
