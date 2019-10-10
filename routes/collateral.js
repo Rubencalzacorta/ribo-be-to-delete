@@ -1,16 +1,18 @@
 const express = require('express');
 const _ = require('lodash');
+const mongoose = require('mongoose')
 
 const collateralCrud = (Model, extensionFn) => {
 
     let router = express.Router();
-
+    console.log(extensionFn)
     let notUsedPaths = ['_id', 'updated_at', 'created_at', '__v'];
     let paths = Object.keys(Model.schema.paths).filter(e => !notUsedPaths.includes(e));
 
     if (extensionFn) {
         router = extensionFn(router);
     }
+
 
     router.get('/', (req, res, next) => {
 
@@ -33,9 +35,10 @@ const collateralCrud = (Model, extensionFn) => {
 
         const object = _.pickBy(req.body, (e, k) => paths.includes(k));
 
-        console.log(`Creating new collateral for loan ${req.body.loanId}`)
+        console.log(`Creating collateral for loan ${req.body.loanId}`)
 
-        Model.create(object)
+        let newCollateral = new Model(object)
+        newCollateral.save()
             .then(obj => {
                 return res.status(200).json({
                     status: "success",
@@ -89,11 +92,16 @@ const collateralCrud = (Model, extensionFn) => {
     })
 
     // CRUD: DELETE
-    router.delete('/:id', (req, res, next) => {
+    router.delete('/', (req, res, next) => {
         const {
-            id
-        } = req.params;
-        Model.findByIdAndRemove(id)
+            collateralIds
+        } = req.body;
+
+        Model.deleteMany({
+                _id: {
+                    $in: collateralIds.map(mongoose.Types.ObjectId)
+                }
+            })
             .then(obj => {
                 if (obj) {
                     res.status(200).json({

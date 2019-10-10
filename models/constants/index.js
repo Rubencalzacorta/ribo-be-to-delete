@@ -5,7 +5,8 @@ module.exports.collateralTypes = [
     'investments',
     'machinaryAndEquipment',
     'valuablesAndColletibles',
-    'electronicItems'
+    'electronicItems',
+    'employmentBenefits'
 ]
 
 module.exports.currentStatus = [
@@ -28,4 +29,24 @@ module.exports.condition = [
     'good',
     'fair',
     'demaged'
+]
+
+module.exports.loanControlStatus = [
+    "inReview",
+    "approved",
+    "denied",
+    "open",
+    "terminated",
+    "paid",
+    "canceled",
+]
+
+module.exports.loanPaymentStatus = [
+    "late",
+    "late30",
+    "late60",
+    "late90",
+    "current",
+    "defaulted",
+    "chargedOff",
 ]
