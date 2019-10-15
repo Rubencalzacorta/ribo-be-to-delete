@@ -23,8 +23,9 @@ const collateralCrud = (Model, extensionFn) => {
     })
 
     router.get('/:id', (req, res, next) => {
-
-        Model.findById(req.params.id)
+        Model.find({
+                _loan: req.params.id
+            })
             .then(obj => res.status(200).json(obj))
             .catch(e => next(e))
     })
@@ -32,10 +33,11 @@ const collateralCrud = (Model, extensionFn) => {
     // CRUD: CREATE
 
     router.post('/', (req, res, next) => {
-
+        console.log('aqui')
+        console.log(req.body)
         const object = _.pickBy(req.body, (e, k) => paths.includes(k));
-
-        console.log(`Creating collateral for loan ${req.body.loanId}`)
+        console.log(object)
+        console.log(`Creating collateral for loan ${req.body._loan}`)
 
         let newCollateral = new Model(object)
         newCollateral.save()
@@ -115,6 +117,7 @@ const collateralCrud = (Model, extensionFn) => {
     })
 
     router.use((err, req, res, next) => {
+        console.log(err.message)
         res.status(500).json({
             error: true,
             message: err.message
