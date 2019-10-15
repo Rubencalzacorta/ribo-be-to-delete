@@ -11,6 +11,7 @@ const path = require('path');
 const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
 const cors = require('cors');
+const sslRedirect = require('heroku-ssl-redirect');
 
 const app_name = require('./package.json').name;
 const debug = require('debug')(`${app_name}:${path.basename(__filename).split('.')[0]}`);
@@ -51,7 +52,7 @@ app.use(bodyParser.urlencoded({
   extended: false
 }));
 app.use(cookieParser());
-
+app.use(sslRedirect())
 // Express View engine setup
 
 app.use(require('node-sass-middleware')({
