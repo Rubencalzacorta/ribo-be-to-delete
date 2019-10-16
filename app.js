@@ -11,6 +11,7 @@ const path = require('path');
 const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
 const cors = require('cors');
+const sslRedirect = require('heroku-ssl-redirect');
 
 const app_name = require('./package.json').name;
 const debug = require('debug')(`${app_name}:${path.basename(__filename).split('.')[0]}`);
@@ -51,7 +52,7 @@ app.use(bodyParser.urlencoded({
   extended: false
 }));
 app.use(cookieParser());
-
+app.use(sslRedirect())
 // Express View engine setup
 
 app.use(require('node-sass-middleware')({
@@ -93,6 +94,7 @@ const genericCrud = require('./routes/genericCRUD');
 const companyCrud = require('./routes/company');
 const investorCrud = require('./routes/investor');
 const loanCrud = require('./routes/loan');
+const collateralCrud = require('./routes/collateral');
 const paymentCrud = require('./routes/payment')
 const financialsRouter = require('./routes/financials');
 
@@ -101,6 +103,7 @@ app.use('/api/loan', loanCrud(require('./models/Loan')));
 app.use('/api/test/transaction', transactionRouter);
 app.use('/api/test/summary', summaryRouter);
 app.use('/api/payment', paymentCrud(require('./models/Payment')));
+app.use('/api/collateral', collateralCrud(require('./models/Collateral')));
 app.use('/api/company', companyCrud(require('./models/Company')));
 app.use('/api/investor', investorCrud(require('./models/User')));
 app.use('/api/financials', financialsRouter(require('./models/Transaction')));

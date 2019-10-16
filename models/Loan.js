@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const constants = require('./constants')
 const LoanSchedule = require('./LoanSchedule')
 const Investment = require('./Investment')
 const User = require('./User')
@@ -20,6 +21,32 @@ const loanSchema = new Schema({
   commission: [{
     type: Schema.ObjectId,
     ref: 'Commission'
+  }],
+  collateral: [{
+    type: Schema.ObjectId,
+    ref: 'Collateral'
+  }],
+  controlStatus: [{
+    status: {
+      type: String,
+      enum: constants.loanControlStatus,
+      default: 'inReview',
+      required: true
+    },
+    date: {
+      type: Date,
+      required: true
+    }
+  }],
+  paymentStatus: [{
+    status: {
+      type: String,
+      enum: constants.loanPaymentStatus,
+    },
+    date: {
+      type: Date,
+      required: true
+    }
   }],
   collateralType: String,
   collateralValue: Number,

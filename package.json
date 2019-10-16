@@ -24,6 +24,7 @@
     "googleapis": "^39.2.0",
     "handlebars": ">=4.0.14",
     "hbs": "^4.0.4",
+    "heroku-ssl-redirect": "0.0.4",
     "hoek": "^5.0.4",
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
