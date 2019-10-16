@@ -4,7 +4,8 @@ const {
     cashAvailable,
     countryCashFlow,
     countryAllocation,
-    cashAccountMovements
+    cashAccountMovements,
+    countryPandL
 } = require('./helpers/financialsAggregates')
 const LoanSchedule = require('../models/LoanSchedule')
 const User = require('../models/User')
@@ -80,6 +81,21 @@ const companyCrud = (Model, extensionFn) => {
                     objList
                 )
             )
+            .catch(e => next(e))
+    })
+
+    router.get('/p-and-l/:countryId', async (req, res, next) => {
+        let {
+            countryId
+        } = req.params
+
+        console.log(countryId)
+
+        countryPandL(countryId).then(objList => {
+                res.status(200).json(
+                    objList
+                )
+            })
             .catch(e => next(e))
     })
 
@@ -159,6 +175,9 @@ const companyCrud = (Model, extensionFn) => {
             message: err.message
         });
     })
+
+
+
 
     return router;
 }

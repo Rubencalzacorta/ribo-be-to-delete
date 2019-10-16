@@ -48,6 +48,7 @@ const loanCrud = (Model, extensionFn) => {
     }
 
     router.post('/create/all-active-invest', async (req, res, next) => {
+        console.log(req.body)
         let notUsedPaths = ['_id', 'updated_at', 'created_at', '__v'];
         let paths = Object.keys(Loan.schema.paths).filter(e => !notUsedPaths.includes(e));
         const loanInitDetails = _.pickBy(req.body, (e, k) => paths.includes(k));
@@ -66,7 +67,7 @@ const loanCrud = (Model, extensionFn) => {
         }
 
         
-        await cashAvailabilityValidator(country, loanDetails.capital)
+        await cashAvailabilityValidator(country, loanDetails.investedCapital)
             .then(obj => {
                 try {
                     if (obj.status === false) {
@@ -75,7 +76,7 @@ const loanCrud = (Model, extensionFn) => {
                         Loan.create({...loanInitDetails,...loanDetails})
                             .then(async obj => {
                                 let loanId = obj._id
-                                let investments = await investmentDistributor(country, obj.capital, loanId, currency)
+                                let investments = await investmentDistributor(country, loanDetails.investedCapital, loanId, currency)
                                 let schedule = await loanSelector(loanId, loanDetails, currency)
                                 await scheduleRecorder(schedule, loanId, next)
                                 await borrowerLoanRecorder(_borrower, loanId, next)
