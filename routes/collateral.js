@@ -5,7 +5,6 @@ const mongoose = require('mongoose')
 const collateralCrud = (Model, extensionFn) => {
 
     let router = express.Router();
-    console.log(extensionFn)
     let notUsedPaths = ['_id', 'updated_at', 'created_at', '__v'];
     let paths = Object.keys(Model.schema.paths).filter(e => !notUsedPaths.includes(e));
 

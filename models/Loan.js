@@ -106,6 +106,7 @@ loanSchema.pre('remove', function (next) {
   const LoanSchedule = require('./LoanSchedule')
   const Investment = require('./Investment')
   const Transaction = require('./Transaction')
+  const Collateral = require('./Collateral')
 
   LoanSchedule.deleteMany({
       _loan: this._id
@@ -124,6 +125,13 @@ loanSchema.pre('remove', function (next) {
         _loan: this._id
       }, next).then(() => {
         console.log('Transactions deleted')
+      })
+    })
+    .then(e => {
+      Collateral.deleteMany({
+        _loan: this._id
+      }, next).then(() => {
+        console.log('Collaterals deleted')
       })
     })
     .then(e => {
