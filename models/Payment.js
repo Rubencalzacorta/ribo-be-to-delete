@@ -55,7 +55,9 @@ paymentSchema.post("save", function (result) {
             }
         })
 
-        let loan = await Loan.findById(result._loan)
+        let loan = await Loan.findById(result._loan).populate({
+            path: 'commission'
+        })
         let IandK = await intAndCapCalc(loanSchedule, result.amount)
 
         txPlacer(result, investors, loan, IandK)

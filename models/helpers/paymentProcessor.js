@@ -31,6 +31,17 @@ const interestDistributor = (details) => {
     return txs
 }
 
+const commissionDistributor = (details) => {
+    if (details._commission === []) {
+        console.log(`status: no commissions to distribute`)
+        return []
+    }
+
+    mgmtAcc = '5d713e42e256d90017eb4857'
+
+    return commissionTx(details, mgmtAcc)
+}
+
 const capitalTx = (txDetails, investor) => {
     return {
         _loan: txDetails._loan,
@@ -96,6 +107,37 @@ const mgmtFeeTxs = (txDetails, investor) => {
     return txs
 }
 
+const commissionTx = (txDetails, managementAccount) => {
+
+    txs = []
+    txDetails._commission.forEach(commission => {
+        txs.push({
+            _loan: commission._loan,
+            _investor: managementAccount,
+            _loanSchedule: txDetails._loanSchedule,
+            _payment: txDetails._payment,
+            date: txDetails.date,
+            cashAccount: txDetails.cashAccount,
+            currency: txDetails.currency,
+            concept: 'COMMISSION',
+            debit: 0,
+            credit: txDetails.interest * commission.pct
+        }, {
+            _loan: commission._loan,
+            _investor: commission._salesman,
+            _loanSchedule: txDetails._loanSchedule,
+            _payment: txDetails._payment,
+            date: txDetails.date,
+            cashAccount: txDetails.cashAccount,
+            currency: txDetails.currency,
+            concept: 'COMMISSION',
+            debit: txDetails.interest * commission.pct,
+            credit: 0
+        })
+    })
+    return txs
+}
+
 
 const investorInterestTx = (txDetails, investor) => {
     return {
@@ -129,6 +171,7 @@ let distributorDetails = (result, investors, loan, IandK) => {
     return {
         _loan: result._loan,
         _loanSchedule: result._loanSchedule,
+        _commission: loan.commission,
         investors: investors,
         _payment: result._id,
         date: result.date_pmt,
@@ -144,8 +187,9 @@ txPlacer = async (result, investors, loan, IandK) => {
     let dd = distributorDetails(result, investors, loan, IandK)
     let capital = capitalDistributor(dd)
     let interest = interestDistributor(dd)
+    let commission = commissionDistributor(dd)
+    let txs = [...capital, ...interest, ...commission]
 
-    let txs = [...capital, ...interest]
     return Transaction.insertMany(txs)
 }
 
