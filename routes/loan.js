@@ -48,7 +48,6 @@ const loanCrud = (Model, extensionFn) => {
     }
 
     router.post('/create/all-active-invest', async (req, res, next) => {
-        console.log(req.body)
         let notUsedPaths = ['_id', 'updated_at', 'created_at', '__v'];
         let paths = Object.keys(Loan.schema.paths).filter(e => !notUsedPaths.includes(e));
         const loanInitDetails = _.pickBy(req.body, (e, k) => paths.includes(k));
@@ -57,6 +56,7 @@ const loanCrud = (Model, extensionFn) => {
             loanDetails,
             country
         } = req.body
+
 
         let {
             currency,
