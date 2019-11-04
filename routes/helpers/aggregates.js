@@ -1,4 +1,4 @@
-const countryOutstandingQuery = (country, fromDate, toDate) => {
+const countryOutstandingQuery = (country) => {
   return [{
     '$lookup': {
       'from': 'loans',
@@ -17,10 +17,6 @@ const countryOutstandingQuery = (country, fromDate, toDate) => {
     '$match': {
       'details.status': {
         '$ne': 'CLOSED'
-      },
-      'date': {
-        '$gte': new Date(fromDate),
-        '$lte': new Date(toDate)
       },
       'borrower.country': country,
       'status': 'OUTSTANDING',
@@ -444,7 +440,7 @@ const allLoansQuery = (fromDate, toDate) => {
 }
 
 
-const outstandingQuery = (fromDate, toDate) => {
+const outstandingQuery = () => {
   return [{
     '$lookup': {
       'from': 'loans',
@@ -463,10 +459,6 @@ const outstandingQuery = (fromDate, toDate) => {
     '$match': {
       'details.status': {
         '$ne': 'CLOSED'
-      },
-      'date': {
-        '$gte': new Date(fromDate),
-        '$lte': new Date(toDate)
       },
       'status': 'OUTSTANDING'
     }
