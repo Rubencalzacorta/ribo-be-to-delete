@@ -4,6 +4,25 @@ rounder = (numberToRound) => {
   return Math.round(numberToRound * 10000) / 10000
 }
 
+const paymentDate = (inputDate, pl, p, period) => {
+  if (period != 'payDay') {
+    date = moment(inputDate).add(pl, p).format('YYYY-MM-DD')
+  } else {
+    if (moment(inputDate).add(pl, p).date() < 16) {
+      date = moment(inputDate).add(pl, p).set({
+        date: 15 + 1
+      }).format('YYYY-MM-DD')
+
+    } else {
+      let lastDay = moment(inputDate).add(pl, p).endOf('month').date()
+      date = moment(inputDate).add(pl, p).set({
+        date: lastDay + 1
+      }).format('YYYY-MM-DD')
+    }
+  }
+  return date
+}
+
 
 interestRatesTransformer = (interest) => {
   interest = interest / 100
@@ -13,6 +32,7 @@ interestRatesTransformer = (interest) => {
     'biMonthly': interest * 2,
     'monthly': interest,
     'biWeekly': ((interest * 12) / 360) * 14,
+    'payDay': ((interest * 12) / 360) * 14,
     'weekly': ((interest * 12) / 360) * 7,
     'daily': ((interest * 12) / 360)
   }
@@ -39,6 +59,8 @@ const period = (period) => {
     return 'month'
   } else if (period == 'biWeekly') {
     return 'weeks'
+  } else if (period == 'payDay') {
+    return 'weeks'
   } else if (period == 'weekly') {
     return 'weeks'
   }
@@ -53,6 +75,8 @@ const periodLength = (period) => {
     return 1
   } else if (period == 'biWeekly') {
     return 2
+  } else if (period == 'payDay') {
+    return 2
   } else if (period == 'weekly') {
     return 1
   }
@@ -61,11 +85,9 @@ const periodLength = (period) => {
 
 amort2Loan = (loanId, amountOfPayments, periodicity, initialDate, startDate, startAmortPeriod, interest, capital, currency) => {
   schedule = []
-  console.log('entra')
   let p = period(periodicity)
   let pl = periodLength(periodicity)
   let int = interestRatesTransformer(interest)[periodicity]
-  console.log(p, pl, int)
   let amortPeriods = amountOfPayments - startAmortPeriod
   let payments = annuity(capital, int, amortPeriods)
   let initialAmort = payments - (capital * interestRatesTransformer(interest)[periodicity])
@@ -85,10 +107,9 @@ amort2Loan = (loanId, amountOfPayments, periodicity, initialDate, startDate, sta
         currency: currency
       })
     } else if (i == 1) {
-      console.log(ap)
       schedule.push({
         _loan: loanId,
-        status: 'PENDING',
+        status: 'DUE',
         date: moment(startDate).format('YYYY-MM-DD'),
         interest: rounder((moment(startDate).diff(moment(initialDate), 'd') + 1) * capital * interestRatesTransformer(interest)['daily']),
         principal: ap == 0 ? 0 : initialAmort,
@@ -111,7 +132,7 @@ amort2Loan = (loanId, amountOfPayments, periodicity, initialDate, startDate, sta
         _loan: loanId,
         status: 'PENDING',
         currency: currency,
-        date: moment(schedule[schedule.length - 1].date).add(pl, p).format('YYYY-MM-DD'),
+        date: paymentDate(schedule[schedule.length - 1].date, pl, p, periodicity),
         ...ap
       })
     }
