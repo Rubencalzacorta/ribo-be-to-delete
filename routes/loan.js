@@ -51,12 +51,12 @@ const loanCrud = (Model, extensionFn) => {
         let notUsedPaths = ['_id', 'updated_at', 'created_at', '__v'];
         let paths = Object.keys(Loan.schema.paths).filter(e => !notUsedPaths.includes(e));
         const loanInitDetails = _.pickBy(req.body, (e, k) => paths.includes(k));
+
         let {
             _borrower,
             loanDetails,
             country
         } = req.body
-
 
         let {
             currency,
@@ -66,7 +66,6 @@ const loanCrud = (Model, extensionFn) => {
             country = 'USA'
         }
 
-        
         await cashAvailabilityValidator(country, loanDetails.investedCapital)
             .then(obj => {
                 try {

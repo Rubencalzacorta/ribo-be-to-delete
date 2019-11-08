@@ -70,7 +70,18 @@ const loanSchema = new Schema({
   startDate: Date,
   paymentDate: Date,
   loanType: String,
-  useOfFunds: String,
+  insurancePremium: {
+    type: Number,
+    required: false
+  },
+  insurancePremiumPct: {
+    type: Number,
+    required: false
+  },
+  useOfFunds: [{
+    type: String,
+    enum: constants.useOfFunds
+  }],
   currency: {
     type: String,
     default: "USD",
@@ -151,6 +162,9 @@ loanSchema.pre('remove', function (next) {
 
 loanSchema.pre('save', function (next) {
   this.capitalRemaining = this.get('capital');
+  if (this.get('insurancePremium')) {
+    this.insurancePremiumPct = round((this.get('insurancePremium') / this.get('capital')), 4)
+  }
   next();
 });
 

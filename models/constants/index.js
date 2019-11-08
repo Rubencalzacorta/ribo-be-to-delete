@@ -8,7 +8,6 @@ module.exports.collateralTypes = [
     'electronicItems',
     'employmentBenefits'
 ]
-
 module.exports.currentStatus = [
     'depositedIntoBranch',
     'collateralWithBorrower',
@@ -22,7 +21,21 @@ module.exports.currentStatus = [
     'stolen',
     'insuranceClaim'
 ]
-
+module.exports.useOfFunds = [
+    'vehicle',
+    'motorcycle',
+    'personal',
+    'workingCapital',
+    'capitalGoods',
+    'refinancing',
+    'debtConsolidation',
+    'factoring',
+    'vehicleWithInsurance',
+    'motorcycleWithInsurance',
+    'personalWithInsurance',
+    'capitalGoodsWithInsurance',
+    'creditLine'
+]
 module.exports.condition = [
     'new',
     'excellent',
@@ -30,7 +43,6 @@ module.exports.condition = [
     'fair',
     'demaged'
 ]
-
 module.exports.loanControlStatus = [
     "inReview",
     "approved",
@@ -40,7 +52,6 @@ module.exports.loanControlStatus = [
     "paid",
     "canceled",
 ]
-
 module.exports.loanPaymentStatus = [
     "late",
     "late30",
