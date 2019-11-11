@@ -1,7 +1,11 @@
 const moment = require('moment')
 
 rounder = (numberToRound) => {
-  return Math.round(numberToRound * 10000) / 10000
+  try {
+    return Math.round(numberToRound * 10000) / 10000
+  } catch (e) {
+    return e
+  }
 }
 
 const paymentDate = (inputDate, pl, p, period) => {

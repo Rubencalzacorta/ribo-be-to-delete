@@ -31,7 +31,7 @@ const transactionSchema = new Schema({
   },
   concept: {
     type: String,
-    enum: ['DEPOSIT', 'DIVESTMENT', 'INVESTMENT', 'WITHDRAWAL', 'INTEREST', 'CAPITAL', 'FEE', 'COST', 'COMMISSION', 'MANAGEMENT_FEE', 'MANAGEMENT_INTEREST', 'INSURANCE_COST']
+    enum: ['DEPOSIT', 'DIVESTMENT', 'INVESTMENT', 'WITHDRAWAL', 'INTEREST', 'CAPITAL', 'FEE', 'COST', 'COMMISSION', 'MANAGEMENT_FEE', 'MANAGEMENT_INTEREST', 'INSURANCE_COST', 'INSURANCE_PREMIUM']
   },
   debit: {
     type: Float,

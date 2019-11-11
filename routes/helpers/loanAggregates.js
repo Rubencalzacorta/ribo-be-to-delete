@@ -158,6 +158,30 @@ const transactionLoanRecorder = async (investments, loanDetails, currency, next)
 }
 
 
+const insurancePremiumRecorder = async (loanId, insurancePremium, loanDetails, currency, country, next) => {
+
+  try {
+    let account = await insuranceAccount(country)
+
+    pendingTransactions = []
+    let transaction = {
+      _loan: loanId,
+      _investor: mongoose.Types.ObjectId(account._id),
+      date: loanDetails.startDate,
+      cashAccount: 'RBPERU',
+      concept: 'INSURANCE_PREMIUM',
+      debit: insurancePremium,
+      currency: currency
+    }
+    console.log('pending', pendingTransactions)
+    pendingTransactions.push(transaction)
+    await Transaction.insertMany(pendingTransactions)
+  } catch (e) {
+    next(e)
+  }
+}
+
+
 const loanScheduleTotalsByStatus = (status) => {
   return [{
     '$match': {
@@ -182,6 +206,20 @@ const loanScheduleTotalsByStatus = (status) => {
   }]
 }
 
+const adminAccount = async (country) => {
+  return await User.findOne({
+    firstName: 'Ribo Capital',
+    location: country
+  }).select('_id')
+}
+
+const insuranceAccount = async (country) => {
+  return await User.findOne({
+    firstName: 'Ribo Prima',
+    location: country
+  }).select('_id')
+}
+
 module.exports = {
   loansTotalRemaining,
   loansTotalPaid,
@@ -191,5 +229,8 @@ module.exports = {
   scheduleRecorder,
   investmentsRecorder,
   borrowerLoanRecorder,
-  transactionLoanRecorder
+  insurancePremiumRecorder,
+  transactionLoanRecorder,
+  adminAccount,
+  insuranceAccount
 }

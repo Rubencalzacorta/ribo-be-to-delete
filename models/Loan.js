@@ -163,7 +163,7 @@ loanSchema.pre('remove', function (next) {
 loanSchema.pre('save', function (next) {
   this.capitalRemaining = this.get('capital');
   if (this.get('insurancePremium')) {
-    this.insurancePremiumPct = round((this.get('insurancePremium') / this.get('capital')), 4)
+    this.insurancePremiumPct = Math.round((this.get('insurancePremium') / this.get('capital')), 4)
   }
   next();
 });

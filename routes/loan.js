@@ -17,7 +17,9 @@ const {
     scheduleRecorder,
     borrowerLoanRecorder,
     investmentsRecorder,
-    transactionLoanRecorder
+    transactionLoanRecorder,
+    adminAccount,
+    insurancePremiumRecorder
  } = require ('./helpers/loanAggregates')
 const { loanSelector } = require('./helpers/loanSchedule')
 const {investmentDistributor,
@@ -34,6 +36,22 @@ const {
     overdueQuery,
     outstandingQuery
 } = require('./helpers/aggregates')
+
+
+withInsurance = (useOfFunds) => {
+    const withPremium = [
+        'vehicleWithInsurance',
+        'motorcycleWithInsurance',
+        'personalWithInsurance',
+        'capitalGoodsWithInsurance'
+    ]
+
+    if (withPremium.indexOf(useOfFunds) !== -1) {
+        return true 
+    } else {
+        return false
+    }
+}
 
 
 const loanCrud = (Model, extensionFn) => {
@@ -60,22 +78,30 @@ const loanCrud = (Model, extensionFn) => {
 
         let {
             currency,
+            useOfFunds,
+            insurancePremium
         } = loanInitDetails
 
         if (country === 'VENEZUELA') {
             country = 'USA'
         }
 
+        
         await cashAvailabilityValidator(country, loanDetails.investedCapital)
-            .then(obj => {
-                try {
-                    if (obj.status === false) {
-                        throw new Error(`Balance insuficiente, disponibilidad: ${(obj.cash).toFixed(2)}`)
-                    } else if (obj.status) {
-                        Loan.create({...loanInitDetails,...loanDetails})
-                            .then(async obj => {
+        .then(obj => {
+            try {
+                if (obj.status === false) {
+                    throw new Error(`Balance insuficiente, disponibilidad: ${(obj.cash).toFixed(2)}`)
+                } else if (obj.status) {
+                    Loan.create({...loanInitDetails,...loanDetails})
+                    .then(async obj => {
                                 let loanId = obj._id
                                 let investments = await investmentDistributor(country, loanDetails.investedCapital, loanId, currency)
+                                let isInsured = await withInsurance(useOfFunds)
+                                if (isInsured) {
+                                    console.log('aca')
+                                    await insurancePremiumRecorder(loanId, insurancePremium, loanDetails, currency, country, next)
+                                }
                                 let schedule = await loanSelector(loanId, loanDetails, currency)
                                 await scheduleRecorder(schedule, loanId, next)
                                 await borrowerLoanRecorder(_borrower, loanId, next)
