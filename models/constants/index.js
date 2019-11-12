@@ -25,6 +25,7 @@ module.exports.useOfFunds = [
     'vehicle',
     'motorcycle',
     'personal',
+    'payroll',
     'workingCapital',
     'capitalGoods',
     'refinancing',

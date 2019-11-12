@@ -30,8 +30,12 @@ const paymentCrud = (Model, extensionFn) => {
             id
         } = req.params
 
+        let body = {
+            ...req.body,
+            paymentType: "REGULAR"
+        }
 
-        const object = _.pickBy(req.body, (e, k) => paths.includes(k));
+        const object = _.pickBy(body, (e, k) => paths.includes(k));
         console.group('Payment placer details')
         Model.create(object)
             .then(obj => {
@@ -41,8 +45,32 @@ const paymentCrud = (Model, extensionFn) => {
                 })
             })
             .catch(e => next(e))
-
     })
+
+
+    router.post('/prepay-loan/installment/:id', (req, res, next) => {
+        let {
+            id
+        } = req.params
+
+        let body = {
+            ...req.body,
+            paymentType: "FULL"
+        }
+
+        const object = _.pickBy(body, (e, k) => paths.includes(k));
+        console.group('Payment placer details')
+        Model.create(object)
+            .then(obj => {
+                return res.status(200).json({
+                    status: "success",
+                    response: obj
+                })
+            })
+            .catch(e => next(e))
+    })
+
+
 
 
     router.post('/', (req, res, next) => {

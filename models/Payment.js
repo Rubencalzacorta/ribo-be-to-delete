@@ -25,6 +25,11 @@ const paymentSchema = new Schema({
     cashAccount: {
         type: String,
         enum: ["RBPERU", "GCUS", "GFUS", "GCDR"]
+    },
+    paymentType: {
+        type: String,
+        enum: ["REGULAR", "FULL"],
+        default: "REGULAR"
     }
 }, {
     timestamps: {
@@ -35,19 +40,28 @@ const paymentSchema = new Schema({
 
 
 
-paymentSchema.post("save", function (result) {
+paymentSchema.post("save", async function (result, next) {
 
     const Loan = require("./Loan");
 
-    Payment.find({
-        _loanSchedule: result._loanSchedule
-    }).then(async payments => {
-        console.log(payments)
-        let loanSchedule = await LoanSchedule.findById(result._loanSchedule);
+    let {
+        _loan,
+        _loanSchedule,
+        _id,
+        paymentType,
+        amount
+    } = result
+
+    let payments = await Payment.find({
+        _loanSchedule: _loanSchedule
+    })
+    if (paymentType === "REGULAR") {
+
+        let loanSchedule = await LoanSchedule.findById(_loanSchedule);
         let amountPaid = await amountPaidReducer(payments)
-        await loanInstallmentPaymentUpdate(amountPaid, loanSchedule, result._loanSchedule, result._id)
+        await loanInstallmentPaymentUpdate(amountPaid, loanSchedule, _loanSchedule, _id, paymentType)
         let investors = await Investment.find({
-            _loan: result._loan
+            _loan: _loan
         }).populate({
             path: '_investor',
             populate: {
@@ -55,18 +69,99 @@ paymentSchema.post("save", function (result) {
             }
         })
 
-        let loan = await Loan.findById(result._loan).populate({
+        let loan = await Loan.findById(_loan).populate({
             path: 'commission'
         })
-        let IandK = await intAndCapCalc(loanSchedule, result.amount)
+        let IandK = await intAndCapCalc(loanSchedule, amount, paymentType)
 
-        txPlacer(result, investors, loan, IandK)
-            .then(resp => console.log(`status: success, txs_inserted: ${resp.length}`))
-            .catch(e => console.log(`status: failed, error: ${e}`))
+        await txPlacer(result, investors, loan, IandK)
+            .then(resp => {
+                console.log(`status: success, txs_inserted: ${resp.length}`)
+            })
+            .catch(e => next(`status: failed, error: ${e}`))
 
+        next()
+    } else if (paymentType === "FULL") {
 
-    });
+        fullPaymentValidator(result, next)
+            .then(async (ld) => {
+
+                let {
+                    capitalRemaining
+                } = ld
+
+                let loanSchedule = await LoanSchedule.findById(_loanSchedule);
+                let amountPaid = await amountPaidReducer(payments);
+                await loanInstallmentPaymentUpdate(amountPaid, loanSchedule, _loanSchedule, _id, paymentType, capitalRemaining)
+                let investors = await Investment.find({
+                    _loan: _loan
+                }).populate({
+                    path: '_investor',
+                    populate: {
+                        path: 'managementFee'
+                    }
+                })
+
+                let loan = await Loan.findById(_loan).populate({
+                    path: 'commission'
+                })
+
+                let IandK = await intAndCapCalc(loanSchedule, amount, paymentType, capitalRemaining)
+
+                await txPlacer(result, investors, loan, IandK)
+                    .then(resp => {
+                        console.log(`status: success, txs_inserted: ${resp.length}`)
+                    })
+                    .catch(e => next(`status: failed, error: ${e}`))
+
+                next()
+
+            }).catch(e => {
+                next(e)
+            })
+    }
 });
+
+const loanInstallmentPaymentUpdate = async (amountPaid, loanSchedule, id, payments, paymentType, capitalRemaining) => {
+    let update = await loanScheduleUpdater(amountPaid, loanSchedule, paymentType, capitalRemaining)
+    console.log(update)
+    return await LoanSchedule.findByIdAndUpdate(id, {
+            $set: update,
+            $push: {
+                payments
+            }
+        }, {
+            new: true,
+            safe: true,
+            upsert: true
+        })
+        .then(console.log(
+            `status: updated loan schedule payments, amount paid ${update.interest_pmt+update.principal_pmt}`
+        ))
+}
+
+
+
+const fullPaymentValidator = async (result, next) => {
+    const Loan = require("./Loan");
+
+    return Loan.findOne({
+        _id: result._loan
+    }).then(loan => {
+        if (loan.capitalRemaining > result.amount) {
+            Payment.findOneAndDelete({
+                _id: result._id
+            }).then(() => console.log(`status: failed, payment: insufficient`))
+            throw new Error('payment was insufficient')
+        }
+
+        return {
+            capitalRemaining: loan.capitalRemaining,
+            amount: result.amount
+        }
+
+    }).catch(e => next(e))
+}
 
 paymentSchema.post('remove', function (result) {
 
@@ -101,23 +196,6 @@ const amountPaidReducer = async (payments) => {
     }, 0);
 }
 
-const loanInstallmentPaymentUpdate = async (amountPaid, loanSchedule, id, payments) => {
-    let update = await loanScheduleUpdater(amountPaid, loanSchedule)
-    console.log(update)
-    return await LoanSchedule.findByIdAndUpdate(id, {
-            $set: update,
-            $push: {
-                payments
-            }
-        }, {
-            new: true,
-            safe: true,
-            upsert: true
-        })
-        .then(console.log(
-            `status: updated loan schedule payments, amount paid ${update.interest_pmt+update.principal_pmt}`
-        ))
-}
 
 
 const loanInstallmentDeleteUpdate = async (amountPaid, loanSchedule, id, payments) => {

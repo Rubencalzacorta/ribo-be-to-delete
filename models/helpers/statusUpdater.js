@@ -42,7 +42,7 @@ let statusValidator = async (totalPaid, capital) => {
 
 }
 
-const loanScheduleUpdater = (amountPaid, loanSchedule) => {
+const loanScheduleUpdater = (amountPaid, loanSchedule, paymentType, capitalRemaining) => {
 
   let {
     principal,
@@ -50,31 +50,41 @@ const loanScheduleUpdater = (amountPaid, loanSchedule) => {
     status,
     date
   } = loanSchedule
-
+  console.log('entra', capitalRemaining)
   let initialBalance = principal + interest
 
-  if (amountPaid >= initialBalance - 0.5) {
-    principal_pmt = principal
-    interest_pmt = amountPaid - principal
-    balanceDue = 0
-    status = "PAID"
-  } else if (amountPaid <= initialBalance) {
-    if (amountPaid < principal) {
-      principal_pmt = amountPaid
-      interest_pmt = 0
-      // status = "OUTSTANDING"
-    } else if (amountPaid >= principal) {
+  if (paymentType === 'REGULAR') {
+
+    if (amountPaid >= initialBalance - 0.5) {
       principal_pmt = principal
       interest_pmt = amountPaid - principal
+      balanceDue = 0
+      status = "PAID"
+    } else if (amountPaid <= initialBalance) {
+      if (amountPaid < principal) {
+        principal_pmt = amountPaid
+        interest_pmt = 0
+        // status = "OUTSTANDING"
+      } else if (amountPaid >= principal) {
+        principal_pmt = principal
+        interest_pmt = amountPaid - principal
+      }
+      // status = statusSetter(date)
+      status = "OUTSTANDING"
+      balanceDue = initialBalance - amountPaid
     }
-    // status = statusSetter(date)
-    status = "OUTSTANDING"
-    balanceDue = initialBalance - amountPaid
+  } else if (paymentType === 'FULL') {
+    principal_pmt = capitalRemaining
+    interest_pmt = amountPaid - capitalRemaining
+    balanceDue = 0
+    status = "PAID"
   }
+
 
   if (amountPaid === 0) {
     status = statusSetter(date)
   }
+
 
   return {
     status,
@@ -101,7 +111,7 @@ const dateDiff = (date1, date2) => {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
-const intAndCapCalc = (loanSchedule, paymentAmount) => {
+const intAndCapCalc = (loanSchedule, paymentAmount, paymentType, loanCapitalRemaining) => {
 
   let {
     interest_pmt,
@@ -117,18 +127,28 @@ const intAndCapCalc = (loanSchedule, paymentAmount) => {
   interestRemaining = interest - interest_pmt
   totalRemaining = capitalRemaining + interestRemaining
 
-  if (paymentAmount >= capitalRemaining) {
-    principalPayment = capitalRemaining
-    interestPayment = paymentAmount - capitalRemaining
-  } else if (paymentAmount >= totalRemaining) {
-    principalPayment = capitalRemaining
-    interestPayment = paymentAmount - capitalRemaining
-  } else if (paymentAmount < capitalRemaining) {
-    principalPayment = paymentAmount
-    interestPayment = 0
-  } else if (capitalRemaining === 0) {
-    interestPayment = paymentAmount
+  if (paymentType === 'FULL') {
+    principalPayment = loanCapitalRemaining
+    interestPayment = paymentAmount - loanCapitalRemaining
+  } else {
+    if (paymentAmount >= capitalRemaining) {
+      principalPayment = capitalRemaining
+      interestPayment = paymentAmount - capitalRemaining
+    } else if (paymentAmount >= totalRemaining) {
+      principalPayment = capitalRemaining
+      interestPayment = paymentAmount - capitalRemaining
+    } else if (paymentAmount < capitalRemaining) {
+      principalPayment = paymentAmount
+      interestPayment = 0
+    } else if (capitalRemaining === 0) {
+      interestPayment = paymentAmount
+    }
   }
+
+  console.log({
+    principalPayment: principalPayment,
+    interestPayment: interestPayment
+  })
 
   return {
     principalPayment,
