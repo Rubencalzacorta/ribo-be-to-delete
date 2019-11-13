@@ -69,7 +69,6 @@ const loanCrud = (Model, extensionFn) => {
         let notUsedPaths = ['_id', 'updated_at', 'created_at', '__v'];
         let paths = Object.keys(Loan.schema.paths).filter(e => !notUsedPaths.includes(e));
         const loanInitDetails = _.pickBy(req.body, (e, k) => paths.includes(k));
-        console.log(req.body)
         let {
             _borrower,
             loanDetails,
@@ -99,7 +98,6 @@ const loanCrud = (Model, extensionFn) => {
                                 let investments = await investmentDistributor(country, loanDetails.investedCapital, loanId, currency)
                                 let isInsured = await withInsurance(useOfFunds)
                                 if (isInsured) {
-                                    console.log('aca')
                                     await insurancePremiumRecorder(loanId, insurancePremium, loanDetails, currency, country, next)
                                 }
                                 let schedule = await loanSelector(loanId, loanDetails, currency)
@@ -207,8 +205,6 @@ const loanCrud = (Model, extensionFn) => {
             
         let notUsedPaths = ['_id','updated_at','created_at','__v'];
         let paths = Object.keys(LoanSchedule.schema.paths).filter(e => !notUsedPaths.includes(e));
-        console.log(req.body)
-        console.log(req.params)
         const {id} = req.params;
         const { cashAccount, interest_pmt, principal_pmt, date_pmt, currency } = req.body.payment
         const object = _.pickBy(req.body.payment, (e,k) => paths.includes(k));

@@ -137,7 +137,6 @@ const transactionLoanRecorder = async (investments, loanDetails, currency, next)
   try {
     pendingTransactions = []
     investments.forEach(e => {
-      console.log(e)
       let credit = e.amount
       let transaction = {
         _loan: e._loan,
@@ -173,7 +172,6 @@ const insurancePremiumRecorder = async (loanId, insurancePremium, loanDetails, c
       debit: insurancePremium,
       currency: currency
     }
-    console.log('pending', pendingTransactions)
     pendingTransactions.push(transaction)
     await Transaction.insertMany(pendingTransactions)
   } catch (e) {

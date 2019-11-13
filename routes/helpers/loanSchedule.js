@@ -42,6 +42,7 @@ interestRatesTransformer = (interest) => {
   }
 }
 
+
 let balance_period = (C, P, i) => {
   let periodSchedule = {}
 
@@ -616,7 +617,7 @@ const factoring = (loan, startDate, days, interest, capital, currency) => {
 
 
 const loanSelector = (loanId, loanDetails, currency) => {
-  console.log('loanSelector', loanDetails)
+
   let {
     loanType,
     period,

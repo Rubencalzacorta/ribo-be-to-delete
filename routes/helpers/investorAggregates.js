@@ -191,7 +191,6 @@ generateInvestments = (loanAmount, loanId, currency, investors) => {
   let a = 0
   investors.forEach(e => {
     a += e.pct * loanAmount
-    console.log(e.pct, loanAmount, e.pct * loanAmount, a, e._investor)
     investments.push({
       _investor: e._investor,
       _loan: loanId,
