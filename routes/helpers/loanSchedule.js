@@ -36,7 +36,7 @@ interestRatesTransformer = (interest) => {
     'biMonthly': interest * 2,
     'monthly': interest,
     'biWeekly': ((interest * 12) / 360) * 14,
-    'payDay': ((interest * 12) / 360) * 14,
+    'payDay': ((interest * 12) / 360) * 15,
     'weekly': ((interest * 12) / 360) * 7,
     'daily': ((interest * 12) / 360)
   }
@@ -653,6 +653,7 @@ const loanSelector = (loanId, loanDetails, currency) => {
       return amort2Loan(loanId, duration, period, startDate, paymentDate, startAmortPeriod, interest, capital, currency)
   }
 }
+
 
 module.exports = {
   loanSelector,
