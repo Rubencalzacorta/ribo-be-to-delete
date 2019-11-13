@@ -1,18 +1,30 @@
+const LoanSchedule = require('../LoanSchedule')
+const moment = require('moment')
+
 const statusUpdater = async (loan) => {
   let {
-    loanSchedule
+    loanSchedule,
+    capital
   } = loan
 
   totalPaid = await cashSourceReducer(loanSchedule, 'principal_pmt')
   interestEarned = await cashSourceReducer(loanSchedule, 'interest_pmt')
-  status = await statusValidator(totalPaid, loan.capital)
-  paidback = totalPaid + interestEarned >= loan.capital ? true : false;
+  previousStatus = loan.status
+  newStatus = await statusValidator(totalPaid, capital)
+  paidback = totalPaid + interestEarned >= capital ? true : false;
+
+  if (previousStatus === 'OPEN' && newStatus === 'CLOSED') {
+    scheduleUpdaterOnCloseLoan(loan)
+  } else if (previousStatus === 'CLOSED' && newStatus === 'OPEN') {
+    scheduleUpdaterOnReOpenLoan(loan)
+  }
+
 
   return {
     totalPaid: totalPaid,
     interestEarned: interestEarned,
-    status: status,
-    capitalRemaining: loan.capital - totalPaid,
+    status: newStatus,
+    capitalRemaining: capital - totalPaid,
     paidback: paidback
   }
 }
@@ -42,6 +54,73 @@ let statusValidator = async (totalPaid, capital) => {
 
 }
 
+let scheduleUpdaterOnCloseLoan = async (loan) => {
+  const LoanSchedule = require('../LoanSchedule')
+  let uncloseableStatus = ['DISBURSTMENT', 'DUE', 'OVERDUE', 'PAID', 'OUTSTANDING']
+  console.log(LoanSchedule)
+  await LoanSchedule.updateMany({
+    _loan: loan._id,
+    status: {
+      $nin: uncloseableStatus
+    }
+  }, {
+    status: 'CLOSED'
+  })
+  await LoanSchedule.updateMany({
+    _loan: loan._id,
+    status: 'DUE'
+  }, {
+    status: 'UNPAID_DUE'
+  })
+  await LoanSchedule.updateMany({
+    _loan: loan._id,
+    status: 'OVERDUE'
+  }, {
+    status: 'UNPAID_OVERDUE'
+  })
+}
+
+let scheduleUpdaterOnReOpenLoan = async (loan) => {
+  const LoanSchedule = require('../LoanSchedule')
+  let closedStatus = ['CLOSED', 'UNPAID_DUE', 'UNPAID_OVERDUE']
+
+  console.log(LoanSchedule)
+  await LoanSchedule.updateMany({
+    _loan: loan._id,
+    status: {
+      $in: closedStatus
+    },
+    date: {
+      $gt: moment().add(30, 'd').format('YYYY-MM-DD')
+    }
+  }, {
+    status: 'PENDING'
+  })
+  await LoanSchedule.updateMany({
+    _loan: loan._id,
+    status: {
+      $in: closedStatus
+    },
+    date: {
+      $lt: moment().add(30, 'd'),
+      $gte: moment().subtract(7, 'd')
+    }
+  }, {
+    status: 'DUE'
+  })
+  await LoanSchedule.updateMany({
+    _loan: loan._id,
+    status: {
+      $in: closedStatus
+    },
+    date: {
+      $lte: moment().subtract(7, 'd').format('YYYY-MM-DD'),
+    }
+  }, {
+    status: 'OVERDUE'
+  })
+}
+
 const loanScheduleUpdater = (amountPaid, loanSchedule, paymentType, capitalRemaining) => {
 
   let {
@@ -50,7 +129,7 @@ const loanScheduleUpdater = (amountPaid, loanSchedule, paymentType, capitalRemai
     status,
     date
   } = loanSchedule
-  console.log('entra', capitalRemaining)
+
   let initialBalance = principal + interest
 
   if (paymentType === 'REGULAR') {
@@ -96,12 +175,12 @@ const loanScheduleUpdater = (amountPaid, loanSchedule, paymentType, capitalRemai
 
 const statusSetter = (date) => {
   todayDate = new Date()
-
+  console.log(dateDiff(todayDate, date))
   if (date > todayDate) {
     return 'PENDING'
   } else if (dateDiff(todayDate, date) >= 7) {
     return 'OVERDUE'
-  } else if (dateDiff(todayDate, date) < 7 && dateDiff(todayDate, date) > 0) {
+  } else if (dateDiff(todayDate, date) < 30 && dateDiff(todayDate, date) > 0) {
     return 'DUE'
   }
 }
@@ -145,10 +224,6 @@ const intAndCapCalc = (loanSchedule, paymentAmount, paymentType, loanCapitalRema
     }
   }
 
-  console.log({
-    principalPayment: principalPayment,
-    interestPayment: interestPayment
-  })
 
   return {
     principalPayment,

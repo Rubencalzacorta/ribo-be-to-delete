@@ -357,14 +357,14 @@ const loanCrud = (Model, extensionFn) => {
         LoanSchedule.findById(id).select({"date": 1})
         .then( resp => 
             {
-            if (moment(resp.date) > moment()) {
+            if (moment(resp.date) > moment().add(31, 'd')) {
                 return {
                     interest_pmt: 0,
                     principal_pmt: 0,
                     status: 'PENDING',
                     cashAccount: null
                 }
-            } else if (moment(resp.date) <= moment() && moment(resp.date) > moment().subtract(7, 'd')) {
+            } else if (moment(resp.date) <= moment().add(30, 'd') && moment(resp.date) > moment().subtract(7, 'd')) {
                 return {
                     interest_pmt: 0,
                     principal_pmt: 0,
@@ -379,7 +379,10 @@ const loanCrud = (Model, extensionFn) => {
                     cashAccount: null
                 }
             }})
-        .then( (updates) => { LoanSchedule.findByIdAndUpdate(id, updates, {new:true}).exec()})
+        .then( (updates) => { 
+            console.log(updates)
+            LoanSchedule.findByIdAndUpdate(id, updates, {new:true}).exec()}
+            )
         .then( async () => { await Transaction.deleteMany({_loanSchedule: mongoose.Types.ObjectId(id)})})
         .then( async () => { await Payment.deleteMany({_loanSchedule: mongoose.Types.ObjectId(id)})})
         .then( () => res.status(200).json({status: "Success", message: "Removed Successfully"}))
