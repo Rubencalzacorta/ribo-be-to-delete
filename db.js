@@ -1,6 +1,7 @@
 require('dotenv').config();
 const {
-  DBURL
+  DBURL,
+  DBURL_DEV
 } = process.env;
 const mongoose = require('mongoose');
 require("./models/Commission")
@@ -45,14 +46,16 @@ process.on('SIGINT', function () {
   });
 });
 
+const dburi = DBURL ? DBURL : DBURL_DEV
 
-mongoose.connect(DBURL, {
+mongoose.connect(dburi, {
     auto_reconnect: true,
     useNewUrlParser: true,
-    useFindAndModify: false
+    useFindAndModify: false,
+    useUnifiedTopology: true
   })
-  .then(() => {
-    console.log(`Connected to Mongo on ${DBURL}`)
+  .then((r) => {
+    console.log(`Connected to Mongo on ${dburi}`)
   })
   .catch(err => {
     console.error('Error connecting to mongo', err)
