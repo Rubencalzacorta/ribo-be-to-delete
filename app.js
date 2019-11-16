@@ -97,11 +97,13 @@ const loanCrud = require('./routes/loan');
 const collateralCrud = require('./routes/collateral');
 const paymentCrud = require('./routes/payment')
 const financialsRouter = require('./routes/financials');
+const stRouter = require('./routes/scheduleTransform');
 
 app.use('/api/auth', authRouter);
 app.use('/api/loan', loanCrud(require('./models/Loan')));
 app.use('/api/test/transaction', transactionRouter);
 app.use('/api/test/summary', summaryRouter);
+app.use('/api/st', stRouter);
 app.use('/api/payment', paymentCrud(require('./models/Payment')));
 app.use('/api/collateral', collateralCrud(require('./models/Collateral')));
 app.use('/api/company', companyCrud(require('./models/Company')));

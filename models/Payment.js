@@ -74,7 +74,7 @@ paymentSchema.post("save", async function (result, next) {
         })
         let IandK = await intAndCapCalc(loanSchedule, amount, paymentType)
 
-        await txPlacer(result, investors, loan, IandK)
+        await txPlacer(result, investors, loan, IandK, next)
             .then(resp => {
                 console.log(`status: success, txs_inserted: ${resp.length}`)
             })

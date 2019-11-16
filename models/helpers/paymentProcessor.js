@@ -1,5 +1,6 @@
 let Transaction = require('../Transaction')
-
+let User = require('../User')
+const _ = require('lodash')
 const capitalDistributor = (details) => {
     if (!details.principal) {
         console.log(`status: no capital to distribute`)
@@ -14,32 +15,30 @@ const capitalDistributor = (details) => {
 }
 
 
-const interestDistributor = (details) => {
+const interestDistributor = (details, managementAccount) => {
     if (!details.interest) {
         console.log(`status: no interest to distribute`)
         return []
     }
 
-    let txs = []
-    details.investors.forEach(async (investor) => {
+    let txs = details.investors.map((investor) => {
         if (investor._investor.investorType === 'FIXED_INTEREST') {
-            txs.push(...mgmtInterestFixedTxs(details, investor))
+            return fixedInterestTxs(details, investor, managementAccount)
         } else {
-            txs.push(...variableInterestTxs(details, investor))
+            return variableInterestTxs(details, investor, managementAccount)
         }
     })
-    return txs
+
+    return _.flattenDeep(txs)
 }
 
-const commissionDistributor = (details) => {
+const commissionDistributor = (details, managementAccount) => {
     if (details._commission === []) {
         console.log(`status: no commissions to distribute`)
         return []
     }
 
-    mgmtAcc = '5d713e42e256d90017eb4857'
-
-    return commissionTx(details, mgmtAcc)
+    return commissionTx(details, managementAccount)
 }
 
 const capitalTx = (txDetails, investor) => {
@@ -71,6 +70,17 @@ const mgmtInterestFixedTxs = (txDetails, investor) => {
             concept: 'MANAGEMENT_INTEREST',
             debit: investor.pct * txDetails.interest * e.pct,
             credit: 0,
+        }, {
+            _loan: txDetails._loan,
+            _investor: e._investor,
+            _loanSchedule: txDetails._loanSchedule,
+            _payment: txDetails._payment,
+            date: txDetails.date,
+            cashAccount: txDetails.cashAccount,
+            currency: txDetails.currency,
+            concept: 'MANAGEMENT_INTEREST',
+            debit: 0,
+            credit: investor.pct * txDetails.interest * e.pct,
         })
     })
     return txs
@@ -154,9 +164,19 @@ const investorInterestTx = (txDetails, investor) => {
     }
 }
 
-const variableInterestTxs = (txDetails, investor) => {
+
+const fixedInterestTxs = (txDetails, investor, managementAccount) => {
     let interestTx = investorInterestTx(txDetails, investor)
-    let feesTx = mgmtFeeTxs(txDetails, investor)
+    let feesTx = mgmtInterestFixedTxs(txDetails, investor, managementAccount)
+
+    let a = [interestTx, ...feesTx]
+    console.log(a)
+    return a
+}
+
+const variableInterestTxs = (txDetails, investor, managementAccount) => {
+    let interestTx = investorInterestTx(txDetails, investor)
+    let feesTx = mgmtFeeTxs(txDetails, investor, managementAccount)
     return [interestTx, ...feesTx]
 }
 
@@ -183,14 +203,26 @@ let distributorDetails = (result, investors, loan, IandK) => {
     }
 }
 
-txPlacer = async (result, investors, loan, IandK) => {
-    let dd = distributorDetails(result, investors, loan, IandK)
-    let capital = capitalDistributor(dd)
-    let interest = interestDistributor(dd)
-    let commission = commissionDistributor(dd)
-    let txs = [...capital, ...interest, ...commission]
+managementAccountFinder = async (investors) => {
+    return await User.find({
+        firstName: 'RIbo Capital',
+        location: investors[0]._investor.location
+    })
+}
 
-    return Transaction.insertMany(txs)
+txPlacer = async (result, investors, loan, IandK) => {
+    try {
+        let dd = distributorDetails(result, investors, loan, IandK)
+        let managementAccount = await managementAccountFinder(investors)
+        let capital = capitalDistributor(dd)
+        let interest = interestDistributor(dd, managementAccount)
+        let commission = commissionDistributor(dd)
+        let txs = [...capital, ...interest, ...commission]
+        return Transaction.insertMany(txs)
+    } catch (e) {
+        next(e)
+    }
+
 }
 
 txDelete = async (id) => {
