@@ -1,18 +1,96 @@
 const express = require('express');
 const router = express.Router();
 const Loan = require('../models/Loan')
+const LoanSchedule = require('../models/LoanSchedule')
 const Transaction = require('../models/Transaction')
+const _ = require('lodash')
 
 
-router.get('/loans', async (req, res, next) => {
-    let loans = await findLoans()
-    let disburstmentLoanSchedule = loans.map(l => {
-        return l.loanSchedule.filter((e, i) => {
-            return i === 0
-        })[0]
+router.get('/loans/:status', async (req, res, next) => {
+    let loans = await findLoans('CLOSED')
+    let statusChanges = {
+        disburstment: [],
+        paid: [],
+        closed: [],
+        incomplete: []
+    }
+    await loans.map(async l => {
+
+        let sortedSched = _.sortBy(l.loanSchedule, ['date'])
+        let capital = l.capital
+        let accumPmts = 0
+        // console.log(l._id)
+
+        await sortedSched.forEach((e, i) => {
+
+            if (i === 0) {
+                statusChanges.disburstment.push(e._id)
+            } else if (i === 1 && (e.interest_pmt + e.principal_pmt >= e.interest + e.principal - 35)) {
+                statusChanges.paid.push(e._id)
+            } else if (e.interest_pmt + e.principal_pmt >= (e.interest + e.principal - 1)) {
+                statusChanges.paid.push(e._id)
+            } else if (accumPmts >= capital - 1) {
+                statusChanges.closed.push(e._id)
+            } else if (accumPmts <= capital - 1 && e.interest_pmt + e.principal_pmt <= (e.interest + e.principal - 2)) {
+                statusChanges.incomplete.push(e._id)
+            }
+
+            accumPmts += e.principal_pmt
+            if (l._id == '5d51a1804e9e650017c00b5a') {
+                console.log(accumPmts, capital)
+            }
+        })
     })
 
-    res.status(200).json(disburstmentLoanSchedule)
+    bulk = LoanSchedule.collection.initializeOrderedBulkOp();
+    bulk.find({
+        '_id': {
+            $in: statusChanges.disburstment
+        }
+    }).update({
+        $set: {
+            status: 'DISBURSTMENT'
+        }
+    });
+    bulk.find({
+        '_id': {
+            $in: statusChanges.incomplete
+        }
+    }).update({
+        $set: {
+            status: 'OUTSTANDING'
+        }
+    });
+    bulk.find({
+        '_id': {
+            $in: statusChanges.paid
+        }
+    }).update({
+        $set: {
+            status: 'PAID'
+        }
+    });
+
+    bulk.find({
+        '_id': {
+            $in: statusChanges.closed
+        }
+    }).update({
+        $set: {
+            status: 'CLOSED'
+        }
+    });
+
+
+
+    bulk.execute(function (error) {
+        console.log('done');
+    });
+
+    res.status(200).json({
+        len: statusChanges.length,
+        ls: statusChanges
+    })
 })
 
 
@@ -61,46 +139,16 @@ router.post('/add-int', async (req, res, next) => {
 
 })
 
-router.get('/complete-details/:id', async (req, res, next) => {
-    let {
-        id
-    } = req.params
-
-    let Investors = await Investment.find({
-        _loan: id
-    }).populate('_investor', 'firstName lastName fullName amount pct ')
-    let LoanDetails = await Loan.findById(id)
-    let Transactions = await Transaction.find({
-        _loan: id
-    }).populate('_investor', 'firstName lastName').sort({
-        date: 1,
-        _payment: 1,
-        concept: 1,
-        debit: 1,
-        credit: 1,
-        _investor: 1
-    })
-
-    Promise.all([Investors, LoanDetails, Transactions])
-        .then(objList => {
-            res.status(200).json({
-                investors: objList[0],
-                details: objList[1],
-                transactions: objList[2]
-            })
-        })
-        .catch(e => next(e))
-})
-
-const findLoans = async () => {
+const findLoans = async (status) => {
     return await Loan.find({
-            status: 'CLOSED'
+            status: status
         })
         .select({
             'loanSchedule': 1,
             'status': 1,
+            'capital': 1,
             'investors': 0,
-            '_borrower': 0
+            '_borrower': 0,
         })
 
 };

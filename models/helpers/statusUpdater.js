@@ -13,8 +13,9 @@ const statusUpdater = async (loan) => {
   newStatus = await statusValidator(totalPaid, capital)
   paidback = totalPaid + interestEarned >= capital ? true : false;
 
+
   if (previousStatus === 'OPEN' && newStatus === 'CLOSED') {
-    scheduleUpdaterOnCloseLoan(loan)
+    scheduleUpdaterOnCloseLoan(loanSchedule.date, loan)
   } else if (previousStatus === 'CLOSED' && newStatus === 'OPEN') {
     scheduleUpdaterOnReOpenLoan(loan)
   }
@@ -54,12 +55,14 @@ let statusValidator = async (totalPaid, capital) => {
 
 }
 
-let scheduleUpdaterOnCloseLoan = async (loan) => {
+let scheduleUpdaterOnCloseLoan = async (lsDate, loan) => {
   const LoanSchedule = require('../LoanSchedule')
   let uncloseableStatus = ['DISBURSTMENT', 'DUE', 'OVERDUE', 'PAID', 'OUTSTANDING']
-  console.log(LoanSchedule)
   await LoanSchedule.updateMany({
     _loan: loan._id,
+    date: {
+      $ne: loan.startDate,
+    },
     status: {
       $nin: uncloseableStatus
     }
@@ -68,15 +71,27 @@ let scheduleUpdaterOnCloseLoan = async (loan) => {
   })
   await LoanSchedule.updateMany({
     _loan: loan._id,
+    date: {
+      $ne: loan.startDate,
+    },
     status: 'DUE'
   }, {
     status: 'UNPAID_DUE'
   })
   await LoanSchedule.updateMany({
     _loan: loan._id,
+    date: {
+      $ne: loan.startDate,
+    },
     status: 'OVERDUE'
   }, {
     status: 'UNPAID_OVERDUE'
+  })
+  await LoanSchedule.updateMany({
+    _loan: loan._id,
+    date: loan.startDate
+  }, {
+    status: 'DISBURSTMENT'
   })
 }
 
@@ -87,6 +102,9 @@ let scheduleUpdaterOnReOpenLoan = async (loan) => {
   console.log(LoanSchedule)
   await LoanSchedule.updateMany({
     _loan: loan._id,
+    date: {
+      $ne: loan.startDate
+    },
     status: {
       $in: closedStatus
     },
@@ -108,6 +126,7 @@ let scheduleUpdaterOnReOpenLoan = async (loan) => {
   }, {
     status: 'DUE'
   })
+
   await LoanSchedule.updateMany({
     _loan: loan._id,
     status: {
@@ -115,9 +134,16 @@ let scheduleUpdaterOnReOpenLoan = async (loan) => {
     },
     date: {
       $lte: moment().subtract(7, 'd').format('YYYY-MM-DD'),
+      $ne: loan.startDate
     }
   }, {
     status: 'OVERDUE'
+  })
+  await LoanSchedule.updateMany({
+    _loan: loan._id,
+    date: loan.startDate
+  }, {
+    status: 'DISBURSTMENT'
   })
 }
 

@@ -418,12 +418,21 @@ const loanCrud = (Model, extensionFn) => {
     router.get('/complete-details/:id', async (req,res,next) => {
         let { id } = req.params
 
-        let Investors = await Investment.find({_loan: id}).populate('_investor', 'firstName lastName fullName amount pct ')
+        let Investors = await Investment.find({
+            _loan: id
+        }).populate('_investor', 'firstName lastName fullName amount pct ')
         let LoanDetails = await Loan.findById(id)
         let Transactions = await Transaction.find({
             _loan: id
-        }).populate('_investor', 'firstName lastName')
-
+        }).populate('_investor', 'firstName lastName').sort({
+            date: 1,
+            _payment: 1,
+            concept: 1,
+            debit: 1,
+            credit: 1,
+            _investor: 1
+        })
+        
         Promise.all([Investors,LoanDetails,Transactions])
             .then( objList => {
                  res.status(200).json
