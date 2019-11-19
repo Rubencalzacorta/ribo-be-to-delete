@@ -106,6 +106,24 @@ router.get('/it', async (req, res, next) => {
     }
 })
 
+router.post('/delete-misplaced', (req, res, next) => {
+    let {
+        acc,
+        id
+    }
+
+    Transaction.deleteMany({
+            _id: id,
+            cashAccount: acc
+        })
+        .then((r) => {
+            res.status(200).json(r)
+        })
+        .catch((e) => {
+            res.status(500).json(e.message)
+        })
+})
+
 router.post('/add-int', async (req, res, next) => {
     let {
         peru,
