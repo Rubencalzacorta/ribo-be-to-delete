@@ -3,6 +3,7 @@ const router = express.Router();
 const Loan = require('../models/Loan')
 const LoanSchedule = require('../models/LoanSchedule')
 const Transaction = require('../models/Transaction')
+const moment = require('moment')
 const _ = require('lodash')
 
 
@@ -110,10 +111,10 @@ router.post('/delete-misplaced', (req, res, next) => {
     let {
         acc,
         id
-    }
+    } = req.body
 
     Transaction.deleteMany({
-            _id: id,
+            _investor: id,
             cashAccount: acc
         })
         .then((r) => {
@@ -124,7 +125,23 @@ router.post('/delete-misplaced', (req, res, next) => {
         })
 })
 
+
+router.post('/delete-dated', (req, res, next) => {
+    gteDate = moment('2019-11-19T09:00:40.974Z')
+
+    Transaction.deleteMany({
+        created_at: {
+            $gte: gteDate
+        }
+    }).then(r => {
+        res.status(200).json({
+            r
+        })
+    })
+})
+
 router.post('/add-int', async (req, res, next) => {
+
     let {
         peru,
         dom,
@@ -132,24 +149,26 @@ router.post('/add-int', async (req, res, next) => {
     } = req.body
 
     try {
-        let jintPeru = await interestConsolidation(peru.concept, peru.acc, peru.id)
+        // let jintPeru = await interestConsolidation(peru.concept, peru.acc, peru.id)
         let jIntDominicana = await interestConsolidation(dom.concept, dom.acc, dom.id)
-        let jIntGFUSA = await interestConsolidation(us.concept, us.gfacc, us.id)
-        let jIntGCUSA = await interestConsolidation(us.concept, us.gcacc, us.id)
-        let jrevPeru = await reverseTxs(peru.concept, peru.acc, peru.id)
+        // console.log(jIntDominicana)
+        // let jIntGFUSA = await interestConsolidation(us.concept, us.gfacc, us.id)
+        // let jIntGCUSA = await interestConsolidation(us.concept, us.gcacc, us.id)
+        // let jrevPeru = await reverseTxs(peru.concept, peru.acc, peru.id)
         let jrevDominicana = await reverseTxs(dom.concept, dom.acc, dom.id)
-        let jrevGFUSA = await reverseTxs(us.concept, us.gfacc, us.id)
-        let jrevGCUSA = await reverseTxs(us.concept, us.gcacc, us.id)
+        // console.log(jrevDominicana)
+        // let jrevGFUSA = await reverseTxs(us.concept, us.gfacc, us.id)
+        // let jrevGCUSA = await reverseTxs(us.concept, us.gcacc, us.id)
 
         Transaction.insertMany([
-            ...jintPeru,
+            //     // ...jintPeru,
             ...jIntDominicana,
-            ...jIntGCUSA,
-            ...jIntGFUSA,
+            //     // ...jIntGCUSA,
+            //     // ...jIntGFUSA,
             ...jrevDominicana,
-            ...jrevGCUSA,
-            ...jrevGFUSA,
-            ...jrevPeru
+            //     // ...jrevGCUSA,
+            //     // ...jrevGFUSA,
+            //     // ...jrevPeru
         ]).then(r => res.status(200).json(r))
     } catch (e) {
         res.status(500).json(e.message)
@@ -193,12 +212,25 @@ router.post('/reverse-txs', async (req, res, next) => {
 })
 
 
-const reverseTxs = async (concept, cashAccount, id) => {
+router.post('/addCommissionField', async (req, res, next) => {
+    Transaction.updateMany({
+        _investor: null,
+        currency: 'DOP',
+        concept: 'COMMISSION'
+    }, {
+        _investor: '5d713e42e256d90017eb4857'
+    }).then(r => res.status(200).json(r))
+})
 
+const reverseTxs = async (concept, cashAccount, id) => {
+    adate = new Date('2019-11-18T00:00:40.974Z')
     return await Transaction.aggregate([{
         '$match': {
             'concept': concept,
-            'cashAccount': cashAccount
+            'cashAccount': cashAccount,
+            'created_at': {
+                $lte: adate
+            }
         }
     }, {
         '$group': {
@@ -249,10 +281,14 @@ const reverseTxs = async (concept, cashAccount, id) => {
 }
 
 const interestConsolidation = async (concept, cashAccount, id) => {
+    adate = new Date('2019-11-18T00:00:40.974Z')
     return await Transaction.aggregate([{
         '$match': {
             'concept': concept,
-            'cashAccount': cashAccount
+            'cashAccount': cashAccount,
+            'created_at': {
+                $lte: adate
+            }
         }
     }, {
         '$group': {
