@@ -216,7 +216,7 @@ txPlacer = async (result, investors, loan, IandK) => {
         let managementAccount = await managementAccountFinder(investors)
         let capital = capitalDistributor(dd)
         let interest = interestDistributor(dd, managementAccount)
-        let commission = commissionDistributor(dd)
+        let commission = commissionDistributor(dd, managementAccount)
         let txs = [...capital, ...interest, ...commission]
         return Transaction.insertMany(txs)
     } catch (e) {
