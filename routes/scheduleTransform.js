@@ -9,12 +9,14 @@ const _ = require('lodash')
 
 router.get('/loans/:status', async (req, res, next) => {
     let loans = await findLoans('CLOSED')
+
     let statusChanges = {
         disburstment: [],
         paid: [],
         closed: [],
         incomplete: []
     }
+
     await loans.map(async l => {
 
         let sortedSched = _.sortBy(l.loanSchedule, ['date'])
