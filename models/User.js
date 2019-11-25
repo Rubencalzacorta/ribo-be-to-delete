@@ -66,6 +66,7 @@ const userSchema = new Schema({
   residenceName: String,
   residenceNumber: String,
   city: String,
+  personalReference: String,
   country: {
     type: String,
     enum: ['PERU', 'VENEZUELA', 'DOMINICAN_REPUBLIC']
