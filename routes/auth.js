@@ -16,10 +16,14 @@ const {
 const login = (req, user) => {
   return new Promise((resolve, reject) => {
     req.login(user, err => {
-      if (err) {
-        reject(new Error('Something went wrong --- aqui'))
-      } else {
-        resolve(user);
+      try {
+        if (err) {
+          throw new Error('Something went wrong')
+        } else {
+          resolve(user);
+        }
+      } catch (err) {
+        reject(err)
       }
     })
   })
@@ -191,6 +195,7 @@ router.get('/logout', (req, res) => {
 
 
 router.use((err, req, res, next) => {
+  console.log(err)
   res.status(500).json({
     message: err.message
   });
