@@ -82,9 +82,18 @@ const countryCashFlow = (country) => {
             'date': 1,
             'interest': 1,
             'principal': 1,
+            'interest_pmt': 1,
+            'principal_pmt': 1,
             'currency': 1,
             'status': 1,
-            '_borrower': '$loan._borrower'
+            '_borrower': '$loan._borrower',
+            'loanStatus': '$loan.status'
+        }
+    }, {
+        '$match': {
+            'loanStatus': {
+                '$ne': 'CLOSED'
+            }
         }
     }, {
         '$lookup': {
@@ -101,7 +110,9 @@ const countryCashFlow = (country) => {
         '$project': {
             'date': 1,
             'interest': 1,
+            'interest_pmt': 1,
             'principal': 1,
+            'principal_pmt': 1,
             'currency': 1,
             'status': 1,
             'country': '$borrower.country'
@@ -135,8 +146,14 @@ const countryCashFlow = (country) => {
             'interest': {
                 '$sum': '$interest'
             },
+            'interest_pmt': {
+                '$sum': '$interest_pmt'
+            },
             'principal': {
                 '$sum': '$principal'
+            },
+            'principal_pmt': {
+                '$sum': '$principal_pmt'
             },
             'payment': {
                 '$sum': '$payment'
@@ -152,6 +169,8 @@ const countryCashFlow = (country) => {
             'year': '$_id.year',
             'country': '$_id.country',
             'interest': 1,
+            'interest_pmt': 1,
+            'principal_pmt': 1,
             'principal': 1,
             'payment': 1,
             'currency': 1

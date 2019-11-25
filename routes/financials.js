@@ -89,7 +89,6 @@ const companyCrud = (Model, extensionFn) => {
             countryId
         } = req.params
 
-        console.log(countryId)
 
         countryPandL(countryId).then(objList => {
                 res.status(200).json(
@@ -117,14 +116,9 @@ const companyCrud = (Model, extensionFn) => {
                 return {
                     [country]: await LoanSchedule.aggregate(countryCashFlow(country))
                 }
-
-                // let countryCF = await LoanSchedule.aggregate(countryCashFlow(country))
             })
         }
 
-        // usdCF = LoanSchedule.aggregate(currencyCashFlow('USD', new Date()))
-        // domCF = LoanSchedule.aggregate(currencyCashFlow('DOP', new Date()))
-        // console.log(LoanSchedule)
         Promise.all(cashFlows)
             .then(objList => res.status(200).json(objList))
             .catch(e => next(e))
