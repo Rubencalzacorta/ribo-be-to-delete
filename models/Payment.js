@@ -76,9 +76,13 @@ paymentSchema.post("save", async function (result, next) {
 
         await txPlacer(result, investors, loan, IandK, next)
             .then(resp => {
-                console.log(`status: success, txs_inserted: ${resp.length}`)
+                console.log('respues', resp)
+                // console.log(`status: success, txs_inserted: ${resp.length}`)
             })
-            .catch(e => next(`status: failed, error: ${e}`))
+            .catch(e => {
+                console.log(e)
+                next(`status: failed, error: ${e}`)
+            })
 
         next()
     } else if (paymentType === "FULL") {

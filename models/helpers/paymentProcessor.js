@@ -1,5 +1,6 @@
 let Transaction = require('../Transaction')
 let User = require('../User')
+var mongoose = require('mongoose')
 const _ = require('lodash')
 const capitalDistributor = (details) => {
     if (!details.principal) {
@@ -28,8 +29,8 @@ const interestDistributor = (details, managementAccount) => {
             return variableInterestTxs(details, investor, managementAccount)
         }
     })
-
-    return _.flattenDeep(txs)
+    txs = _.flattenDeep(txs)
+    return txs
 }
 
 const commissionDistributor = (details, managementAccount) => {
@@ -43,10 +44,10 @@ const commissionDistributor = (details, managementAccount) => {
 
 const capitalTx = (txDetails, investor) => {
     return {
-        _loan: txDetails._loan,
-        _investor: investor._investor._id,
-        _loanSchedule: txDetails._loanSchedule,
-        _payment: txDetails._payment,
+        _loan: mongoose.Types.ObjectId(txDetails._loan),
+        _investor: mongoose.Types.ObjectId(investor._investor._id),
+        _loanSchedule: mongoose.Types.ObjectId(txDetails._loanSchedule),
+        _payment: mongoose.Types.ObjectId(txDetails._payment),
         date: txDetails.date,
         cashAccount: txDetails.cashAccount,
         currency: txDetails.currency,
@@ -60,10 +61,10 @@ const mgmtInterestFixedTxs = (txDetails, investor) => {
     txs = []
     investor._investor.managementFee.forEach(e => {
         txs.push({
-            _loan: txDetails._loan,
-            _investor: e._managementAccount,
-            _loanSchedule: txDetails._loanSchedule,
-            _payment: txDetails._payment,
+            _loan: mongoose.Types.ObjectId(txDetails._loan),
+            _investor: mongoose.Types.ObjectId(e._managementAccount),
+            _loanSchedule: mongoose.Types.ObjectId(txDetails._loanSchedule),
+            _payment: mongoose.Types.ObjectId(txDetails._payment),
             date: txDetails.date,
             cashAccount: txDetails.cashAccount,
             currency: txDetails.currency,
@@ -71,10 +72,10 @@ const mgmtInterestFixedTxs = (txDetails, investor) => {
             debit: investor.pct * txDetails.interest * e.pct,
             credit: 0,
         }, {
-            _loan: txDetails._loan,
-            _investor: e._investor,
-            _loanSchedule: txDetails._loanSchedule,
-            _payment: txDetails._payment,
+            _loan: mongoose.Types.ObjectId(txDetails._loan),
+            _investor: mongoose.Types.ObjectId(e._investor),
+            _loanSchedule: mongoose.Types.ObjectId(txDetails._loanSchedule),
+            _payment: mongoose.Types.ObjectId(txDetails._payment),
             date: txDetails.date,
             cashAccount: txDetails.cashAccount,
             currency: txDetails.currency,
@@ -91,10 +92,10 @@ const mgmtFeeTxs = (txDetails, investor) => {
     txs = []
     investor._investor.managementFee.forEach(e => {
         txs.push({
-            _loan: txDetails._loan,
-            _investor: e._managementAccount,
-            _loanSchedule: txDetails._loanSchedule,
-            _payment: txDetails._payment,
+            _loan: mongoose.Types.ObjectId(txDetails._loan),
+            _investor: mongoose.Types.ObjectId(e._managementAccount),
+            _loanSchedule: mongoose.Types.ObjectId(txDetails._loanSchedule),
+            _payment: mongoose.Types.ObjectId(txDetails._payment),
             date: txDetails.date,
             cashAccount: txDetails.cashAccount,
             currency: txDetails.currency,
@@ -102,10 +103,10 @@ const mgmtFeeTxs = (txDetails, investor) => {
             debit: investor.pct * txDetails.interest * e.pct,
             credit: 0,
         }, {
-            _loan: txDetails._loan,
-            _investor: e._investor,
-            _loanSchedule: txDetails._loanSchedule,
-            _payment: txDetails._payment,
+            _loan: mongoose.Types.ObjectId(txDetails._loan),
+            _investor: mongoose.Types.ObjectId(e._investor),
+            _loanSchedule: mongoose.Types.ObjectId(txDetails._loanSchedule),
+            _payment: mongoose.Types.ObjectId(txDetails._payment),
             date: txDetails.date,
             cashAccount: txDetails.cashAccount,
             currency: txDetails.currency,
@@ -122,10 +123,10 @@ const commissionTx = (txDetails, managementAccount) => {
     txs = []
     txDetails._commission.forEach(commission => {
         txs.push({
-            _loan: commission._loan,
-            _investor: managementAccount,
-            _loanSchedule: txDetails._loanSchedule,
-            _payment: txDetails._payment,
+            _loan: mongoose.Types.ObjectId(commission._loan),
+            _investor: mongoose.Types.ObjectId(managementAccount),
+            _loanSchedule: mongoose.Types.ObjectId(txDetails._loanSchedule),
+            _payment: mongoose.Types.ObjectId(txDetails._payment),
             date: txDetails.date,
             cashAccount: txDetails.cashAccount,
             currency: txDetails.currency,
@@ -133,10 +134,10 @@ const commissionTx = (txDetails, managementAccount) => {
             debit: 0,
             credit: txDetails.interest * commission.pct
         }, {
-            _loan: commission._loan,
-            _investor: commission._salesman,
-            _loanSchedule: txDetails._loanSchedule,
-            _payment: txDetails._payment,
+            _loan: mongoose.Types.ObjectId(commission._loan),
+            _investor: mongoose.Types.ObjectId(commission._salesman),
+            _loanSchedule: mongoose.Types.ObjectId(txDetails._loanSchedule),
+            _payment: mongoose.Types.ObjectId(txDetails._payment),
             date: txDetails.date,
             cashAccount: txDetails.cashAccount,
             currency: txDetails.currency,
@@ -151,10 +152,10 @@ const commissionTx = (txDetails, managementAccount) => {
 
 const investorInterestTx = (txDetails, investor) => {
     return {
-        _loan: txDetails._loan,
-        _investor: investor._investor._id,
-        _loanSchedule: txDetails._loanSchedule,
-        _payment: txDetails._payment,
+        _loan: mongoose.Types.ObjectId(txDetails._loan),
+        _investor: mongoose.Types.ObjectId(investor._investor._id),
+        _loanSchedule: mongoose.Types.ObjectId(txDetails._loanSchedule),
+        _payment: mongoose.Types.ObjectId(txDetails._payment),
         date: txDetails.date,
         cashAccount: txDetails.cashAccount,
         currency: txDetails.currency,
@@ -168,9 +169,7 @@ const investorInterestTx = (txDetails, investor) => {
 const fixedInterestTxs = (txDetails, investor, managementAccount) => {
     let interestTx = investorInterestTx(txDetails, investor)
     let feesTx = mgmtInterestFixedTxs(txDetails, investor, managementAccount)
-
     let a = [interestTx, ...feesTx]
-    console.log(a)
     return a
 }
 
@@ -204,13 +203,15 @@ let distributorDetails = (result, investors, loan, IandK) => {
 }
 
 managementAccountFinder = async (investors) => {
-    return await User.find({
-        firstName: 'RIbo Capital',
+    let user = await User.find({
+        firstName: 'Ribo Capital',
         location: investors[0]._investor.location
     })
+    return user._id
 }
 
-txPlacer = async (result, investors, loan, IandK) => {
+
+txPlacer = async (result, investors, loan, IandK, next) => {
     try {
         let dd = distributorDetails(result, investors, loan, IandK)
         let managementAccount = await managementAccountFinder(investors)
@@ -218,7 +219,7 @@ txPlacer = async (result, investors, loan, IandK) => {
         let interest = interestDistributor(dd, managementAccount)
         let commission = commissionDistributor(dd, managementAccount)
         let txs = [...capital, ...interest, ...commission]
-        return Transaction.insertMany(txs)
+        return await Transaction.insertMany(txs)
     } catch (e) {
         next(e)
     }

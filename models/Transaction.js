@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const constants = require('./constants')
 var Float = require('mongoose-float').loadType(mongoose, 4);
+
 
 const transactionSchema = new Schema({
   _loan: {
@@ -31,7 +33,7 @@ const transactionSchema = new Schema({
   },
   concept: {
     type: String,
-    enum: ['DEPOSIT', 'DIVESTMENT', 'INVESTMENT', 'WITHDRAWAL', 'INTEREST', 'CAPITAL', 'FEE', 'COST', 'COMMISSION', 'MANAGEMENT_FEE', 'MANAGEMENT_INTEREST', 'INSURANCE_COST', 'INSURANCE_PREMIUM']
+    enum: constants.txConcepts
   },
   debit: {
     type: Float,

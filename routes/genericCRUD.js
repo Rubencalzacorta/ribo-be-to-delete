@@ -165,7 +165,7 @@ const simpleCrud = (Model, extensionFn) => {
                                 capitalRemaining: j.capitalRemaining,
                                 nextPayment: _.pick(j.loanSchedule.filter(e => e.status === 'DUE').sort(compare = (a, b) => {
                                     return a.date > b.date ? 1 : b.date > a.date ? -1 : 0;
-                                })[0], ['interest', 'principal', 'date'])
+                                })[0], ['_id', 'interest', 'principal', 'date'])
                             }
                         })
                     }
@@ -241,7 +241,7 @@ const simpleCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
 
-    
+
 
 
 
