@@ -70,7 +70,32 @@ const paymentCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
 
+    router.post('/bulk-payment', (req, res, next) => {
+        console.log(req.body)
+        let {
+            bulkPayment,
+            date,
+            cashAccount
+        } = req.body
+        payments = bulkPayment.map(async (e) => {
+            return await Model.create({
+                _loan: e._loan,
+                _loanSchedule: e._loanSchedule,
+                date_pmt: date,
+                amount: e.amount,
+                cashAccount: cashAccount
+            })
+        })
 
+        Promise.all(payments)
+            .then((payments_r) => {
+                res.status(200).json({
+                    status: "success",
+                    response: payments_r
+                })
+            }).catch(e => next(e))
+
+    })
 
 
     router.post('/', (req, res, next) => {
