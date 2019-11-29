@@ -6,6 +6,9 @@ const LoanSchedule = require('../models/LoanSchedule')
 const Investment = require('../models/Investment')
 const Transaction = require('../models/Transaction')
 const uploadCloud = require('../config/cloudinary')
+const {
+    paymentsByCountry
+} = require('./helpers/paymentAggregates')
 
 const paymentCrud = (Model, extensionFn) => {
 
@@ -19,10 +22,13 @@ const paymentCrud = (Model, extensionFn) => {
     }
 
     router.get('/', (req, res, next) => {
-        Model.find()
+        console.log(req.user)
+        paymentsByCountry(req.user.location)
             .then(objList => res.status(200).json(objList))
             .catch(e => next(e))
+
     })
+
 
     // CRUD: CREATE
     router.post('/installment/:id', (req, res, next) => {
@@ -46,6 +52,8 @@ const paymentCrud = (Model, extensionFn) => {
             })
             .catch(e => next(e))
     })
+
+
 
 
     router.post('/prepay-loan/installment/:id', (req, res, next) => {
@@ -74,14 +82,14 @@ const paymentCrud = (Model, extensionFn) => {
         console.log(req.body)
         let {
             bulkPayment,
-            date,
+            paymentDate,
             cashAccount
         } = req.body
         payments = bulkPayment.map(async (e) => {
             return await Model.create({
                 _loan: e._loan,
                 _loanSchedule: e._loanSchedule,
-                date_pmt: date,
+                date_pmt: paymentDate,
                 amount: e.amount,
                 cashAccount: cashAccount
             })
