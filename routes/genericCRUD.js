@@ -163,7 +163,7 @@ const simpleCrud = (Model, extensionFn) => {
                                 totalPaid: j.totalPaid,
                                 capital: j.capital,
                                 capitalRemaining: j.capitalRemaining,
-                                nextPayment: _.pick(j.loanSchedule.filter(e => e.status === 'DUE').sort(compare = (a, b) => {
+                                nextPayment: _.pick(j.loanSchedule.filter(e => e.status === 'OVERDUE' || e.status === 'DUE').sort(compare = (a, b) => {
                                     return a.date > b.date ? 1 : b.date > a.date ? -1 : 0;
                                 })[0], ['_id', 'interest', 'principal', 'date'])
                             }
@@ -173,9 +173,6 @@ const simpleCrud = (Model, extensionFn) => {
             })
             .then(objList => res.status(200).json(objList))
             .catch(e => console.log(e))
-
-
-
     })
 
     router.get('/all-clients-name/:country', (req, res, next) => {
