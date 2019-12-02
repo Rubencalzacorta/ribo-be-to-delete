@@ -39,6 +39,7 @@ module.exports.paymentsByCountry = async (adminCountry) => {
         }
     }, {
         '$project': {
+            '_loan': 1,
             '_id': 1,
             'date_pmt': {
                 '$dateToString': {
