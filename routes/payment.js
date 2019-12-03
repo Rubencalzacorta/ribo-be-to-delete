@@ -1,11 +1,5 @@
 const express = require('express');
 const _ = require('lodash');
-const mongoose = require('mongoose')
-const moment = require('moment')
-const LoanSchedule = require('../models/LoanSchedule')
-const Investment = require('../models/Investment')
-const Transaction = require('../models/Transaction')
-const uploadCloud = require('../config/cloudinary')
 const {
     paymentsByCountry
 } = require('./helpers/paymentAggregates')
@@ -22,11 +16,9 @@ const paymentCrud = (Model, extensionFn) => {
     }
 
     router.get('/', (req, res, next) => {
-        console.log(req.user)
         paymentsByCountry(req.user.location)
             .then(objList => res.status(200).json(objList))
             .catch(e => next(e))
-
     })
 
 

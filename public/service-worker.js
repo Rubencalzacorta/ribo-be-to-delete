@@ -14,7 +14,11 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
+<<<<<<< HEAD
   "/precache-manifest.9a78d130025df826e78d5696343bc22b.js"
+=======
+  "/precache-manifest.ea1e4dc17150726be497e98262e71186.js"
+>>>>>>> restructuring-service
 );
 
 self.addEventListener('message', (event) => {
