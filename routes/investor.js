@@ -1,11 +1,11 @@
 const express = require('express');
 const _ = require('lodash')
-const LoanSchedule = require('../models/LoanSchedule')
-const User = require('../models/User')
-const Loan = require('../models/Loan')
-const ManagementFee = require('../models/ManagementFee')
-const Transaction = require('../models/Transaction')
-const Investment = require('../models/Investment')
+const {
+    User,
+    ManagementFee,
+    Transaction,
+    Investment
+} = require('../models')
 let {
     investorCashDetails,
     investorInvestmentDetails,

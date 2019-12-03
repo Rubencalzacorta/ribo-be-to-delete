@@ -1,18 +1,17 @@
 const express = require('express');
-const router  = express.Router();
 const Finance = require('financejs')
-const excel = require('node-excel-export');
 const mongoose   = require('mongoose')
 const _ = require('lodash');
 const moment = require('moment')
-const path = require('path');
-const LoanSchedule = require("../models/LoanSchedule")
-const Transaction = require("../models/Transaction")
-const Commission = require("../models/Commission")
-const Investment = require("../models/Investment")
-const Payment = require("../models/Payment")
-const Loan = require("../models/Loan")
-const User = require("../models/User")
+const {
+    LoanSchedule,
+    Transaction,
+    Commission,
+    Investment,
+    Payment,
+    Loan,
+    User
+} = require("../models/index.js")
 const transactionPlacer = require('./helpers/transactionPlacer')
 const { 
     scheduleRecorder,
@@ -244,9 +243,111 @@ const loanCrud = (Model, extensionFn) => {
 
             .catch(e => {
                 console.log(e)
-                next(e)})
+                })
     })
 
+    router.post('/restructure/:loanId', async (req, res, next) => {
+        let {
+            loanId
+        } = req.params
+
+        let {
+            restructuringType,
+            interest,
+            duration,
+            period,
+            startDate,
+            paymentDate,
+            startAmortPeriod,
+            loanType
+        } = req.body
+
+
+        let l = await Loan.find({_id: loanId})
+        currency = l.currency
+
+        let ls = await LoanSchedule.find({
+            _loan: loanId,
+            status: {
+                $in: ['DUE', 'OVERDUE', 'PENDING']
+            }
+        })
+
+        let ids = await ls.map((e) => mongoose.Types.ObjectId(e._id))
+    
+        const totalCapitalDue = (ls)=> ls.reduce((acc, e) => {
+                return acc + e.principal
+        }, 0)
+
+        const totalInterestDue = (ls) => ls.reduce((acc, e) => {
+            if (e.status === 'DUE' || e.status === 'OVERDUE') return acc + e.interest;
+            else return acc;
+        }, 0)
+
+        const totalInterestDueAndPending = (ls) => ls.reduce((acc, e) => {
+            if (e.status === 'DUE' || e.status === 'OVERDUE' || e.status === 'PENDING') return acc + e.interest;
+            else return acc;
+        }, 0)
+
+        let capitalPicker = (restructuringType, ls) => {
+            switch (restructuringType) {
+                case 'capital':
+                    return totalCapitalDue(ls)
+                case 'capitalAndDueInterest':
+                    return totalInterestDue(ls) + totalCapitalDue(ls)
+                case'capitalAndPendingInterest':
+                    return totalInterestDueAndPending(ls) + totalCapitalDue(ls)   
+            }
+        }
+        
+        
+        let capital = capitalPicker(restructuringType, ls)
+
+        let loanDetails = {
+            capital,
+            loanType,
+            duration,
+            period,
+            startDate,
+            paymentDate,
+            startAmortPeriod,
+            interest
+        }
+
+        let schedule = await loanSelector(loanId, loanDetails, currency)
+        schedule.shift()
+        await scheduleRecorder(schedule, loanId, next)
+        await LoanSchedule.updateMany({_id: {$in: ids}}, {status: 'RESTRUCTURED'})
+        await Loan.findByIdAndUpdate(loanId, {
+            $push: {
+                restructuringDetails: {
+                    interest,
+                    duration,
+                    capital,
+                    startDate,
+                    paymentDate,
+                    loanType,
+                    restructuringType
+                }
+            },
+            isRestructured: true
+        }, {
+            safe: true,
+            upsert: true
+        }).exec()
+
+        let newLS = await LoanSchedule.find({_loan: loanId})
+        try {
+            res.status(200).json({
+                status: 'success',
+                loanSchedule: newLS
+            })
+        } catch (e) {
+            next(e)
+        }
+        
+    })
+    
     router.post('/commission', async (req, res, next) => {
 
         let {
@@ -1026,132 +1127,6 @@ router.get('/all-loans/list', async (req, res, next) => {
             console.log('ALL DONE!')
         })
     })
-
-    router.use('/testing-excel', (req, res, next) => {
-
-        const styles = {
-          headerDark: {
-            fill: {
-              fgColor: {
-                rgb: "FF000000"
-              }
-            },
-            font: {
-              color: {
-                rgb: "FFFFFFFF"
-              },
-              sz: 14,
-              bold: true,
-              underline: true
-            }
-          },
-          cellPink: {
-            fill: {
-              fgColor: {
-                rgb: "FFFFCCFF"
-              }
-            }
-          },
-          cellGreen: {
-            fill: {
-              fgColor: {
-                rgb: "FF00FF00"
-              }
-            }
-          }
-        };
-
-        const heading = [
-          [
-            { value: "a1", style: styles.headerDark },
-            { value: "b1", style: styles.headerDark },
-            { value: "c1", style: styles.headerDark }
-          ],
-          ["a2", "b2", "c2"] // <-- It can be only values
-        ];
-
-        const specification = {
-          customer_name: {
-            // <- the key should match the actual data key
-            displayName: "Customer", // <- Here you specify the column header
-            headerStyle: styles.headerDark, // <- Header style
-            cellStyle: function(value, row) {
-              // <- style renderer function
-              // if the status is 1 then color in green else color in red
-              // Notice how we use another cell value to style the current one
-              return row.status_id == 1
-                ? styles.cellGreen
-                : { fill: { fgColor: { rgb: "FFFF0000" } } }; // <- Inline cell style is possible
-            },
-            width: 120 // <- width in pixels
-          },
-          status_id: {
-            displayName: "Status",
-            headerStyle: styles.headerDark,
-            cellFormat: function(value, row) {
-              // <- Renderer function, you can access also any row.property
-              return value == 1 ? "Active" : "Inactive";
-            },
-            width: "10" // <- width in chars (when the number is passed as string)
-          },
-          note: {
-            displayName: "Description",
-            headerStyle: styles.headerDark,
-            cellStyle: styles.cellPink, // <- Cell style
-            width: 220 // <- width in pixels
-          }
-        };
-
-        // The data set should have the following shape (Array of Objects)
-        // The order of the keys is irrelevant, it is also irrelevant if the
-        // dataset contains more fields as the report is build based on the
-        // specification provided above. But you should have all the fields
-        // that are listed in the report specification
-        const dataset = [
-          {
-            customer_name: "IBM",
-            status_id: 1,
-            note: "some note",
-            misc: "not shown"
-          },
-          { customer_name: "HP", status_id: 0, note: "some note" },
-          {
-            customer_name: "MS",
-            status_id: 0,
-            note: "some note",
-            misc: "not shown"
-          }
-        ];
-
-        // Define an array of merges. 1-1 = A:1
-        // The merges are independent of the data.
-        // A merge will overwrite all data _not_ in the top-left cell.
-        const merges = [
-          { start: { row: 1, column: 1 }, end: { row: 1, column: 10 } },
-          { start: { row: 2, column: 1 }, end: { row: 2, column: 5 } },
-          { start: { row: 2, column: 6 }, end: { row: 2, column: 10 } }
-        ];
-
-        // Create the excel report.
-        // This function will return Buffer
-        const report = excel.buildExport([
-          // <- Notice that this is an array. Pass multiple sheets to create multi sheet report
-          {
-            name: "Report", // <- Specify sheet name (optional)
-            heading: heading, // <- Raw heading array (optional)
-            merges: merges, // <- Merge cell ranges
-            specification: specification, // <- Report specification
-            data: dataset // <-- Report data
-          }
-        ]);
-
-        // You can then return this straight
-        res.attachment("report.xlsx"); // This is sails.js specific (in general you need to set headers)
-        return res.send(report);
-
-
-    })
-
 
 
 

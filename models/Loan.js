@@ -61,6 +61,30 @@ const loanSchema = new Schema({
     type: Boolean,
     default: false
   },
+  isRestructured: {
+    type: Boolean,
+    default: false
+  },
+  restructuringDetails: [{
+    interest: Number,
+    interesDuePrevious: Number,
+    interesPendingPrevious: Number,
+    interesOverduePrevious: Number,
+    capitalPendingPrevious: Number,
+    duration: Number,
+    capital: Number,
+    startDate: Date,
+    paymentDate: Date,
+    loanType: String,
+    restructuringType: {
+      type: String,
+      enum: [
+        'capital',
+        'capitalAndDueInterest',
+        'capitalAndPendingInterest'
+      ]
+    }
+  }],
   interestEarned: Number,
   PaybackPeriod: Number,
   capitalRemaining: Number,

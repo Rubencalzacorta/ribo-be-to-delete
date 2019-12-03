@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const statusUpdater = require('./helpers/statusUpdater')
 
-const statuses = ['DISBURSTMENT', 'PENDING', 'DUE', 'OVERDUE', 'PAID', 'UNPAID', 'UNPAID_DUE', 'UNPAID_OVERDUE', 'OUTSTANDING', 'UNPAID_OUTSTANDING', 'CLOSED']
+const statuses = ['DISBURSTMENT', 'PENDING', 'DUE', 'OVERDUE', 'PAID', 'UNPAID', 'UNPAID_DUE', 'UNPAID_OVERDUE', 'OUTSTANDING', 'UNPAID_OUTSTANDING', 'CLOSED', 'RESTRUCTURED']
 const currencies = ['DOP', 'USD', 'PEN']
 
 const loanScheduleSchema = new Schema({
