@@ -91,6 +91,7 @@ const loanSchema = new Schema({
   interest: Number,
   duration: Number,
   capital: Number,
+  days: Number,
   startDate: Date,
   paymentDate: Date,
   loanType: String,
@@ -189,6 +190,13 @@ loanSchema.pre('save', function (next) {
   if (this.get('insurancePremium')) {
     this.insurancePremiumPct = Math.round((this.get('insurancePremium') / this.get('capital')), 4)
   }
+
+  if (this.get('loanType') === 'factoring') {
+    let dailyInterest = ((this.get('interest') / 100) * 12) / 360
+    interest = dailyInterest * this.get('days') * this.get('capital')
+    this.capital = this.get('capital') - interest
+  }
+
   next();
 });
 

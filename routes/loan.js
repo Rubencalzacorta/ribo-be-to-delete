@@ -85,7 +85,15 @@ const loanCrud = (Model, extensionFn) => {
             country = 'USA'
         }
 
-        
+        if (loanDetails.loanType === 'factoring') {
+            let dailyInterest = ((loanDetails.interest / 100) * 12) / 360
+            interest = dailyInterest * loanDetails.days * loanDetails.capital
+            loanDetails.investedCapital = loanDetails.capital - interest
+            console.log(loanDetails.investedCapital)
+        }
+
+        console.log('init', loanInitDetails)
+        console.log('det', loanDetails)
         await cashAvailabilityValidator(country, loanDetails.investedCapital)
         .then(obj => {
             try {

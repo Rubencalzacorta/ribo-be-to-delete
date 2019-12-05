@@ -588,7 +588,11 @@ const daysDiff = (initialDate, lastDate) => {
 
 const factoring = (loan, startDate, days, interest, capital, currency) => {
   let schedule = []
-  var interest = [(interest / 100) * (days / 30)] * capital
+
+  let dailyInterest = ((interest / 100) * 12) / 360
+  interest = dailyInterest * days * capital
+  capital = capital - interest
+
   amortization_pmt = {
     _loan: loan,
     date: moment(startDate).format('YYYY-MM-DD'),
