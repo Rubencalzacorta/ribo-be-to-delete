@@ -212,6 +212,10 @@ managementAccountFinder = async (investors) => {
 
 
 txPlacer = async (result, investors, loan, IandK, next) => {
+
+    let session = await Transaction.startSession()
+    session.startTransaction()
+
     try {
         let dd = distributorDetails(result, investors, loan, IandK)
         let managementAccount = await managementAccountFinder(investors)
@@ -219,9 +223,18 @@ txPlacer = async (result, investors, loan, IandK, next) => {
         let interest = interestDistributor(dd, managementAccount)
         let commission = commissionDistributor(dd, managementAccount)
         let txs = [...capital, ...interest, ...commission]
-        return await Transaction.insertMany(txs)
+        txs.map(e => {
+            return Transaction.create([e], {
+                session
+            })
+        })
+        await session.commitTransaction()
+        // return await Transaction.insertMany(txs)
     } catch (e) {
+        session.abortTransaction()
         next(e)
+    } finally {
+        return session.endSession()
     }
 
 }

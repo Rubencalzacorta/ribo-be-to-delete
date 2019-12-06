@@ -51,6 +51,12 @@ const transactionSchema = new Schema({
   }
 });
 
+transactionSchema.pre('save', function (next) {
+
+  console.log(this.concept)
+  next();
+});
+
 
 const Transaction = mongoose.model('Transaction', transactionSchema);
 module.exports = Transaction;
