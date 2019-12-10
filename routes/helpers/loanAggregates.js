@@ -85,9 +85,34 @@ const scheduleRecorder = async (schedule, loanId, next) => {
   }
 }
 
+const investmentReducer = (investments) => {
+  a = investments.reduce((acc, e) => {
+    const found = acc.find(a => a._investor.toString() == e._investor.toString())
+    console.log(found)
+    if (!found) {
+      acc.push({
+        _investor: e._investor,
+        _loan: e._loan,
+        currency: e.currency,
+        pct: rounder(e.pct),
+        amount: rounder(e.amount),
+      })
+    } else {
+      found.pct += rounder(e.pct)
+      found.amount += rounder(e.amount)
+    }
+    return acc
+  }, [])
+
+  return a
+}
+
+
 const investmentsRecorder = async (investments, loanId, next) => {
+
+  reducedInvestments = investmentReducer(investments)
   try {
-    investments.forEach(e => {
+    reducedInvestments.forEach(e => {
       Investment.create(e)
         .then((investment_x) => {
           User.findByIdAndUpdate(e._investor, {
@@ -134,30 +159,45 @@ const borrowerLoanRecorder = async (_borrower, loanId, next) => {
 }
 
 const transactionLoanRecorder = async (investments, loanDetails, currency, next) => {
+
+  let session = await Transaction.startSession()
+  session.startTransaction()
+
   try {
     pendingTransactions = []
     investments.forEach(e => {
-      let credit = e.amount
       let transaction = {
         _loan: e._loan,
         _investor: mongoose.Types.ObjectId(e._investor),
         date: loanDetails.startDate,
         cashAccount: e.cashAccount,
         concept: 'INVESTMENT',
-        credit: credit,
+        amount: e.amount,
         currency: currency
       }
       pendingTransactions.push(transaction)
     })
-    await Transaction.insertMany(pendingTransactions)
+
+    pendingTransactions.map(e => {
+      return Transaction.create([e], {
+        session
+      })
+    })
+
+    await session.commitTransaction()
+
+    // return await Transaction.insertMany(txs)
   } catch (e) {
+    session.abortTransaction()
     next(e)
   }
-
 }
 
 
 const insurancePremiumRecorder = async (loanId, insurancePremium, loanDetails, currency, country, next) => {
+
+  let session = await Transaction.startSession()
+  session.startTransaction()
 
   try {
     let account = await insuranceAccount(country)
@@ -169,12 +209,21 @@ const insurancePremiumRecorder = async (loanId, insurancePremium, loanDetails, c
       date: loanDetails.startDate,
       cashAccount: 'RBPERU',
       concept: 'INSURANCE_PREMIUM',
-      debit: insurancePremium,
+      amount: insurancePremium,
       currency: currency
     }
     pendingTransactions.push(transaction)
-    await Transaction.insertMany(pendingTransactions)
+
+    pendingTransactions.map(e => {
+      return Transaction.create([e], {
+        session
+      })
+    })
+    await session.commitTransaction()
+
+    // return await Transaction.insertMany(txs)
   } catch (e) {
+    session.abortTransaction()
     next(e)
   }
 }

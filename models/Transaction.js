@@ -33,11 +33,14 @@ const transactionSchema = new Schema({
   },
   concept: {
     type: String,
-    enum: constants.txConcepts
+    enum: Object.keys(constants.txConcepts)
   },
   debit: {
     type: Float,
     default: 0
+  },
+  amount: {
+    type: Float
   },
   credit: {
     type: Float,
@@ -52,8 +55,11 @@ const transactionSchema = new Schema({
 });
 
 transactionSchema.pre('save', function (next) {
-
-  console.log(this.concept)
+  if (constants.txConcepts[this.concept] == 'CREDIT') {
+    this.credit = this.amount
+  } else {
+    this.debit = this.amount
+  }
   next();
 });
 

@@ -187,9 +187,6 @@ router.get('/transaction-list/:id', async (req, res, next) => {
 })
 
 
-
-
-
 router.get('/loaninvestordetails/:id', (req, res, next) => {
   let {
     id

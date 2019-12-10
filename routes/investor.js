@@ -29,6 +29,12 @@ const investorCrud = (Model, extensionFn) => {
     router.get('/list', (req, res, next) => {
         Model.find({
                 investor: true
+            }, null, {
+                sort: {
+                    location: 1,
+                    firstName: 1,
+                    lastName: 1
+                }
             })
             .then(objList => res.status(200).json(objList))
             .catch(e => next(e))
