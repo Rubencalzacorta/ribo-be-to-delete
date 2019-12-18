@@ -8,6 +8,7 @@ const {
 } = require('./helpers/investorAggregates')
 const Transaction = require("../models/Transaction")
 const LoanSchedule = require("../models/LoanSchedule")
+const User = require("../models/User")
 
 var ObjectID = require('mongodb').ObjectID
 
@@ -236,6 +237,43 @@ router.get('/updateCashLoanTx', (req, res, next) => {
 
 router.get('/', (req, res, next) => {
   Transaction.find()
+    .then(objList => res.status(200).json(objList))
+    .catch(e => next(e))
+})
+
+router.get('/null-ref', (req, res, next) => {
+  Transaction.find({
+      concept: 'COMMISSION'
+    }).select({
+      _investor: 1,
+      _loan: 1
+    }).lean()
+    .then(async response => {
+
+      let nulls = []
+
+      let rrd = await User.findOne({
+        firstName: 'Ribo Capital',
+        lastName: 'RD'
+      })
+
+      rrid = rrd._id
+
+      await response.forEach(async e => {
+        check = await User.findById(e._investor)
+
+        if (check === null) {
+          console.log(e._id)
+          Transaction.findByIdAndUpdate({
+            _id: e._id
+          }, {
+            _investor: rrid
+          }).then(console.log)
+        }
+      })
+
+      return 'Done'
+    })
     .then(objList => res.status(200).json(objList))
     .catch(e => next(e))
 })
