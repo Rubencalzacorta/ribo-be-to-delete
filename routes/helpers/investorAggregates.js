@@ -171,8 +171,9 @@ investorsAutoInvesting = async (location) => {
 
 
 calculateTotalCashAvailable = (accTotals) => {
+
   return accTotals.reduce((acc, e) => {
-    return acc + parseInt(e.total)
+    return acc + rounder(e.total)
   }, 0)
 }
 
@@ -180,7 +181,7 @@ calculateAccountPcts = (accs, totalCash) => {
   let accounts = accs.map(e => {
     return {
       ...e,
-      pct: (e.total / totalCash)
+      pct: rounder((e.total / totalCash))
     }
   })
   return accounts
@@ -206,10 +207,8 @@ generateInvestments = (loanAmount, loanId, currency, investors) => {
 }
 
 cashAvailabilityValidator = async (location, loanAmount, next) => {
-  console.log(location, loanAmount)
   let accounts = await accountTotalsByLocation(location)
   let totalCashAvailable = await calculateTotalCashAvailable(accounts)
-  console.log(accounts, totalCashAvailable)
   if (parseFloat(loanAmount) > totalCashAvailable) {
     return {
       status: false,
@@ -231,6 +230,14 @@ investmentDistributor = async (location, loanAmount, loanId, currency) => {
   let investments = await generateInvestments(loanAmount, loanId, currency, investors)
   return investments
 
+}
+
+rounder = (numberToRound) => {
+  try {
+    return Math.round(numberToRound * 10000) / 10000
+  } catch (e) {
+    return e
+  }
 }
 
 
@@ -334,6 +341,14 @@ const cashAccountTotals = async (id) => {
       '_id': 0
     }
   }])
+}
+
+rounder = (numberToRound) => {
+  try {
+    return Math.round(numberToRound * 10000) / 10000
+  } catch (e) {
+    return e
+  }
 }
 
 

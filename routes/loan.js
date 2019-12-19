@@ -32,6 +32,9 @@ const {
     outstandingQuery
 } = require('./helpers/aggregates')
 
+const Queue = require('bull')
+const createLoanQueue = new Queue('createLoanQueue', 'redis://127.0.0.1:6379')
+
 
 withInsurance = (useOfFunds) => {
     const withPremium = [
@@ -65,6 +68,8 @@ const loanCrud = (Model, extensionFn) => {
         let loanDetails = _.merge(req.body, req.body.loanDetails);
         delete loanDetails.loanDetails
 
+        
+
         try {
             createLoan(loanDetails, next)
             .then(obj => {
@@ -82,20 +87,36 @@ const loanCrud = (Model, extensionFn) => {
 
     router.post('/create/bulk/autoinvest', async (req, res, next) => {
         let { loans } = req.body
+
+        await loans.map( e => {
+                delete e.firstName
+                e.interest= parseFloat(e.interest)
+                e.investedCapital= parseFloat(e.investedCapital)
+                e.capital= parseFloat(e.capital)
+                e.interest= parseFloat(e.interest)
+                e.startAmortPeriod= parseFloat(e.startAmortPeriod)
+                e.collateralValue= parseFloat(e.collateralValue)
+                e.startDate = moment(e.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD'),
+                e.paymentDate = moment(e.paymentDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
+                e.duration = 20         
+                return e              
+        })
+     
+        
+
         try {
-            let createdLoans = await loans.map( async  e => {
-                return await createLoan(e)
+            await loans.forEach( async (e, i) => {
+                createLoanQueue.add(createLoan(e, next))
             })
 
             res.status(200).json({
                 status: 'success',
-                message: createdLoans
+                message: 'adding loans'
             })
 
         } catch (e) {
             next(e)
         }
-
     })
 
 

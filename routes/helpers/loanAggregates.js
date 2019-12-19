@@ -7,6 +7,9 @@ const Transaction = require('../../models/Transaction')
 const {
   loanSelector
 } = require('./loanSchedule')
+const {
+  investmentDistributor
+} = require('./investorAggregates')
 
 const autoInvest = async (loanDetails, next) => {
 
@@ -67,6 +70,7 @@ const createLoan = async (loanDetails, next) => {
         next(e)
       }
     })
+    .catch(e => next(e))
 
 }
 
@@ -150,7 +154,7 @@ const scheduleRecorder = async (schedule, loanId, next) => {
 }
 
 const investmentReducer = (investments) => {
-  a = investments.reduce((acc, e) => {
+  return investments.reduce((acc, e) => {
     const found = acc.find(a => a._investor.toString() == e._investor.toString())
     if (!found) {
       acc.push({
@@ -167,7 +171,6 @@ const investmentReducer = (investments) => {
     return acc
   }, [])
 
-  return a
 }
 
 
@@ -228,6 +231,7 @@ const transactionLoanRecorder = async (investments, loanDetails, currency, next)
 
   try {
     pendingTransactions = []
+
     investments.forEach(e => {
       let transaction = {
         _loan: e._loan,
@@ -235,7 +239,7 @@ const transactionLoanRecorder = async (investments, loanDetails, currency, next)
         date: loanDetails.startDate,
         cashAccount: e.cashAccount,
         concept: 'INVESTMENT',
-        amount: e.amount,
+        credit: e.amount,
         currency: currency
       }
       pendingTransactions.push(transaction)
@@ -246,7 +250,6 @@ const transactionLoanRecorder = async (investments, loanDetails, currency, next)
         session
       })
     })
-
     await session.commitTransaction()
 
     // return await Transaction.insertMany(txs)
@@ -272,7 +275,7 @@ const insurancePremiumRecorder = async (loanId, insurancePremium, loanDetails, c
       date: loanDetails.startDate,
       cashAccount: 'RBPERU',
       concept: 'INSURANCE_PREMIUM',
-      amount: insurancePremium,
+      debit: insurancePremium,
       currency: currency
     }
     pendingTransactions.push(transaction)
