@@ -206,10 +206,10 @@ generateInvestments = (loanAmount, loanId, currency, investors) => {
 }
 
 cashAvailabilityValidator = async (location, loanAmount, next) => {
-
+  console.log(location, loanAmount)
   let accounts = await accountTotalsByLocation(location)
   let totalCashAvailable = await calculateTotalCashAvailable(accounts)
-
+  console.log(accounts, totalCashAvailable)
   if (parseFloat(loanAmount) > totalCashAvailable) {
     return {
       status: false,

@@ -15,15 +15,10 @@ const {
 const transactionPlacer = require('./helpers/transactionPlacer')
 const { 
     scheduleRecorder,
-    borrowerLoanRecorder,
-    investmentsRecorder,
-    transactionLoanRecorder,
-    adminAccount,
-    insurancePremiumRecorder, createLoanAutoInvest
+    createLoanAutoInvest
  } = require ('./helpers/loanAggregates')
 const { loanSelector } = require('./helpers/loanSchedule')
-const {investmentDistributor,
-       cashAvailabilityValidator} =require('./helpers/investorAggregates')
+const {cashAvailabilityValidator} =require('./helpers/investorAggregates')
 const {
     countryOutstandingQuery,
     countryPaidQuery,
@@ -66,23 +61,12 @@ const loanCrud = (Model, extensionFn) => {
     }
 
     router.post('/create/all-active-invest', async (req, res, next) => {
-        let notUsedPaths = ['_id', 'updated_at', 'created_at', '__v'];
-        let paths = Object.keys(Loan.schema.paths).filter(e => !notUsedPaths.includes(e));
-        const loanInitDetails = _.pickBy(req.body, (e, k) => paths.includes(k));
-        let {
-            _borrower,
-            loanDetails,
-            country
-        } = req.body
 
-        let {
-            currency,
-            useOfFunds,
-            insurancePremium
-        } = loanInitDetails
+        let loanDetails = _.merge(req.body, req.body.loanDetails);
+        delete loanDetails.loanDetails
 
-        if (country === 'VENEZUELA') {
-            country = 'USA'
+        if (loanDetails.country === 'VENEZUELA') {
+            loanDetails.country = 'USA'
         }
 
         if (loanDetails.loanType === 'factoring') {
@@ -91,13 +75,13 @@ const loanCrud = (Model, extensionFn) => {
             loanDetails.investedCapital = loanDetails.capital - interest
         }
 
-        await cashAvailabilityValidator(country, loanDetails.investedCapital)
+        await cashAvailabilityValidator(loanDetails.country, loanDetails.investedCapital)
         .then( async obj => {
             try {
                 if (obj.status === false) {
                     throw new Error(`Balance insuficiente, disponibilidad: ${(obj.cash).toFixed(2)}`)
                 } else if (obj.status) {
-                        createLoanAutoInvest(loanInitDetails, loanDetails, country, _borrower, currency, useOfFunds, insurancePremium, next)
+                        createLoanAutoInvest(loanDetails, next)
                         .then( obj => {
                             console.log(obj)
                             res.status(200).json({
@@ -106,7 +90,6 @@ const loanCrud = (Model, extensionFn) => {
                             })
                         })
                 }
-                
             } catch (e) {
                 console.log(e)
                 next(e)
