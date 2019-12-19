@@ -19,7 +19,7 @@ const {
     investmentsRecorder,
     transactionLoanRecorder,
     adminAccount,
-    insurancePremiumRecorder
+    insurancePremiumRecorder, createLoanAutoInvest
  } = require ('./helpers/loanAggregates')
 const { loanSelector } = require('./helpers/loanSchedule')
 const {investmentDistributor,
@@ -89,49 +89,32 @@ const loanCrud = (Model, extensionFn) => {
             let dailyInterest = ((loanDetails.interest / 100) * 12) / 360
             interest = dailyInterest * loanDetails.days * loanDetails.capital
             loanDetails.investedCapital = loanDetails.capital - interest
-            console.log(loanDetails.investedCapital)
         }
 
-        console.log('init', loanInitDetails)
-        console.log('det', loanDetails)
         await cashAvailabilityValidator(country, loanDetails.investedCapital)
-        .then(obj => {
+        .then( async obj => {
             try {
                 if (obj.status === false) {
                     throw new Error(`Balance insuficiente, disponibilidad: ${(obj.cash).toFixed(2)}`)
                 } else if (obj.status) {
-                    Loan.create({...loanInitDetails,...loanDetails})
-                    .then(async obj => {
-                                let loanId = obj._id
-                                let investments = await investmentDistributor(country, loanDetails.investedCapital, loanId, currency)
-                                let isInsured = await withInsurance(useOfFunds)
-                                if (isInsured) {
-                                    await insurancePremiumRecorder(loanId, insurancePremium, loanDetails, currency, country, next)
-                                }
-                                let schedule = await loanSelector(loanId, loanDetails, currency)
-                                await scheduleRecorder(schedule, loanId, next)
-                                await borrowerLoanRecorder(_borrower, loanId, next)
-                                await investmentsRecorder(investments, loanId, next)
-                                await transactionLoanRecorder(investments, loanDetails, currency, next)
-                                return obj
+                        createLoanAutoInvest(loanInitDetails, loanDetails, country, _borrower, currency, useOfFunds, insurancePremium, next)
+                        .then( obj => {
+                            console.log(obj)
+                            res.status(200).json({
+                                status: 'success',
+                                message: obj
                             })
-                            .then(obj => {
-                                res.status(200).json({
-                                    status: 'success',
-                                    message: obj
-                                })
-                            })
-                            .catch(e => {
-                                next(e)
-                            })
-                    }
-                } catch (e) {
-                    next(e)
+                        })
                 }
-            })
-
-        
+                
+            } catch (e) {
+                console.log(e)
+                next(e)
+            }
+        })
     })
+
+
 
     router.post('/create',(req,res,next) => {
         let notUsedPaths = ['_id','updated_at','created_at','__v'];

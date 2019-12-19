@@ -241,6 +241,16 @@ router.get('/', (req, res, next) => {
     .catch(e => next(e))
 })
 
+// router.get('/adjustment-gfgc', (req, res, next) => {
+//   Transaction.find({
+//     _investor: {
+//       $in: ['5c8103dfcf81366c6c0f133a', '5cd19be0821e200017b6fec2']
+//     }, 
+//     concept: 'INVESTMENT',
+//     date
+//   })
+// })
+
 router.get('/null-ref', (req, res, next) => {
   Transaction.find({
       concept: 'COMMISSION'

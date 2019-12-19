@@ -6,6 +6,31 @@ const Loan = require('../../models/Loan')
 const Transaction = require('../../models/Transaction')
 
 
+const createLoanAutoInvest = async (loanInitDetails, loanDetails, country, _borrower, currency, useOfFunds, insurancePremium, next) => {
+  try {
+    return Loan.create({
+        ...loanInitDetails,
+        ...loanDetails
+      })
+      .then(async obj => {
+        let loanId = obj._id
+        let investments = await investmentDistributor(country, loanDetails.investedCapital, loanId, currency)
+        let isInsured = await withInsurance(useOfFunds)
+        if (isInsured) {
+          await insurancePremiumRecorder(loanId, insurancePremium, loanDetails, currency, country, next)
+        }
+        let schedule = await loanSelector(loanId, loanDetails, currency)
+        await scheduleRecorder(schedule, loanId, next)
+        await borrowerLoanRecorder(_borrower, loanId, next)
+        await investmentsRecorder(investments, loanId, next)
+        await transactionLoanRecorder(investments, loanDetails, currency, next)
+        return obj
+      })
+  } catch (e) {
+    next(e)
+  }
+}
+
 const loansTotalRemaining = (status) => {
   return [{
     '$match': {
@@ -224,6 +249,7 @@ module.exports = {
   loansTotalNominal,
   loansTotalCollateral,
   loanScheduleTotalsByStatus,
+  createLoanAutoInvest,
   scheduleRecorder,
   investmentsRecorder,
   borrowerLoanRecorder,
