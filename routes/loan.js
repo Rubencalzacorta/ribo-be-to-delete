@@ -15,7 +15,7 @@ const {
 const transactionPlacer = require('./helpers/transactionPlacer')
 const { 
     scheduleRecorder,
-    createLoanAutoInvest
+    createLoan
  } = require ('./helpers/loanAggregates')
 const { loanSelector } = require('./helpers/loanSchedule')
 const {cashAvailabilityValidator} =require('./helpers/investorAggregates')
@@ -65,38 +65,38 @@ const loanCrud = (Model, extensionFn) => {
         let loanDetails = _.merge(req.body, req.body.loanDetails);
         delete loanDetails.loanDetails
 
-        if (loanDetails.country === 'VENEZUELA') {
-            loanDetails.country = 'USA'
+        try {
+            createLoan(loanDetails, next)
+            .then(obj => {
+                res.status(200).json({
+                    status: 'success',
+                    message: obj
+                })
+            })
+        } catch (e) {
+            next(e)
         }
-
-        if (loanDetails.loanType === 'factoring') {
-            let dailyInterest = ((loanDetails.interest / 100) * 12) / 360
-            interest = dailyInterest * loanDetails.days * loanDetails.capital
-            loanDetails.investedCapital = loanDetails.capital - interest
-        }
-
-        await cashAvailabilityValidator(loanDetails.country, loanDetails.investedCapital)
-        .then( async obj => {
-            try {
-                if (obj.status === false) {
-                    throw new Error(`Balance insuficiente, disponibilidad: ${(obj.cash).toFixed(2)}`)
-                } else if (obj.status) {
-                        createLoanAutoInvest(loanDetails, next)
-                        .then( obj => {
-                            console.log(obj)
-                            res.status(200).json({
-                                status: 'success',
-                                message: obj
-                            })
-                        })
-                }
-            } catch (e) {
-                console.log(e)
-                next(e)
-            }
-        })
+        
     })
 
+
+    router.post('/create/bulk/autoinvest', async (req, res, next) => {
+        let { loans } = req.body
+        try {
+            let createdLoans = await loans.map( async  e => {
+                return await createLoan(e)
+            })
+
+            res.status(200).json({
+                status: 'success',
+                message: createdLoans
+            })
+
+        } catch (e) {
+            next(e)
+        }
+
+    })
 
 
     router.post('/create',(req,res,next) => {

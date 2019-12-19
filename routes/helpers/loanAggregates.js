@@ -8,7 +8,7 @@ const {
   loanSelector
 } = require('./loanSchedule')
 
-const createLoanAutoInvest = async (loanDetails, next) => {
+const autoInvest = async (loanDetails, next) => {
 
   let {
     _borrower,
@@ -39,6 +39,35 @@ const createLoanAutoInvest = async (loanDetails, next) => {
   } catch (e) {
     next(e)
   }
+}
+
+
+const createLoan = async (loanDetails, next) => {
+
+
+  if (loanDetails.country === 'VENEZUELA') {
+    loanDetails.country = 'USA'
+  }
+
+  if (loanDetails.loanType === 'factoring') {
+    let dailyInterest = ((loanDetails.interest / 100) * 12) / 360
+    interest = dailyInterest * loanDetails.days * loanDetails.capital
+    loanDetails.investedCapital = loanDetails.capital - interest
+  }
+
+  return await cashAvailabilityValidator(loanDetails.country, loanDetails.investedCapital)
+    .then(async obj => {
+      try {
+        if (obj.status === false) {
+          throw new Error(`Balance insuficiente, disponibilidad: ${(obj.cash).toFixed(2)}`)
+        } else if (obj.status) {
+          return await autoInvest(loanDetails, next)
+        }
+      } catch (e) {
+        next(e)
+      }
+    })
+
 }
 
 const loansTotalRemaining = (status) => {
@@ -123,7 +152,6 @@ const scheduleRecorder = async (schedule, loanId, next) => {
 const investmentReducer = (investments) => {
   a = investments.reduce((acc, e) => {
     const found = acc.find(a => a._investor.toString() == e._investor.toString())
-    console.log(found)
     if (!found) {
       acc.push({
         _investor: e._investor,
@@ -310,12 +338,13 @@ module.exports = {
   loansTotalNominal,
   loansTotalCollateral,
   loanScheduleTotalsByStatus,
-  createLoanAutoInvest,
+  autoInvest,
   scheduleRecorder,
   investmentsRecorder,
   borrowerLoanRecorder,
   insurancePremiumRecorder,
   transactionLoanRecorder,
   adminAccount,
-  insuranceAccount
+  insuranceAccount,
+  createLoan
 }
