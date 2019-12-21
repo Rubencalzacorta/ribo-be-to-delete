@@ -19,6 +19,7 @@ const autoInvest = async (loanDetails, next) => {
     currency,
     country,
     investedCapital,
+    insurancePremium
   } = loanDetails
 
   try {
