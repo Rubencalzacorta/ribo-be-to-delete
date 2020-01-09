@@ -357,7 +357,7 @@ router.post('/julieta/update', async (req, res, next) => {
             })
 
 
-            div = await Transaction.insertMany(divestituresTx) 
+            div = await Transaction.insertMany(divestituresTx)
             inv = await Transaction.insertMany(investmentTx)
 
             let totalDivest = divestituresTx.reduce((acc, e) => {
@@ -409,10 +409,12 @@ function roundNumber(num, scale) {
         return +(Math.round(+arr[0] + "e" + sig + (+arr[1] + scale)) + "e-" + scale);
     }
 }
+
 router.get('/investorAggregates/:id', async (req, res, next) => {
     let {
         id
     } = req.params
+
     let deposit = await Transaction.aggregate(conceptAggregates('DEPOSIT', id))
     let fees = await Transaction.aggregate(conceptAggregates('FEE', id))
     let interest = await Transaction.aggregate(conceptAggregates('INTEREST', id))

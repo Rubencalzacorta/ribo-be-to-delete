@@ -301,11 +301,11 @@ const cashAvailableInvestor = async (id) => {
 const investorTransactions = async (id) => {
   return Transaction.find({
       '_investor': new ObjectID(id)
-    }, null, {
-      sort: {
-        date: 1
-      }
     })
+    .sort({
+      date: -1
+    })
+    .limit(200)
     .populate({
       path: '_loan',
       populate: {
@@ -339,6 +339,31 @@ const cashAccountTotals = async (id) => {
       'cashAccount': '$_id.cashAccount',
       'total': 1,
       '_id': 0
+    }
+  }])
+}
+
+cashAccountTotalReducer = async (id, skip) => {
+  return Transaction.aggregate([{
+    '$match': {
+      '_investor': new ObjectID(id)
+    }
+  }, {
+    '$skip': skip
+  }, {
+    '$sort': {
+      'date': 1
+    }
+  }, {
+    '$group': {
+      '_id': null,
+      'account_total': {
+        '$sum': {
+          '$subtract': [
+            '$debit', '$credit'
+          ]
+        }
+      }
     }
   }])
 }
