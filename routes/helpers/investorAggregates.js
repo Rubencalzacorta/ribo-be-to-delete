@@ -299,63 +299,66 @@ const cashAvailableInvestor = async (id) => {
 }
 
 const investorTransactions = async (id, page, pageSize) => {
-  if (page === 1) {
+  let skip
+  if (page == 1) {
     skip = 0
   } else {
     skip = (page - 1) * pageSize
   }
 
-  return Transaction.find({
-      '_investor': new ObjectID(id)
-    })
-    .sort({
-      date: -1
-    })
-    .skip(skip)
-    .limit(pageSize)
-    .populate({
-      path: '_loan',
-      select: {
-        '_id': 1,
-        '_borrower': 1
-      },
-      populate: {
-        path: '_borrower',
+  try {
+    let txs = await Transaction.find({
+        '_investor': new ObjectID(id)
+      })
+      .sort({
+        date: -1
+      })
+      .skip(skip)
+      .limit(parseInt(pageSize))
+      .populate({
+        path: '_loan',
+        select: {
+          '_id': 1,
+          '_borrower': 1
+        },
+        populate: {
+          path: '_borrower',
+          select: {
+            '_id': 1,
+            'firstName': 1,
+            'lastName': 1,
+          }
+        }
+      })
+      .populate({
+        path: '_investor',
         select: {
           '_id': 1,
           'firstName': 1,
-          'lastName': 1,
+          'lastName': 1
         }
-      }
-    })
-    .populate({
-      path: '_investor',
-      select: {
-        '_id': 1,
-        'firstName': 1,
-        'lastName': 1
-      }
-    })
+      })
+    return txs
+  } catch (e) {
+    console.log(e)
+  }
+
 }
 
 
 const investorTxBook = async (id, page, pageSize) => {
 
   accountTotalAccum = await cashAccountTotalReducer(id)
-  console.log(accountTotalAccum)
   accountTotalRemainder = await cashAccountTotalReducerRemainder(id, page, pageSize)
-  console.log(accountTotalRemainder)
   accountTotal = accountTotalAccum[0].account_total - accountTotalRemainder[0].account_total
   investorTxs = await investorTransactions(id, page, pageSize)
-  console.log(investorTxs)
-
 
   newTxs = []
 
   investorTxs.forEach((e, i) => {
 
     let balance = 0
-    if (i === 0) {
+    if (i == 0) {
       balance = accountTotal
     } else {
       balance = rounder(newTxs[i - 1].balance) + rounder(-newTxs[i - 1].debit + newTxs[i - 1].credit)
@@ -374,7 +377,11 @@ const investorTxBook = async (id, page, pageSize) => {
 
   })
 
-  return newTxs
+  return {
+    data: newTxs,
+    page: page,
+    total: accountTotalAccum[0].totalTxs
+  }
 
 }
 
@@ -434,7 +441,8 @@ cashAccountTotalReducer = async (id) => {
 }
 
 cashAccountTotalReducerRemainder = async (id, page, pageSize) => {
-  if (page === 1) {
+
+  if (page == 1) {
     return [{
       _id: null,
       account_total: 0

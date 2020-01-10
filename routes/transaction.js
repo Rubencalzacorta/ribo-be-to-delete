@@ -174,18 +174,13 @@ router.get('/list/:id', async (req, res, next) => {
     })
 })
 
-router.get('/transaction-list/:id', async (req, res, next) => {
+router.get('/transaction-list/:id/:page/:pageSize', async (req, res, next) => {
   let {
-    id
+    id,
+    page,
+    pageSize
   } = req.params
 
-  page = 1
-  pageSize = 10
-  // ({
-  //   data: result.data,
-  //   page: result.page - 1,
-  //   totalCount: result.total,
-  // })
   investorTxBook(id, page, pageSize)
     .then(result => {
       res.status(200).json(result)
