@@ -4,7 +4,8 @@ const router = express.Router();
 const {
   investorDetails,
   investorInvestmentsDetails,
-  investorTransactions
+  investorTransactions,
+  investorTxBook
 } = require('./helpers/investorAggregates')
 const Transaction = require("../models/Transaction")
 const LoanSchedule = require("../models/LoanSchedule")
@@ -178,7 +179,14 @@ router.get('/transaction-list/:id', async (req, res, next) => {
     id
   } = req.params
 
-  investorTransactions(id)
+  page = 1
+  pageSize = 10
+  // ({
+  //   data: result.data,
+  //   page: result.page - 1,
+  //   totalCount: result.total,
+  // })
+  investorTxBook(id, page, pageSize)
     .then(result => {
       res.status(200).json(result)
     })
@@ -205,7 +213,6 @@ router.get('/loaninvestordetails/:id', (req, res, next) => {
 })
 
 router.get('/updateCashLoanTx', (req, res, next) => {
-  console.log("a")
   Transaction.aggregate(
     [{
       '$match': {
