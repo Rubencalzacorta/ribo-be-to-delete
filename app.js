@@ -89,6 +89,7 @@ app.locals.title = 'Express - Generated with IronGenerator';
 
 const authRouter = require('./routes/auth');
 const summaryRouter = require('./routes/summary');
+const reportingRouter = require('./routes/reporting');
 const transactionRouter = require('./routes/transaction');
 const genericCrud = require('./routes/genericCRUD');
 const companyCrud = require('./routes/company');
@@ -104,6 +105,7 @@ app.use('/api/loan', loanCrud(require('./models/Loan')));
 app.use('/api/test/transaction', transactionRouter);
 app.use('/api/test/summary', summaryRouter);
 app.use('/api/st', stRouter);
+app.use('/api/reporting', reportingRouter(require('./models/User')));
 app.use('/api/payment', paymentCrud(require('./models/Payment')));
 app.use('/api/collateral', collateralCrud(require('./models/Collateral')));
 app.use('/api/company', companyCrud(require('./models/Company')));
