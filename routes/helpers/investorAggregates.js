@@ -543,7 +543,7 @@ let investorPLDetails = async (id) => {
     'TRAVEL_EXPENSES',
     'TRANSPORT',
     'INSURANCE_COST',
-    'INTEREST_PAYMENT',
+    'INTEREST_COST',
     'UNCLASSIFIED_COST'
   ])
   let feeExpenses = await transactionTypeTotal(id, 'credit', ['FEE', 'MANAGEMENT_INTEREST_COST', 'MANAGEMENT_FEE_COST', 'COMMISSION_COST'])

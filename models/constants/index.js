@@ -50,7 +50,7 @@ module.exports.txConcepts = {
     'DIVIDENDS': 'CREDIT',
     'DIVIDEND_INCOME': 'DEBIT',
     'INTEREST': 'DEBIT',
-    'INTEREST_PAYMENT': 'CREDIT',
+    'INTEREST_COST': 'CREDIT',
     'CAPITAL': 'DEBIT',
     'FEE': 'CREDIT',
     'COST': 'CREDIT',
