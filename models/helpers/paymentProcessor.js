@@ -52,8 +52,7 @@ const capitalTx = (txDetails, investor) => {
         cashAccount: txDetails.cashAccount,
         currency: txDetails.currency,
         concept: 'CAPITAL',
-        debit: txDetails.principal * investor.pct,
-        credit: 0,
+        amount: txDetails.principal * investor.pct,
     }
 }
 
@@ -68,9 +67,8 @@ const mgmtInterestFixedTxs = (txDetails, investor) => {
             date: txDetails.date,
             cashAccount: txDetails.cashAccount,
             currency: txDetails.currency,
-            concept: 'MANAGEMENT_INTEREST',
-            debit: investor.pct * txDetails.interest * e.pct,
-            credit: 0,
+            concept: 'MANAGEMENT_INTEREST_INCOME',
+            amount: investor.pct * txDetails.interest * e.pct
         }, {
             _loan: mongoose.Types.ObjectId(txDetails._loan),
             _investor: mongoose.Types.ObjectId(e._investor),
@@ -79,9 +77,8 @@ const mgmtInterestFixedTxs = (txDetails, investor) => {
             date: txDetails.date,
             cashAccount: txDetails.cashAccount,
             currency: txDetails.currency,
-            concept: 'MANAGEMENT_INTEREST',
-            debit: 0,
-            credit: investor.pct * txDetails.interest * e.pct,
+            concept: 'MANAGEMENT_INTEREST_COST',
+            amount: investor.pct * txDetails.interest * e.pct,
         })
     })
     return txs
@@ -99,9 +96,8 @@ const mgmtFeeTxs = (txDetails, investor) => {
             date: txDetails.date,
             cashAccount: txDetails.cashAccount,
             currency: txDetails.currency,
-            concept: 'MANAGEMENT_FEE',
-            debit: investor.pct * txDetails.interest * e.pct,
-            credit: 0,
+            concept: 'MANAGEMENT_FEE_INCOME',
+            amount: investor.pct * txDetails.interest * e.pct,
         }, {
             _loan: mongoose.Types.ObjectId(txDetails._loan),
             _investor: mongoose.Types.ObjectId(e._investor),
@@ -110,9 +106,8 @@ const mgmtFeeTxs = (txDetails, investor) => {
             date: txDetails.date,
             cashAccount: txDetails.cashAccount,
             currency: txDetails.currency,
-            concept: 'MANAGEMENT_FEE',
-            debit: 0,
-            credit: investor.pct * txDetails.interest * e.pct
+            concept: 'MANAGEMENT_FEE_COST',
+            amount: investor.pct * txDetails.interest * e.pct
         })
     })
     return txs
@@ -130,9 +125,8 @@ const commissionTx = (txDetails, managementAccount) => {
             date: txDetails.date,
             cashAccount: txDetails.cashAccount,
             currency: txDetails.currency,
-            concept: 'COMMISSION',
-            debit: 0,
-            credit: txDetails.interest * commission.pct
+            concept: 'COMMISSION_COST',
+            amount: txDetails.interest * commission.pct
         }, {
             _loan: mongoose.Types.ObjectId(commission._loan),
             _investor: mongoose.Types.ObjectId(commission._salesman),
@@ -141,9 +135,8 @@ const commissionTx = (txDetails, managementAccount) => {
             date: txDetails.date,
             cashAccount: txDetails.cashAccount,
             currency: txDetails.currency,
-            concept: 'COMMISSION',
-            debit: txDetails.interest * commission.pct,
-            credit: 0
+            concept: 'COMMISSION_INCOME',
+            amount: txDetails.interest * commission.pct
         })
     })
     return txs
@@ -160,8 +153,7 @@ const investorInterestTx = (txDetails, investor) => {
         cashAccount: txDetails.cashAccount,
         currency: txDetails.currency,
         concept: 'INTEREST',
-        debit: investor.pct * txDetails.interest,
-        credit: 0,
+        amount: investor.pct * txDetails.interest
     }
 }
 
@@ -212,6 +204,11 @@ managementAccountFinder = async (investors) => {
 
 
 txPlacer = async (result, investors, loan, IandK, next) => {
+
+    let session = await Transaction.startSession()
+
+    session.startTransaction()
+
     try {
         let dd = distributorDetails(result, investors, loan, IandK)
         let managementAccount = await managementAccountFinder(investors)
@@ -219,8 +216,17 @@ txPlacer = async (result, investors, loan, IandK, next) => {
         let interest = interestDistributor(dd, managementAccount)
         let commission = commissionDistributor(dd, managementAccount)
         let txs = [...capital, ...interest, ...commission]
-        return await Transaction.insertMany(txs)
+
+        txs.map(e => {
+            return Transaction.create([e], {
+                session
+            })
+        })
+
+        await session.commitTransaction()
+
     } catch (e) {
+        session.abortTransaction()
         next(e)
     }
 

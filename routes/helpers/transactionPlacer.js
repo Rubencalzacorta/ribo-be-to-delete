@@ -34,8 +34,8 @@ const transactionPlacer = async (transactionDetails) => {
                     date: date_pmt,
                     cashAccount: cashAccount,
                     currency: currency,
-                    concept: "MANAGEMENT_INTEREST",
-                    debit: investor.pct * interest_pmt * (management.pct),
+                    concept: "MANAGEMENT_INTEREST_INCOME",
+                    amount: investor.pct * interest_pmt * (management.pct),
                 }
                 pendingTransactions.push(managementTransaction)
 
@@ -48,7 +48,7 @@ const transactionPlacer = async (transactionDetails) => {
                     cashAccount: cashAccount,
                     currency: currency,
                     concept: "INTEREST",
-                    debit: investor.pct * interest_pmt,
+                    amount: investor.pct * interest_pmt,
                 }
 
                 pendingTransactions.push(interestTransaction)
@@ -60,8 +60,8 @@ const transactionPlacer = async (transactionDetails) => {
                     date: date_pmt,
                     cashAccount: cashAccount,
                     currency: currency,
-                    concept: "MANAGEMENT_FEE",
-                    debit: investor.pct * interest_pmt * (management.pct),
+                    concept: "MANAGEMENT_FEE_INCOME",
+                    amount: investor.pct * interest_pmt * (management.pct),
                 }, {
                     _loan: investor._loan,
                     _investor: investor._investor._id,
@@ -69,8 +69,8 @@ const transactionPlacer = async (transactionDetails) => {
                     date: date_pmt,
                     cashAccount: cashAccount,
                     currency: currency,
-                    concept: "MANAGEMENT_FEE",
-                    credit: investor.pct * interest_pmt * (management.pct),
+                    concept: "MANAGEMENT_FEE_COST",
+                    amount: investor.pct * interest_pmt * (management.pct),
                 }]
 
                 managementTransaction.forEach(tx => {
@@ -89,8 +89,8 @@ const transactionPlacer = async (transactionDetails) => {
                             date: date_pmt,
                             cashAccount: cashAccount,
                             currency: currency,
-                            concept: "COMMISSION",
-                            debit: ((investor.pct * interest_pmt * (management.pct)) / interest_pmt) * interest_pmt * commission.pct,
+                            concept: "COMMISSION_INCOME",
+                            amount: ((investor.pct * interest_pmt * (management.pct)) / interest_pmt) * interest_pmt * commission.pct,
                         }, {
                             _loan: investor._loan,
                             _investor: management._managementAccount,
@@ -98,8 +98,8 @@ const transactionPlacer = async (transactionDetails) => {
                             date: date_pmt,
                             cashAccount: cashAccount,
                             currency: currency,
-                            concept: "COMMISSION",
-                            credit: ((investor.pct * interest_pmt * (management.pct)) / interest_pmt) * interest_pmt * commission.pct,
+                            concept: "COMMISSION_COST",
+                            amount: ((investor.pct * interest_pmt * (management.pct)) / interest_pmt) * interest_pmt * commission.pct,
                         }]
 
                         commissionTransaction.forEach(tx => {
@@ -117,8 +117,8 @@ const transactionPlacer = async (transactionDetails) => {
                             date: date_pmt,
                             cashAccount: cashAccount,
                             currency: currency,
-                            concept: "COMMISSION",
-                            debit: ((investor.pct * interest_pmt) / interest_pmt) * interest_pmt * commission.pct,
+                            concept: "COMMISSION_INCOME",
+                            amount: ((investor.pct * interest_pmt) / interest_pmt) * interest_pmt * commission.pct,
                         }, {
                             _loan: investor._loan,
                             _investor: management._managementAccount,
@@ -126,8 +126,8 @@ const transactionPlacer = async (transactionDetails) => {
                             date: date_pmt,
                             cashAccount: cashAccount,
                             currency: currency,
-                            concept: "COMMISSION",
-                            credit: ((investor.pct * interest_pmt) / interest_pmt) * interest_pmt * commission.pct,
+                            concept: "COMMISSION_COST",
+                            amount: ((investor.pct * interest_pmt) / interest_pmt) * interest_pmt * commission.pct,
                         }]
 
                         commissionTransaction.forEach(tx => {
@@ -147,7 +147,7 @@ const transactionPlacer = async (transactionDetails) => {
             cashAccount: cashAccount,
             currency: currency,
             concept: "CAPITAL",
-            debit: principal_pmt * investor.pct,
+            amount: principal_pmt * investor.pct,
         }
         pendingTransactions.push(principalTransaction)
     })

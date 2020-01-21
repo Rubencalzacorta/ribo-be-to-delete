@@ -374,7 +374,7 @@ const simpleCrud = (Model, extensionFn) => {
                         date: new Date(),
                         cashAccount: e.cashAccount,
                         concept: "INVESTMENT",
-                        credit: e.amount
+                        amount: e.amount
                     }
                     pendingTransactions.push(transaction)
                 })
@@ -476,7 +476,7 @@ const simpleCrud = (Model, extensionFn) => {
                         date: new Date(),
                         cashAccount: cashAccount,
                         concept: "INTEREST",
-                        debit: interest_pmt * e.pct,
+                        amount: interest_pmt * e.pct,
                     }
                     pendingTransactions.push(interestTransaction)
                     principalTransaction = {
@@ -486,7 +486,7 @@ const simpleCrud = (Model, extensionFn) => {
                         date: new Date(),
                         cashAccount: cashAccount,
                         concept: "CAPITAL",
-                        debit: principal_pmt * e.pct,
+                        amount: principal_pmt * e.pct,
                     }
                     pendingTransactions.push(principalTransaction)
                 })
@@ -500,8 +500,8 @@ const simpleCrud = (Model, extensionFn) => {
                                 _loanSchedule: mongoose.Types.ObjectId(id),
                                 date: new Date(),
                                 cashAccount: cashAccount,
-                                concept: "FEE",
-                                credit: feeCharge
+                                concept: "MANAGEMENT_FEE_COST",
+                                amount: feeCharge
                             }
                             pendingTransactions.push(creditTransaction)
                             debitTransaction = {
@@ -510,8 +510,8 @@ const simpleCrud = (Model, extensionFn) => {
                                 _loanSchedule: mongoose.Types.ObjectId(id),
                                 date: new Date(),
                                 cashAccount: cashAccount,
-                                concept: "FEE",
-                                debit: feeCharge
+                                concept: "MANAGEMENT_FEE_INCOME",
+                                amount: feeCharge
                             }
                             pendingTransactions.push(debitTransaction)
                         })

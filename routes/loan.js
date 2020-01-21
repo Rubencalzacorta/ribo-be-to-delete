@@ -179,7 +179,7 @@ const loanCrud = (Model, extensionFn) => {
                         date: loanDetails.startDate,
                         cashAccount: e.cashAccount,
                         concept: 'INVESTMENT',
-                        credit: credit,
+                        amount: credit,
                         currency: currency
                     }
                     pendingTransactions.push(transaction)

@@ -240,7 +240,7 @@ const transactionLoanRecorder = async (investments, loanDetails, currency, next)
         date: loanDetails.startDate,
         cashAccount: e.cashAccount,
         concept: 'INVESTMENT',
-        credit: e.amount,
+        amount: e.amount,
         currency: currency
       }
       pendingTransactions.push(transaction)
@@ -276,7 +276,7 @@ const insurancePremiumRecorder = async (loanId, insurancePremium, loanDetails, c
       date: loanDetails.startDate,
       cashAccount: 'RBPERU',
       concept: 'INSURANCE_PREMIUM',
-      debit: insurancePremium,
+      amount: insurancePremium,
       currency: currency
     }
     pendingTransactions.push(transaction)

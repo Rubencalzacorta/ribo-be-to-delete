@@ -282,6 +282,57 @@ const reverseTxs = async (concept, cashAccount, id) => {
     }])
 }
 
+
+router.post('/concept-modifier', async (req, res, next) => {
+
+    a = await Transaction.updateMany({
+        credit: {
+            $gte: 0
+        },
+        debit: 0,
+        concept: 'MANAGEMENT_FEE'
+    }, {
+        'concept': 'MANAGEMENT_FEE_COST'
+    })
+
+    b = await Transaction.updateMany({
+        credit: {
+            $gte: 0
+        },
+        debit: 0,
+        concept: 'MANAGEMENT_INTEREST'
+    }, {
+        'concept': 'MANAGEMENT_INTEREST_COST'
+    })
+
+    c = await Transaction.updateMany({
+        debit: {
+            $gte: 0
+        },
+        credit: 0,
+        concept: 'MANAGEMENT_FEE'
+    }, {
+        'concept': 'MANAGEMENT_FEE_INCOME'
+    })
+
+    d = await Transaction.updateMany({
+        debit: {
+            $gte: 0
+        },
+        credit: 0,
+        concept: 'MANAGEMENT_INTEREST'
+    }, {
+        'concept': 'MANAGEMENT_INTEREST_INCOME'
+    })
+
+    Promise.all([a, b, c, d]).then(
+        r => res.status(200).json(r)
+    )
+
+})
+
+
+
 const interestConsolidation = async (concept, cashAccount, id) => {
     adate = new Date('2019-11-18T00:00:40.974Z')
     return await Transaction.aggregate([{

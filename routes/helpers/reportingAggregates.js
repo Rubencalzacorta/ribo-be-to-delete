@@ -1,11 +1,19 @@
 const LoanSchedule = require('../../models/LoanSchedule')
 
-module.exports.collectionCategorization = async (country) => {
+module.exports.collectionCategorization = async (country, rateAdjustment) => {
     let today = new Date()
+    let today2 = new Date()
+    var newDate = new Date(today.setDate(today.getDate() + 15));
     if (country === 'WORLD') {
         location = ['PERU', 'VENEZUELA', 'DOMINICAN_REPUBLIC']
     } else {
         location = [country]
+    }
+
+    if (rateAdjustment) {
+        rate = 51
+    } else {
+        rate = 1
     }
 
 
@@ -13,8 +21,11 @@ module.exports.collectionCategorization = async (country) => {
         '$match': {
             'status': {
                 '$nin': [
-                    'CLOSED', 'DISBURSTMENT', 'PAID'
+                    'CLOSED', 'DISBURSTMENT', 'PAID', 'RESTRUCTURED'
                 ]
+            },
+            'date': {
+                '$lte': newDate
             }
         }
     }, {
@@ -30,26 +41,32 @@ module.exports.collectionCategorization = async (country) => {
             'status': {
                 '$first': '$status'
             },
+            'oldest_installment': {
+                '$first': '$_id'
+            },
+            'oldest_payment': {
+                '$first': '$payment'
+            },
             'interest': {
-                '$first': '$interest'
+                '$sum': '$interest'
             },
             'principal': {
-                '$first': '$principal'
+                '$sum': '$principal'
+            },
+            'number_unpaid': {
+                '$sum': 1
             },
             'currency': {
                 '$first': '$currency'
             },
             'payment': {
-                '$first': '$payment'
-            },
-            'balance': {
-                '$first': '$balance'
+                '$sum': '$payment'
             },
             'interest_pmt': {
-                '$first': '$interest_pmt'
+                '$sum': '$interest_pmt'
             },
             'principal_pmt': {
-                '$first': '$principal_pmt'
+                '$sum': '$principal_pmt'
             }
         }
     }, {
@@ -58,13 +75,16 @@ module.exports.collectionCategorization = async (country) => {
             'dayDiff': {
                 '$divide': [{
                     '$subtract': [
-                        today, '$date'
+                        today2, '$date'
                     ]
                 }, 86400000]
             },
             'interest': 1,
             'principal': 1,
+            'oldest_installment': 1,
+            'oldest_payment': 1,
             'payment': 1,
+            'number_unpaid': 1,
             '_id': 1,
             'status': 1,
             'currency': 1,
@@ -81,15 +101,15 @@ module.exports.collectionCategorization = async (country) => {
                             '$dayDiff', 0
                         ]
                     }, {
-                        '$lt': [
-                            '$dayDiff', 3
+                        '$lte': [
+                            '$dayDiff', 7
                         ]
                     }]
                 }, '0-3', {
                     '$cond': [{
                         '$and': [{
                             '$gte': [
-                                '$dayDiff', 3
+                                '$dayDiff', 8
                             ]
                         }, {
                             '$lt': [
@@ -129,7 +149,7 @@ module.exports.collectionCategorization = async (country) => {
                                     '$cond': [{
                                         '$and': [{
                                             '$gte': [
-                                                '$dayDiff', -30
+                                                '$dayDiff', -15
                                             ]
                                         }, {
                                             '$lt': [
@@ -146,6 +166,9 @@ module.exports.collectionCategorization = async (country) => {
             'date': 1,
             'dayDiff': 1,
             'interest': 1,
+            'oldest_installment': 1,
+            'oldest_payment': 1,
+            'number_unpaid': 1,
             'principal': 1,
             'payment': 1,
             '_id': 1,
@@ -217,7 +240,7 @@ module.exports.collectionCategorization = async (country) => {
                                     '$interest_pmt', '$principal_pmt'
                                 ]
                             }]
-                        }, 51]
+                        }, rate]
                     },
                     'else': {
                         '$subtract': [{
@@ -233,7 +256,10 @@ module.exports.collectionCategorization = async (country) => {
                 }
             },
             'status': 1,
-            'currency': 1
+            'currency': 1,
+            'oldest_installment': 1,
+            'oldest_payment': 1,
+            'number_unpaid': 1,
         }
     }, {
         '$match': {

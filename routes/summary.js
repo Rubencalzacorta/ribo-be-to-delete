@@ -340,7 +340,7 @@ router.post('/julieta/update', async (req, res, next) => {
                     cashAccount: 'PLPERU',
                     currency: 'USD',
                     concept: 'DIVESTMENT',
-                    debit: e.capitalRemaining * e.pct * (1 - 0.495667864232),
+                    amount: e.capitalRemaining * e.pct * (1 - 0.495667864232),
                 }
             })
 
@@ -352,7 +352,7 @@ router.post('/julieta/update', async (req, res, next) => {
                     cashAccount: 'PLPERU',
                     currency: 'USD',
                     concept: 'INVESTMENT',
-                    credit: e.capitalRemaining * e.pct,
+                    amount: e.capitalRemaining * e.pct,
                 }
             })
 

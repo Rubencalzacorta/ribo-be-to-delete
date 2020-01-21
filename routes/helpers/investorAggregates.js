@@ -524,9 +524,30 @@ let investorInvestmentDetails = async (id) => {
 let investorPLDetails = async (id) => {
 
   let interestReceived = await transactionTypeTotal(id, 'debit', ['INTEREST'])
-  let totalCosts = await transactionTypeTotal(id, 'credit', ['COST'])
-  let feeExpenses = await transactionTypeTotal(id, 'credit', ['FEE', 'MANAGEMENT_INTEREST', 'MANAGEMENT_FEE', 'COMMISSION'])
-  let feeIncome = await transactionTypeTotal(id, 'debit', ['FEE', 'MANAGEMENT_INTEREST', 'MANAGEMENT_FEE', 'COMMISSION'])
+  let totalCosts = await transactionTypeTotal(id, 'credit', [
+    'COST',
+    'COST_ORIGINATION_LEGAL',
+    'COST_ORIGINATION_TRANSPORT',
+    'COST_ORIGINATION_EXPENSES',
+    'COST_ORIGINATION_SENTINEL',
+    'COST_SERVICING_LEGAL',
+    'COST_SERVICING_TRANSPORT',
+    'COST_SERVICING_EXPENSES',
+    'SG&A_ACCOUNTING',
+    'SG&A_TECH_SERVICES',
+    'SG&A_LEGAL',
+    'SG&A_MAILING',
+    'SG&A_OFFICE_RENT',
+    'SG&A_OFFICE_PRINT',
+    'SG&A_OFFICE_STORAGE',
+    'TRAVEL_EXPENSES',
+    'TRANSPORT',
+    'INSURANCE_COST',
+    'INTEREST_PAYMENT',
+    'UNCLASSIFIED_COST'
+  ])
+  let feeExpenses = await transactionTypeTotal(id, 'credit', ['FEE', 'MANAGEMENT_INTEREST_COST', 'MANAGEMENT_FEE_COST', 'COMMISSION_COST'])
+  let feeIncome = await transactionTypeTotal(id, 'debit', ['FEE', 'MANAGEMENT_INTEREST_INCOME', 'MANAGEMENT_FEE_INCOME', 'INSURANCE_PREMIUM', 'COMMISSION_INCOME'])
 
   return Promise.all([
     interestReceived,
@@ -545,8 +566,8 @@ let investorPLDetails = async (id) => {
 }
 
 let investorCashMovements = async (id) => {
-  let totalDeposits = await transactionTypeTotal(id, 'debit', ['DEPOSIT'])
-  let totalWithdrawals = await transactionTypeTotal(id, 'credit', ['WITHDRAWAL'])
+  let totalDeposits = await transactionTypeTotal(id, 'debit', ['DEPOSIT', 'INTERNAL_TRANSFER_RECIPIENT', 'INTERNATIONAL_TRANSFER_RECIPIENT', 'DIVINDEND_INCOME'])
+  let totalWithdrawals = await transactionTypeTotal(id, 'credit', ['WITHDRAWAL', 'INTERNATIONAL_TRANSFER_SENDER', 'INTERNAL_TRANSFER_SENDER', 'DIVIDENDS'])
 
   return Promise.all([
     totalDeposits,
@@ -680,18 +701,14 @@ const investorInvestmentsDetails = async (id) => {
       'feeExpense': {
         '$sum': {
           '$cond': [{
-            '$eq': [
-              '$concept', 'FEE'
-            ]
+            '$in': ['$concept', ['FEE', 'MANAGEMENT_INTEREST_COST', 'MANAGEMENT_FEE_COST']]
           }, '$credit', 0]
         }
       },
       'feeIncome': {
         '$sum': {
           '$cond': [{
-            '$eq': [
-              '$concept', 'FEE'
-            ]
+            '$in': ['$concept', ['FEE', 'MANAGEMENT_INTEREST_INCOME', 'MANAGEMENT_FEE_INCOME']]
           }, '$debit', 0]
         }
       },
@@ -894,7 +911,7 @@ let investorInvestmentsSummary = async (id) => {
               '$$value', {
                 '$cond': [{
                   '$eq': [
-                    '$$this.concept', 'MANAGEMENT_FEE'
+                    '$$this.concept', 'MANAGEMENT_FEE_COST'
                   ]
                 }, '$$this.credit', 0]
               }
@@ -911,7 +928,7 @@ let investorInvestmentsSummary = async (id) => {
               '$$value', {
                 '$cond': [{
                   '$eq': [
-                    '$$this.concept', 'MANAGEMENT_FEE'
+                    '$$this.concept', 'MANAGEMENT_FEE_INCOME'
                   ]
                 }, '$$this.debit', 0]
               }
@@ -928,7 +945,7 @@ let investorInvestmentsSummary = async (id) => {
               '$$value', {
                 '$cond': [{
                   '$eq': [
-                    '$$this.concept', 'MANAGEMENT_INTEREST'
+                    '$$this.concept', 'MANAGEMENT_INTEREST_COST'
                   ]
                 }, '$$this.credit', 0]
               }
@@ -945,7 +962,7 @@ let investorInvestmentsSummary = async (id) => {
               '$$value', {
                 '$cond': [{
                   '$eq': [
-                    '$$this.concept', 'MANAGEMENT_INTEREST'
+                    '$$this.concept', 'MANAGEMENT_INTEREST_INCOME'
                   ]
                 }, '$$this.debit', 0]
               }
@@ -962,7 +979,7 @@ let investorInvestmentsSummary = async (id) => {
               '$$value', {
                 '$cond': [{
                   '$eq': [
-                    '$$this.concept', 'COMMISION'
+                    '$$this.concept', 'COMMISION_INCOME'
                   ]
                 }, '$$this.debit', 0]
               }
@@ -979,7 +996,7 @@ let investorInvestmentsSummary = async (id) => {
               '$$value', {
                 '$cond': [{
                   '$eq': [
-                    '$$this.concept', 'COMMISION'
+                    '$$this.concept', 'COMMISION_COST'
                   ]
                 }, '$$this.credit', 0]
               }

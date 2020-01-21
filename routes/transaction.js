@@ -292,6 +292,7 @@ router.get('/null-ref', (req, res, next) => {
 
 
 router.post('/', (req, res, next) => {
+  console.log(req.body)
   Transaction.create(req.body)
     .then(obj => {
       res.status(200).json(obj)

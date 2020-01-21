@@ -16,8 +16,7 @@ const reporting = (Model, extensionFn) => {
 
     router.get('/collection', async (req, res, next) => {
 
-        console.log('aca')
-        result = await collectionCategorization(req.user.location)
+        result = await collectionCategorization(req.user.location, true)
         let structuredData = {
             "name": "COBRANZA",
             "children": []
@@ -31,11 +30,11 @@ const reporting = (Model, extensionFn) => {
                         "children": e.c0
                     },
                     {
-                        "name": "0 a 3 días",
+                        "name": "0 a 7 días",
                         "children": e.c030
                     },
                     {
-                        "name": "3 a 30 días",
+                        "name": "7 a 30 días",
                         "children": e.c330
                     },
                     {
@@ -49,7 +48,7 @@ const reporting = (Model, extensionFn) => {
                     {
                         "name": "90 días",
                         "children": e.c90
-                    },
+                    }
                 ]
             })
         })

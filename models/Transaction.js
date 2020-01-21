@@ -33,7 +33,11 @@ const transactionSchema = new Schema({
   },
   concept: {
     type: String,
-    enum: constants.txConcepts
+    enum: Object.keys(constants.txConcepts)
+  },
+  amount: {
+    type: Float,
+    default: 0
   },
   debit: {
     type: Float,
@@ -50,6 +54,18 @@ const transactionSchema = new Schema({
     updatedAt: 'updated_at'
   }
 });
+
+
+transactionSchema.pre('save', function (next) {
+  console.log(this.amount)
+  if (constants.txConcepts[this.concept] == 'CREDIT') {
+    this.credit = this.amount
+  } else {
+    this.debit = this.amount
+  }
+  next();
+});
+
 
 
 const Transaction = mongoose.model('Transaction', transactionSchema);
