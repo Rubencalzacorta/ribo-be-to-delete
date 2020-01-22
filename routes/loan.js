@@ -167,7 +167,12 @@ const loanCrud = (Model, extensionFn) => {
                     {safe: true, upsert: true}).exec()
                 return obj
             })
-            .then( obj => {
+            .then( async obj => {
+
+                let session = await Transaction.startSession()
+
+                session.startTransaction()
+
                 let loanId = obj._id
                 let investments = toInvest.map( e => ({_loan: loanId, ...e, currency}))
                 pendingTransactions = []
@@ -184,7 +189,20 @@ const loanCrud = (Model, extensionFn) => {
                     }
                     pendingTransactions.push(transaction)
                 })
-                Transaction.insertMany(pendingTransactions)
+
+                try {
+                pendingTransactions.map(e => {
+                            return Transaction.create([e], {
+                                session
+                            })
+                        })
+
+                    await session.commitTransaction()
+                } catch (e) {
+                    session.abortTransaction()
+                    next(e)
+                }
+
                 return obj
             })
             .then( obj => {
