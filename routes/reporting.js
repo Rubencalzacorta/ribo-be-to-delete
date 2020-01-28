@@ -1,7 +1,9 @@
 const express = require('express');
 const {
-    collectionCategorization
+    collectionCategorization,
+    pAndLReport
 } = require('./helpers/reportingAggregates')
+const moment = require('moment')
 
 const reporting = (Model, extensionFn) => {
 
@@ -55,6 +57,18 @@ const reporting = (Model, extensionFn) => {
 
         res.status(200).json(structuredData)
 
+    })
+
+
+
+
+    router.get('/p-and-l', async (req, res, next) => {
+        try {
+            pAndL = await pAndLReport(req.query)
+            res.status(200).json(pAndL)
+        } catch (e) {
+            next(e)
+        }
     })
 
     router.use((err, req, res, next) => {

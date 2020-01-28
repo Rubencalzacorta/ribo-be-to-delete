@@ -112,3 +112,14 @@ module.exports.loanPaymentStatus = [
     "defaulted",
     "chargedOff",
 ]
+// credit = (concepts) => [{
+//     'commission': {
+//         '$sum': {
+//             '$cond': [{
+//                 '$eq': [
+//                     '$concept', concept
+//                 ]
+//             }, '$credit', 0]
+//         }
+//     }
+// }]

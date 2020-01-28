@@ -34,6 +34,27 @@ const investorCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
 
+    router.get('/holding-account/list', (req, res, next) => {
+
+        try {
+            if (req.user.location === 'WORLD') {
+                Model.find({
+                        firstName: 'Ribo Capital'
+                    })
+                    .then(objList => res.status(200).json(objList))
+            } else {
+                Model.find({
+                        firstName: 'Ribo Capital',
+                        location: req.user.location
+                    })
+                    .then(objList => res.status(200).json(objList))
+            }
+        } catch (e) {
+            next(e)
+        }
+
+    })
+
     router.post('/', (req, res, next) => {
         const object = _.pickBy(req.body, (e, k) => paths.includes(k));
         Model.create(object)
@@ -181,7 +202,7 @@ const investorCrud = (Model, extensionFn) => {
             investorId,
             investorType
         } = req.body
-        console.log(req.body)
+
         let INV = await User.findOne({
             _id: investorId,
             investor: true
