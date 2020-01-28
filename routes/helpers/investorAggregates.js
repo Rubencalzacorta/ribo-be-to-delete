@@ -543,6 +543,7 @@ let investorPLDetails = async (id) => {
     "SALARY",
     'SG&A_OFFICE_PRINT',
     'SG&A_OFFICE_STORAGE',
+    'SG&A_MARKETING',
     'TRAVEL_EXPENSES',
     'TRANSPORT',
     'INSURANCE_COST',
