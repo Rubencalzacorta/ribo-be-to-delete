@@ -383,7 +383,8 @@ module.exports.pAndLReport = async (query) => {
 
         data['Costo por Seguro'] = accountFilter(accounts, 'INSURANCE_COST')
         data['Costo por Intereses'] = accountFilter(accounts, 'INTEREST_COST')
-        data['Costos Financieros'] = data['Costo por Seguro'] + data['Costo por Intereses']
+        data['Costo por comisiones'] = accountFilter(accounts, 'COMMISSION_COST')
+        data['Costos Financieros'] = data['Costo por Seguro'] + data['Costo por Intereses'] + data['Costo por comisiones']
 
         data['Margen Financiero Bruto'] = data['Ingresos Financieros'] + data['Costos Financieros']
 
