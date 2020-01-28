@@ -523,6 +523,7 @@ let investorInvestmentDetails = async (id) => {
 
 let investorPLDetails = async (id) => {
 
+
   let interestReceived = await transactionTypeTotal(id, 'debit', ['INTEREST'])
   let totalCosts = await transactionTypeTotal(id, 'credit', [
     'COST',
@@ -544,7 +545,8 @@ let investorPLDetails = async (id) => {
     'TRANSPORT',
     'INSURANCE_COST',
     'INTEREST_COST',
-    'UNCLASSIFIED_COST'
+    'UNCLASSIFIED_COST',
+    "BANKING_TRANSFER_FEE"
   ])
   let feeExpenses = await transactionTypeTotal(id, 'credit', ['FEE', 'MANAGEMENT_INTEREST_COST', 'MANAGEMENT_FEE_COST', 'COMMISSION_COST'])
   let feeIncome = await transactionTypeTotal(id, 'debit', ['FEE', 'MANAGEMENT_INTEREST_INCOME', 'MANAGEMENT_FEE_INCOME', 'INSURANCE_PREMIUM', 'COMMISSION_INCOME'])
