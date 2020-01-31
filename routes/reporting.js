@@ -1,6 +1,7 @@
 const express = require('express');
 const {
     collectionCategorization,
+    collectionRaw,
     pAndLReport
 } = require('./helpers/reportingAggregates')
 const moment = require('moment')
@@ -17,6 +18,24 @@ const reporting = (Model, extensionFn) => {
     }
 
     router.get('/collection', async (req, res, next) => {
+        result = await collectionRaw(req.user.location, true)
+        let structuredData = {
+            "name": "COBRANZA",
+            "children": []
+        }
+        result.forEach(e => {
+            structuredData.children.push({
+                "name": e._id.country,
+                "children": [{
+                    "name": "Cobranza",
+                    "children": e.paymentsDue
+                }]
+            })
+        })
+        res.status(200).json(structuredData)
+    })
+
+    router.get('/collection-days', async (req, res, next) => {
 
         result = await collectionCategorization(req.user.location, true)
         let structuredData = {
@@ -54,7 +73,6 @@ const reporting = (Model, extensionFn) => {
                 ]
             })
         })
-
         res.status(200).json(structuredData)
 
     })
