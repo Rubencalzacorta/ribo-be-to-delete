@@ -3,15 +3,14 @@ const _ = require('lodash')
 const {
     User,
     ManagementFee,
-    Transaction,
-    Investment
 } = require('../models')
 let {
     investorCashDetails,
     investorInvestmentDetails,
     investorPLDetails,
     investorCashMovements,
-    investorInvestmentsSummary
+    investorInvestmentsSummary,
+    investorInvestmentsDetails,
 } = require('./helpers/investorAggregates')
 
 
@@ -25,6 +24,7 @@ const investorCrud = (Model, extensionFn) => {
     if (extensionFn) {
         router = extensionFn(router);
     }
+
 
     router.get('/list', (req, res, next) => {
         Model.find({
@@ -65,8 +65,7 @@ const investorCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
 
-
-    router.get('/detail/investmentStatus/:id', (req, res, next) => {
+    router.get('/detail/investment-preference/:id', (req, res, next) => {
         let {
             id
         } = req.params
@@ -78,11 +77,11 @@ const investorCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
 
-    router.post('/detail/investmentStatus/:id', (req, res, next) => {
+    router.post('/detail/investment-preference/:id', (req, res, next) => {
         let {
             id
         } = req.params
-        console.log(id, 'aqui')
+
         Model.findOne({
             _id: id
         }, function (err, user) {
@@ -106,8 +105,7 @@ const investorCrud = (Model, extensionFn) => {
         });
     })
 
-
-    router.post('/management-fee', async (req, res, next) => {
+    router.post('/detail/management-fee', async (req, res, next) => {
         let {
             investorId,
             managementAccountId,
@@ -143,7 +141,7 @@ const investorCrud = (Model, extensionFn) => {
         }
     })
 
-    router.put('/management-fee', async (req, res, next) => {
+    router.put('/detail/management-fee', async (req, res, next) => {
         let {
             managementFeeId,
             pct
@@ -171,7 +169,7 @@ const investorCrud = (Model, extensionFn) => {
         }
     })
 
-    router.get('/management-fee/:investorId', async (req, res, next) => {
+    router.get('/detail/management-fee/:investorId', async (req, res, next) => {
         let {
             investorId,
         } = req.params
@@ -194,10 +192,7 @@ const investorCrud = (Model, extensionFn) => {
         }
     })
 
-
-
-
-    router.put('/type', async (req, res, next) => {
+    router.put('/detail/investment-preference/investor-type', async (req, res, next) => {
         let {
             investorId,
             investorType
@@ -225,13 +220,9 @@ const investorCrud = (Model, extensionFn) => {
         }
     });
 
-
-    // CRUD: DELETE
     router.delete('/:id', (req, res, next) => {
-        const {
-            id
-        } = req.params;
-        Model.findByIdAndRemove(id)
+
+        Model.findByIdAndRemove(req.params.id)
             .then(obj => {
                 if (obj) {
                     res.status(200).json({
@@ -244,20 +235,7 @@ const investorCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
 
-    router.get('/investments/:id', (req, res, next) => {
-        Investment.find({
-                _investor: req.params.id
-            })
-            .populate({
-                path: '_loan'
-            })
-            .then(objList => {
-                res.status(200).json(objList)
-            })
-            .catch(e => next(e))
-    })
-
-    router.get('/cash-details/:id', async (req, res, next) => {
+    router.get('/profile/cash-available/:id', async (req, res, next) => {
 
         investorCashDetails(req.params.id)
             .then(obj => {
@@ -266,7 +244,7 @@ const investorCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
 
-    router.get('/investment-details/:id', async (req, res, next) => {
+    router.get('/profile/investment-details/:id', async (req, res, next) => {
 
         investorInvestmentDetails(req.params.id)
             .then(obj => {
@@ -275,7 +253,7 @@ const investorCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
 
-    router.get('/pl/:id', async (req, res, next) => {
+    router.get('/profile/profit-and-loss/:id', async (req, res, next) => {
 
         investorPLDetails(req.params.id)
             .then(obj => {
@@ -284,7 +262,7 @@ const investorCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
 
-    router.get('/cash-movements/:id', async (req, res, next) => {
+    router.get('/profile/cash-movements/:id', async (req, res, next) => {
 
         investorCashMovements(req.params.id)
             .then(obj => {
@@ -292,9 +270,6 @@ const investorCrud = (Model, extensionFn) => {
             })
             .catch(e => next(e))
     })
-
-
-    // Investor details 
 
     router.get('/investment-summary/:id', async (req, res, next) => {
 
@@ -306,34 +281,16 @@ const investorCrud = (Model, extensionFn) => {
 
     });
 
-    router.post('/divestment-date', async (req, res, next) => {
-        Transaction.updateMany({
-                concept: 'DIVESTMENT'
-            }, {
-                $set: {
-                    date: new Date('2019-09-10')
-                }
-            }).then(obj => {
-                res.status(200).json(obj)
-            })
-            .catch(e => next(e))
-    })
+    router.get('/investment-details/:id', (req, res, next) => {
 
-    router.post('/accounts-rename', async (req, res, next) => {
-        Transaction.updateMany({
-                cashAccount: {
-                    $in: ['PLPERU', 'REMPERU']
-                }
-            }, {
-                $set: {
-                    cashAccount: 'RBPERU'
-                }
-            }).then(obj => {
-                res.status(200).json(obj)
+        investorInvestmentsDetails(req.params.id)
+            .then(result =>
+                res.status(200).json(result))
+            .catch(e => {
+                return next(e)
             })
-            .catch(e => next(e))
-    })
 
+    })
 
     router.use((err, req, res, next) => {
         res.status(500).json({

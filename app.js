@@ -102,7 +102,7 @@ const stRouter = require('./routes/scheduleTransform');
 
 app.use('/api/auth', authRouter);
 app.use('/api/loan', loanCrud(require('./models/Loan')));
-app.use('/api/test/transaction', transactionRouter);
+app.use('/api/transaction', transactionRouter);
 app.use('/api/test/summary', summaryRouter);
 app.use('/api/st', stRouter);
 app.use('/api/reporting', reportingRouter(require('./models/User')));
@@ -111,7 +111,7 @@ app.use('/api/collateral', collateralCrud(require('./models/Collateral')));
 app.use('/api/company', companyCrud(require('./models/Company')));
 app.use('/api/investor', investorCrud(require('./models/User')));
 app.use('/api/financials', financialsRouter(require('./models/Transaction')));
-app.use('/api/test/client', genericCrud(require('./models/User')));
+app.use('/api/client', genericCrud(require('./models/User')));
 app.use('/api/test/investment', genericCrud(require('./models/Investment')));
 app.use('/api/test/borrower', genericCrud(require('./models/User')));
 app.use('/api/test/loanSchedule', genericCrud(require('./models/LoanSchedule')));

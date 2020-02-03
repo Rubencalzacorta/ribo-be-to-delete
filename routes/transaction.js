@@ -3,7 +3,6 @@ const _ = require('lodash')
 const router = express.Router();
 const {
   investorDetails,
-  investorInvestmentsDetails,
   investorTransactions,
   investorTxBook
 } = require('./helpers/investorAggregates')
@@ -12,7 +11,6 @@ const LoanSchedule = require("../models/LoanSchedule")
 const User = require("../models/User")
 
 var ObjectID = require('mongodb').ObjectID
-
 
 router.get('/totals', (req, res, next) => {
   Transaction.aggregate([{
@@ -174,7 +172,7 @@ router.get('/list/:id', async (req, res, next) => {
     })
 })
 
-router.get('/transaction-list/:id/:page/:pageSize', async (req, res, next) => {
+router.get('/investor/:id/:page/:pageSize', async (req, res, next) => {
   let {
     id,
     page,
@@ -191,21 +189,6 @@ router.get('/transaction-list/:id/:page/:pageSize', async (req, res, next) => {
 })
 
 
-
-
-
-router.get('/loaninvestordetails/:id', (req, res, next) => {
-  let {
-    id
-  } = req.params
-
-  investorInvestmentsDetails(id)
-    .then(result => res.status(200).json(result))
-    .catch(e => {
-      return next(e)
-    })
-
-})
 
 router.get('/updateCashLoanTx', (req, res, next) => {
   Transaction.aggregate(
@@ -292,7 +275,6 @@ router.get('/null-ref', (req, res, next) => {
 
 
 router.post('/', (req, res, next) => {
-  console.log(req.body)
   Transaction.create(req.body)
     .then(obj => {
       res.status(200).json(obj)
