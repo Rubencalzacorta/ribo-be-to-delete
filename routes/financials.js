@@ -106,7 +106,7 @@ const companyCrud = (Model, extensionFn) => {
 
         cashFlows = []
 
-        if (country !== 'WORLD') {
+        if (country !== 'GLOBAL') {
             let countryCF = await LoanSchedule.aggregate(countryCashFlow(country))
             cashFlows = [{
                 [country]: countryCF

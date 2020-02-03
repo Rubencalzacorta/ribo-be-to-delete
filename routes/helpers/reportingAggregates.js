@@ -10,7 +10,7 @@ module.exports.collectionRaw = async (country, rateAdjustment) => {
     let today = new Date()
     let today2 = new Date()
     var newDate = new Date(today.setDate(today.getDate() + 15));
-    if (country === 'WORLD') {
+    if (country === 'GLOBAL') {
         location = ['PERU', 'VENEZUELA', 'DOMINICAN_REPUBLIC']
     } else {
         location = [country]
@@ -348,7 +348,7 @@ module.exports.collectionCategorization = async (country, rateAdjustment) => {
     let today = new Date()
     let today2 = new Date()
     var newDate = new Date(today.setDate(today.getDate() + 15));
-    if (country === 'WORLD') {
+    if (country === 'GLOBAL') {
         location = ['PERU', 'VENEZUELA', 'DOMINICAN_REPUBLIC']
     } else {
         location = [country]

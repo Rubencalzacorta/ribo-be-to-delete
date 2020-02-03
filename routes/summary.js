@@ -23,7 +23,7 @@ var ObjectID = require('mongodb').ObjectID
 const moment = require('moment')
 
 router.get('/totals/:country', async (req, res, next) => {
-    if (req.params.country === "WORLD") {
+    if (req.params.country === "GLOBAL") {
         let cTotals = []
         let countries = User.schema.path('country').enumValues;
         generalTotals = await cTotals.push(LoanTotals())

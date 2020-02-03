@@ -25,7 +25,7 @@ const simpleCrud = (Model, extensionFn) => {
         let {
             query
         } = req.params
-        querym = (country === 'WORLD') ? {
+        querym = (country === 'GLOBAL') ? {
             '$and': [{
                     'borrower': true
                 },

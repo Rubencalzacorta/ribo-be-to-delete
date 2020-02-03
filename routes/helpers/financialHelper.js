@@ -6,7 +6,7 @@ let accounts = {
 
 const getCountryAccounts = (country) => {
 
-    if (country === "WORLD") {
+    if (country === "GLOBAL") {
         return [].concat(...Object.values(accounts))
     } else {
         return accounts[country]
@@ -14,7 +14,7 @@ const getCountryAccounts = (country) => {
 }
 
 const getCountry = (country) => {
-    if (country === "WORLD") {
+    if (country === "GLOBAL") {
         return [
             'PERU', 'VENEZUELA', 'DOMINICAN_REPUBLIC'
         ]

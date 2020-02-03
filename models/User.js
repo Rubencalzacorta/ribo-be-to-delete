@@ -11,7 +11,7 @@ const userSchema = new Schema({
   password: String,
   location: {
     type: String,
-    enum: ['PERU', 'VENEZUELA', 'DOMINICAN_REPUBLIC', 'WORLD', 'USA']
+    enum: ['PERU', 'VENEZUELA', 'DOMINICAN_REPUBLIC', 'GLOBAL', 'USA']
   },
   investments: [{
     type: Schema.ObjectId,

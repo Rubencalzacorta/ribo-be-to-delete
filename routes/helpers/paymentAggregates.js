@@ -3,9 +3,9 @@ const Payment = require('../../models/Payment')
 module.exports.paymentsByCountry = async (adminCountry) => {
 
     let countries = []
-    if (adminCountry === 'WORLD' || !adminCountry) {
+    if (adminCountry === 'GLOBAL' || !adminCountry) {
         countries = ['DOMINICAN_REPUBLIC', 'USA', 'PERU', 'VENEZUELA']
-    } else if (adminCountry !== 'WORLD') {
+    } else if (adminCountry !== 'GLOBAL') {
         countries = [adminCountry]
     }
 

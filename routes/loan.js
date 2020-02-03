@@ -583,7 +583,7 @@ router.get('/schedule/:startDate/:endDate/:country', (req,res,next) => {
     const toDate = moment(endDate).toISOString();
 
 
-    if (country !== 'WORLD') {
+    if (country !== 'GLOBAL') {
         LoanSchedule.aggregate([
             {
               '$lookup': {
@@ -651,7 +651,7 @@ router.get('/portfolio-status/:country/:fromDate/:toDate', async (req, res, next
     let startOfMonth = moment().startOf('month')
     let endOfMonth = moment().endOf('month')
     
-    if (country === 'WORLD') {
+    if (country === 'GLOBAL') {
         allLoansSearch = await LoanSchedule.aggregate(allLoansQuery(fromDate, toDate))
         paidQuerySearch = await LoanSchedule.aggregate(paidQuery(startOfMonth, endOfMonth))
         outstandingQuerySearch = await LoanSchedule.aggregate(outstandingQuery())

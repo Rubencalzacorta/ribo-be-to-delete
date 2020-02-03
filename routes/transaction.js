@@ -45,7 +45,7 @@ router.get('/totals/:country', async (req, res, next) => {
   let {
     country
   } = req.params
-  if (country === 'WORLD' || country === 'VENEZUELA') {
+  if (country === 'GLOBAL' || country === 'VENEZUELA') {
     Transaction.aggregate([{
         '$project': {
           '_investor': 1,

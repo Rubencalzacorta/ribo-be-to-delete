@@ -37,7 +37,7 @@ const investorCrud = (Model, extensionFn) => {
     router.get('/holding-account/list', (req, res, next) => {
 
         try {
-            if (req.user.location === 'WORLD') {
+            if (req.user.location === 'GLOBAL') {
                 Model.find({
                         firstName: 'Ribo Capital'
                     })
