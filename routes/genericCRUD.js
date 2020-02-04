@@ -27,7 +27,13 @@ const simpleCrud = (Model, extensionFn) => {
         } = req.params
         querym = (country === 'GLOBAL') ? {
             '$and': [{
-                    'borrower': true
+                    "$or": [{
+                            'borrower': true
+                        },
+                        {
+                            'investor': true
+                        }
+                    ]
                 },
                 {
                     "$or": [{
@@ -71,7 +77,13 @@ const simpleCrud = (Model, extensionFn) => {
             ]
         } : {
             '$and': [{
-                    'borrower': true
+                    "$or": [{
+                            'borrower': true
+                        },
+                        {
+                            'investor': true
+                        }
+                    ]
                 },
                 {
                     "$or": [{
@@ -134,30 +146,54 @@ const simpleCrud = (Model, extensionFn) => {
                 firstName: 1,
                 lastName: 1,
                 country: 1,
+                location: 1,
+                investor: 1,
+                borrower: 1,
                 businessName: 1,
                 loans: 1
             })
             .then(objList => {
-                return objList.map((e) => {
-                    return {
-                        _id: e._id,
-                        firstName: e.firstName,
-                        lastName: e.lastName,
-                        country: e.country,
-                        businessName: e.businessName,
-                        loans: e.loans.map((j) => {
-                            return {
-                                _id: j._id,
-                                totalPaid: j.totalPaid,
-                                capital: j.capital,
+                let serp = []
+                objList.forEach((e) => {
+                    if (e.loans.length === 0) {
+                        serp.push({
+                            _id: e._id,
+                            firstName: e.firstName,
+                            lastName: e.lastName,
+                            country: e.investor ? e.location : e.country,
+                            businessName: e.businessName,
+                            investor: e.investor,
+                            borrower: e.borrower,
+                            _loanId: "",
+                            totalPaid: "",
+                            capital: "",
+                            capitalRemaining: "",
+                            nextPayment: ""
+                        })
+                    } else {
+                        e.loans.forEach((j, i) => {
+                            serp.push({
+                                _id: i === 0 ? e._id : '',
+                                firstName: i === 0 ? e.firstName : '',
+                                lastName: i === 0 ? e.lastName : '',
+                                country: i === 0 ? e.country : '',
+                                businessName: i === 0 ? e.businessName : '',
+                                investor: i === 0 ? e.investor : '',
+                                borrower: i === 0 ? e.borrower : '',
+                                investor: e.investor,
+                                borrower: e.borrower,
+                                _loanId: j._id,
+                                totalPaid: j.totalPaid ? j.totalPaid : 0,
+                                capital: j.capital ? j.capital : 0,
                                 capitalRemaining: j.capitalRemaining,
                                 nextPayment: _.pick(j.loanSchedule.filter(e => e.status === 'OVERDUE' || e.status === 'DUE').sort(compare = (a, b) => {
                                     return a.date > b.date ? 1 : b.date > a.date ? -1 : 0;
                                 })[0], ['_id', 'interest', 'principal', 'date'])
-                            }
+                            })
                         })
                     }
                 })
+                return serp
             })
             .then(objList => res.status(200).json(objList))
             .catch(e => console.log(e))

@@ -52,7 +52,6 @@ const investorCrud = (Model, extensionFn) => {
         } catch (e) {
             next(e)
         }
-
     })
 
     router.post('/', (req, res, next) => {
