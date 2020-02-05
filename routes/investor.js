@@ -27,8 +27,18 @@ const investorCrud = (Model, extensionFn) => {
 
 
     router.get('/list', (req, res, next) => {
+
+        if (req.user.location === 'GLOBAL') {
+            location = Model.schema.path('location').enumValues
+        } else {
+            location = [req.user.location]
+        }
+
         Model.find({
-                investor: true
+                investor: true,
+                location: {
+                    $in: location
+                }
             })
             .then(objList => res.status(200).json(objList))
             .catch(e => next(e))
