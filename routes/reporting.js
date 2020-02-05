@@ -2,7 +2,9 @@ const express = require('express');
 const {
     collectionCategorization,
     collectionRaw,
-    pAndLReport
+    pAndLReport,
+    investorMonthlyReport,
+    investorMontlyInvestments
 } = require('./helpers/reportingAggregates')
 const moment = require('moment')
 
@@ -84,6 +86,24 @@ const reporting = (Model, extensionFn) => {
         try {
             pAndL = await pAndLReport(req.query)
             res.status(200).json(pAndL)
+        } catch (e) {
+            next(e)
+        }
+    })
+
+    router.get('/investor/investments/:id', async (req, res, next) => {
+        try {
+            IMI = await investorMontlyInvestments(req.params.id)
+            res.status(200).json(IMI)
+        } catch (e) {
+            next(e)
+        }
+    })
+
+    router.get('/investor/report/:id', async (req, res, next) => {
+        try {
+            IMR = await investorMonthlyReport(req.params.id)
+            res.status(200).json(IMR)
         } catch (e) {
             next(e)
         }

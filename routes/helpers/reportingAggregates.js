@@ -344,6 +344,173 @@ module.exports.collectionRaw = async (country, rateAdjustment) => {
     }])
 }
 
+
+module.exports.investorMontlyInvestments = async (investorId) => {
+    return await Transaction.aggregate([{
+        '$match': {
+            '_investor': new ObjectID(investorId),
+            '_loan': {
+                '$exists': true
+            },
+            'concept': 'INVESTMENT'
+        }
+    }, {
+        '$group': {
+            '_id': {
+                'loan': '$_loan'
+            },
+            'date': {
+                '$first': '$date'
+            },
+            'amount': {
+                '$sum': '$credit'
+            }
+        }
+    }, {
+        '$group': {
+            '_id': {
+                'month': {
+                    '$month': '$date'
+                },
+                'year': {
+                    '$year': '$date'
+                }
+            },
+            'totalInvestments': {
+                '$sum': 1
+            },
+            'totalInvestedAmount': {
+                '$sum': '$amount'
+            }
+        }
+    }, {
+        '$project': {
+            '_id': 0,
+            'month': '$_id.month',
+            'year': '$_id.year',
+            'totalInvestments': 1,
+            'totalInvestedAmount': 1,
+            'averageInvestedAmount': {
+                '$divide': [
+                    '$totalInvestedAmount', '$totalInvestments'
+                ]
+            }
+        }
+    }])
+}
+module.exports.investorMonthlyReport = async (investorId) => {
+    return await Transaction.aggregate([{
+        '$match': {
+            '_investor': new ObjectID(investorId)
+        }
+    }, {
+        '$group': {
+            '_id': {
+                'month': {
+                    '$month': '$date'
+                },
+                'year': {
+                    '$year': '$date'
+                }
+            },
+            'INVESTMENT': {
+                '$sum': {
+                    '$cond': [{
+                        '$eq': [
+                            '$concept', 'INVESTMENT'
+                        ]
+                    }, '$credit', 0]
+                }
+            },
+            'INTEREST': {
+                '$sum': {
+                    '$cond': [{
+                        '$eq': [
+                            '$concept', 'INTEREST'
+                        ]
+                    }, '$debit', 0]
+                }
+            },
+            'CAPITAL': {
+                '$sum': {
+                    '$cond': [{
+                        '$eq': [
+                            '$concept', 'CAPITAL'
+                        ]
+                    }, '$debit', 0]
+                }
+            },
+            'MANAGEMENT_FEE_COST': {
+                '$sum': {
+                    '$cond': [{
+                        '$eq': [
+                            '$concept', 'MANAGEMENT_FEE_COST'
+                        ]
+                    }, '$credit', 0]
+                }
+            },
+            'INTEREST_PAYOUT': {
+                '$sum': {
+                    '$subtract': [{
+                        '$cond': [{
+                            '$eq': [
+                                '$concept', 'MANAGEMENT_FEE_COST'
+                            ]
+                        }, '$credit', 0]
+                    }, {
+                        '$cond': [{
+                            '$eq': [
+                                '$concept', 'INTEREST'
+                            ]
+                        }, '$debit', 0]
+                    }]
+                }
+            },
+            'DEPOSIT': {
+                '$sum': {
+                    '$cond': [{
+                        '$eq': [
+                            '$concept', 'DEPOSIT'
+                        ]
+                    }, '$debit', 0]
+                }
+            },
+            'WITHDRAWAL': {
+                '$sum': {
+                    '$cond': [{
+                        '$eq': [
+                            '$concept', 'WITHDRAWAL'
+                        ]
+                    }, '$credit', 0]
+                }
+            },
+            'INTERNATIONAL_TRANSFER_SENDER': {
+                '$sum': {
+                    '$cond': [{
+                        '$eq': [
+                            '$concept', 'INTERNATIONAL_TRANSFER_SENDER'
+                        ]
+                    }, '$credit', 0]
+                }
+            }
+        }
+    }, {
+        '$project': {
+            '_id': 0,
+            'month': '$_id.month',
+            'year': '$_id.year',
+            'INVESTMENT': 1,
+            'INTEREST': 1,
+            'CAPITAL': 1,
+            'MANAGEMENT_FEE_COST': 1,
+            'INTEREST_PAYOUT': 1,
+            'DEPOSIT': 1,
+            'WITHDRAWAL': 1,
+            'INTERNATIONAL_TRANSFER_SENDER': 1
+        }
+    }])
+}
+
 module.exports.collectionCategorization = async (country, rateAdjustment) => {
     let today = new Date()
     let today2 = new Date()
