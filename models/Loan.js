@@ -85,6 +85,7 @@ const loanSchema = new Schema({
       ]
     }
   }],
+  startAmortPeriod: Number,
   interestEarned: Number,
   PaybackPeriod: Number,
   capitalRemaining: Number,
@@ -93,6 +94,7 @@ const loanSchema = new Schema({
   capital: Number,
   days: Number,
   startDate: Date,
+  scheduledEndDate: Date,
   paymentDate: Date,
   loanType: String,
   insurancePremium: {

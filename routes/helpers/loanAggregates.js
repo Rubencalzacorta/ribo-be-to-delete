@@ -12,7 +12,6 @@ const {
 } = require('./investorAggregates')
 
 const autoInvest = async (loanDetails, next) => {
-
   let {
     _borrower,
     useOfFunds,
