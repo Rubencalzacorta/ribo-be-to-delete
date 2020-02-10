@@ -11,7 +11,8 @@ const transactionSchema = new Schema({
   },
   _investor: {
     type: Schema.ObjectId,
-    ref: 'User'
+    ref: 'User',
+    required: true
   },
   _loanSchedule: {
     type: Schema.ObjectId,
@@ -24,16 +25,19 @@ const transactionSchema = new Schema({
   date: Date,
   cashAccount: {
     type: String,
-    enum: ['RBPERU', 'GCUS', 'GFUS', 'GCDR']
+    enum: ['RBPERU', 'GCUS', 'GFUS', 'GCDR'],
+    required: true
   },
   currency: {
     type: String,
     default: 'USD',
-    enum: ['DOP', 'USD', 'PEN']
+    enum: ['DOP', 'USD', 'PEN'],
+    required: true
   },
   concept: {
     type: String,
-    enum: Object.keys(constants.txConcepts)
+    enum: Object.keys(constants.txConcepts),
+    required: true
   },
   amount: {
     type: Float,
@@ -57,7 +61,6 @@ const transactionSchema = new Schema({
 
 
 transactionSchema.pre('save', function (next) {
-  console.log(this.amount)
   if (constants.txConcepts[this.concept] == 'CREDIT') {
     this.credit = this.amount
   } else {

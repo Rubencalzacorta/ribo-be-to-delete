@@ -283,6 +283,41 @@ const reverseTxs = async (concept, cashAccount, id) => {
 }
 
 
+router.patch('/cash-account/fix', async (req, res, next) => {
+    Transaction.aggregate([{
+            '$match': {
+                'cashAccount': {
+                    '$exists': false
+                }
+            }
+        }, {
+            '$project': {
+                '_id': 1
+            }
+        }, {
+            '$group': {
+                '_id': null,
+                'txs': {
+                    '$push': '$_id'
+                }
+            }
+        }, {
+            '$project': {
+                '_id': 0,
+                'txs': 1
+            }
+        }]).then(txs => {
+            return Transaction.updateMany({
+                _id: {
+                    $in: txs[0].txs
+                }
+            }, {
+                cashAccount: 'RBPERU'
+            })
+        })
+        .then(resp => res.status(200).json(resp))
+})
+
 router.post('/concept-modifier', async (req, res, next) => {
 
     a = await Transaction.updateMany({

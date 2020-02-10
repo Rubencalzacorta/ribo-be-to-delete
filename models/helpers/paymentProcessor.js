@@ -224,6 +224,7 @@ txPlacer = async (result, investors, loan, IandK, next) => {
         })
 
         await session.commitTransaction()
+        return txs.length
 
     } catch (e) {
         session.abortTransaction()

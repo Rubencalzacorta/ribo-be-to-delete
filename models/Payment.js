@@ -76,8 +76,7 @@ paymentSchema.post("save", async function (result, next) {
 
         await txPlacer(result, investors, loan, IandK, next)
             .then(resp => {
-                console.log('respues', resp)
-                // console.log(`status: success, txs_inserted: ${resp.length}`)
+                console.log(`status: success, txs_inserted: ${resp}`)
             })
             .catch(e => {
                 console.log(e)
@@ -128,7 +127,6 @@ paymentSchema.post("save", async function (result, next) {
 
 const loanInstallmentPaymentUpdate = async (amountPaid, loanSchedule, id, payments, paymentType, capitalRemaining) => {
     let update = await loanScheduleUpdater(amountPaid, loanSchedule, paymentType, capitalRemaining)
-    console.log(update)
     return await LoanSchedule.findByIdAndUpdate(id, {
             $set: update,
             $push: {
@@ -139,9 +137,7 @@ const loanInstallmentPaymentUpdate = async (amountPaid, loanSchedule, id, paymen
             safe: true,
             upsert: true
         })
-        .then(console.log(
-            `status: updated loan schedule payments, amount paid ${update.interest_pmt+update.principal_pmt}`
-        ))
+        .then(console.log(`status: updated loan schedule payments.\nAmount paid: ${update.interest_pmt+update.principal_pmt}`))
 }
 
 
@@ -204,7 +200,6 @@ const amountPaidReducer = async (payments) => {
 
 const loanInstallmentDeleteUpdate = async (amountPaid, loanSchedule, id, payments) => {
     let update = await loanScheduleUpdater(amountPaid, loanSchedule)
-    console.log(update)
     return await LoanSchedule.findByIdAndUpdate(id, {
             $set: update,
             $pull: {
@@ -216,7 +211,7 @@ const loanInstallmentDeleteUpdate = async (amountPaid, loanSchedule, id, payment
             upsert: true
         })
         .then(console.log(
-            `status: updated loan schedule payments, amount paid ${update.interest_pmt+update.principal_pmt}`
+            `status: updated loan schedule payments.\nAmount deleted: ${update.interest_pmt+update.principal_pmt}`
         ))
 }
 
