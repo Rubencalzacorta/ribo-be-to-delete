@@ -83,8 +83,12 @@ const reporting = (Model, extensionFn) => {
 
 
     router.get('/p-and-l', async (req, res, next) => {
+        let {
+            query
+        } = req
+
         try {
-            pAndL = await pAndLReport(req.query)
+            pAndL = await pAndLReport(query)
             res.status(200).json(pAndL)
         } catch (e) {
             next(e)
@@ -110,7 +114,6 @@ const reporting = (Model, extensionFn) => {
     })
 
     router.use((err, req, res, next) => {
-        console.log(err.message)
         res.status(500).json({
             error: true,
             message: err.message

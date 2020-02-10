@@ -26,22 +26,29 @@ const investorCrud = (Model, extensionFn) => {
     }
 
 
-    router.get('/list', (req, res, next) => {
+    router.get('/list', async (req, res, next) => {
 
-        if (req.user.location === 'GLOBAL') {
-            location = Model.schema.path('location').enumValues
+        let {
+            location
+        } = req.user
+
+        if (location === 'GLOBAL') {
+            locations = await Model.schema.path('location').enumValues
         } else {
-            location = [req.user.location]
+            locations = [location]
         }
 
         Model.find({
                 investor: true,
                 location: {
-                    $in: location
+                    $in: locations
                 }
             })
             .then(objList => res.status(200).json(objList))
-            .catch(e => next(e))
+            .catch(e => {
+                console.log(e)
+                return next(e)
+            })
     })
 
     router.get('/holding-account/list', (req, res, next) => {
