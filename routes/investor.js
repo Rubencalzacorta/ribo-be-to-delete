@@ -9,7 +9,6 @@ let {
     investorInvestmentDetails,
     investorPLDetails,
     investorCashMovements,
-    investorInvestmentsSummary,
     investorInvestmentsDetails,
     investorInvestmentsCount,
     investorInvestmentsList
@@ -75,9 +74,11 @@ const investorCrud = (Model, extensionFn) => {
     })
 
     router.get('/detail/investment-preference/:id', (req, res, next) => {
+
         let {
             id
         } = req.params
+
         Model.findById(id).select({
                 isAutoInvesting: true,
                 investorType: true
@@ -253,14 +254,14 @@ const investorCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
 
-    // router.get('/profile/investment-details/:id', async (req, res, next) => {
+    router.get('/profile/investment-details/:id', async (req, res, next) => {
 
-    //     investorInvestmentDetails(req.params.id)
-    //         .then(obj => {
-    //             res.status(200).json(obj)
-    //         })
-    //         .catch(e => next(e))
-    // })
+        investorInvestmentDetails(req.params.id)
+            .then(obj => {
+                res.status(200).json(obj)
+            })
+            .catch(e => next(e))
+    })
 
 
     router.get('/profile/profit-and-loss/:id', async (req, res, next) => {
@@ -281,7 +282,7 @@ const investorCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
 
-    router.get('/profile/investment-details/:id/:page/:pageSize', async (req, res, next) => {
+    router.get('/investment-summary/:id/:page/:pageSize', async (req, res, next) => {
 
         let {
             id,
