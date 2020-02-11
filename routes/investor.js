@@ -11,6 +11,8 @@ let {
     investorCashMovements,
     investorInvestmentsSummary,
     investorInvestmentsDetails,
+    investorInvestmentsCount,
+    investorInvestmentsList
 } = require('./helpers/investorAggregates')
 
 
@@ -44,21 +46,19 @@ const investorCrud = (Model, extensionFn) => {
         }
     })
 
-    router.get('/holding-account/list', (req, res, next) => {
-
+    router.get('/holding-account/list', async (req, res, next) => {
         try {
             if (req.user.location === 'GLOBAL') {
-                Model.find({
-                        firstName: 'Ribo Capital'
-                    })
-                    .then(objList => res.status(200).json(objList))
+                objList = await Model.find({
+                    firstName: 'Ribo Capital'
+                })
             } else {
-                Model.find({
-                        firstName: 'Ribo Capital',
-                        location: req.user.location
-                    })
-                    .then(objList => res.status(200).json(objList))
+                objList = await Model.find({
+                    firstName: 'Ribo Capital',
+                    location: req.user.location
+                })
             }
+            res.status(200).json(objList)
         } catch (e) {
             next(e)
         }
@@ -253,14 +253,15 @@ const investorCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
 
-    router.get('/profile/investment-details/:id', async (req, res, next) => {
+    // router.get('/profile/investment-details/:id', async (req, res, next) => {
 
-        investorInvestmentDetails(req.params.id)
-            .then(obj => {
-                res.status(200).json(obj)
-            })
-            .catch(e => next(e))
-    })
+    //     investorInvestmentDetails(req.params.id)
+    //         .then(obj => {
+    //             res.status(200).json(obj)
+    //         })
+    //         .catch(e => next(e))
+    // })
+
 
     router.get('/profile/profit-and-loss/:id', async (req, res, next) => {
 
@@ -280,14 +281,24 @@ const investorCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
 
-    router.get('/investment-summary/:id', async (req, res, next) => {
+    router.get('/profile/investment-details/:id/:page/:pageSize', async (req, res, next) => {
 
-        investorInvestmentsSummary(req.params.id)
-            .then(obj => {
-                res.status(200).json(obj)
+        let {
+            id,
+            page,
+            pageSize
+        } = req.params
+        try {
+            let count = await investorInvestmentsCount(id)
+            let results = await investorInvestmentsList(id, page, pageSize)
+            res.status(200).json({
+                data: results,
+                page: page,
+                total: count
             })
-            .catch(e => next(e))
-
+        } catch (error) {
+            next(error)
+        }
     });
 
     router.get('/investment-details/:id', (req, res, next) => {

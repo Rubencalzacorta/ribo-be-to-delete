@@ -753,6 +753,404 @@ const investorInvestmentsDetails = async (id) => {
   }])
 }
 
+
+let investorInvestmentsCount = async (id) => {
+
+  let iic = await Investment.aggregate([{
+    '$match': {
+      '_investor': new ObjectID(id)
+    }
+  }, {
+    '$group': {
+      '_id': {
+        '_loan': '$_loan'
+      }
+    }
+  }, {
+    '$group': {
+      '_id': null,
+      'count': {
+        '$sum': 1
+      }
+    }
+  }])
+
+  return iic[0].count
+}
+
+let investorInvestmentsList = async (id, page, pageSize) => {
+  let skip
+  if (page == 1) {
+    skip = 0
+  } else {
+    skip = (page - 1) * pageSize
+  }
+
+  try {
+    let iil = await Investment.aggregate([{
+      '$match': {
+        '_investor': new ObjectID(id)
+      }
+    }, {
+      '$lookup': {
+        'from': 'loans',
+        'localField': '_loan',
+        'foreignField': '_id',
+        'as': 'l'
+      }
+    }, {
+      '$unwind': {
+        'path': '$l'
+      }
+    }, {
+      '$project': {
+        'date': '$l.startDate',
+        'borrower': '$l._borrower',
+        'status': '$l.status',
+        'currency': 1,
+        '_loan': 1,
+        '_investor': 1,
+        'amount': 1,
+        'pct': 1,
+        'created_at': 1,
+        'updated_at': 1
+      }
+    }, {
+      '$sort': {
+        'date': -1
+      }
+    }, {
+      '$skip': parseInt(skip)
+    }, {
+      '$limit': parseInt(pageSize)
+    }, {
+      '$group': {
+        '_id': {
+          '_loan': '$_loan'
+        },
+        'startDate': {
+          '$last': '$date'
+        },
+        'borrower': {
+          '$first': '$borrower'
+        },
+        'status': {
+          '$first': '$status'
+        },
+        '_investor': {
+          '$first': '$_investor'
+        },
+        '_loan': {
+          '$first': '$_loan'
+        },
+        'amount': {
+          '$sum': '$amount'
+        },
+        'pct': {
+          '$sum': '$pct'
+        }
+      }
+    }, {
+      '$sort': {
+        'startDate': -1
+      }
+    }, {
+      '$lookup': {
+        'from': 'transactions',
+        'let': {
+          'loan': '$_loan',
+          'investor': '$_investor'
+        },
+        'pipeline': [{
+          '$match': {
+            '$expr': {
+              '$and': [{
+                '$eq': [
+                  '$_loan', '$$loan'
+                ]
+              }, {
+                '$eq': [
+                  '$_investor', '$$investor'
+                ]
+              }]
+            }
+          }
+        }],
+        'as': 'transaction'
+      }
+    }, {
+      '$project': {
+        '_id': 0,
+        '_loan': '$_id._loan',
+        'pct': 1,
+        'startDate': 1,
+        'borrower': 1,
+        'status': 1,
+        'investment': {
+          '$reduce': {
+            'input': '$transaction',
+            'initialValue': 0,
+            'in': {
+              '$sum': [
+                '$$value', {
+                  '$cond': [{
+                    '$eq': [
+                      '$$this.concept', 'INVESTMENT'
+                    ]
+                  }, '$$this.credit', 0]
+                }
+              ]
+            }
+          }
+        },
+        'divestment': {
+          '$reduce': {
+            'input': '$transaction',
+            'initialValue': 0,
+            'in': {
+              '$sum': [
+                '$$value', {
+                  '$cond': [{
+                    '$eq': [
+                      '$$this.concept', 'DIVESTMENT'
+                    ]
+                  }, '$$this.debit', 0]
+                }
+              ]
+            }
+          }
+        },
+        'interest': {
+          '$reduce': {
+            'input': '$transaction',
+            'initialValue': 0,
+            'in': {
+              '$sum': [
+                '$$value', {
+                  '$cond': [{
+                    '$eq': [
+                      '$$this.concept', 'INTEREST'
+                    ]
+                  }, '$$this.debit', 0]
+                }
+              ]
+            }
+          }
+        },
+        'capital': {
+          '$reduce': {
+            'input': '$transaction',
+            'initialValue': 0,
+            'in': {
+              '$sum': [
+                '$$value', {
+                  '$cond': [{
+                    '$eq': [
+                      '$$this.concept', 'CAPITAL'
+                    ]
+                  }, '$$this.debit', 0]
+                }
+              ]
+            }
+          }
+        },
+        'feeExpenses': {
+          '$reduce': {
+            'input': '$transaction',
+            'initialValue': 0,
+            'in': {
+              '$sum': [
+                '$$value', {
+                  '$cond': [{
+                    '$eq': [
+                      '$$this.concept', 'FEE'
+                    ]
+                  }, '$$this.credit', 0]
+                }
+              ]
+            }
+          }
+        },
+        'feeIncome': {
+          '$reduce': {
+            'input': '$transaction',
+            'initialValue': 0,
+            'in': {
+              '$sum': [
+                '$$value', {
+                  '$cond': [{
+                    '$eq': [
+                      '$$this.concept', 'FEE'
+                    ]
+                  }, '$$this.debit', 0]
+                }
+              ]
+            }
+          }
+        },
+        'managementFeeExpense': {
+          '$reduce': {
+            'input': '$transaction',
+            'initialValue': 0,
+            'in': {
+              '$sum': [
+                '$$value', {
+                  '$cond': [{
+                    '$eq': [
+                      '$$this.concept', 'MANAGEMENT_FEE_COST'
+                    ]
+                  }, '$$this.credit', 0]
+                }
+              ]
+            }
+          }
+        },
+        'managementFeeIncome': {
+          '$reduce': {
+            'input': '$transaction',
+            'initialValue': 0,
+            'in': {
+              '$sum': [
+                '$$value', {
+                  '$cond': [{
+                    '$eq': [
+                      '$$this.concept', 'MANAGEMENT_FEE_INCOME'
+                    ]
+                  }, '$$this.debit', 0]
+                }
+              ]
+            }
+          }
+        },
+        'managementInterestExpense': {
+          '$reduce': {
+            'input': '$transaction',
+            'initialValue': 0,
+            'in': {
+              '$sum': [
+                '$$value', {
+                  '$cond': [{
+                    '$eq': [
+                      '$$this.concept', 'MANAGEMENT_INTEREST_COST'
+                    ]
+                  }, '$$this.credit', 0]
+                }
+              ]
+            }
+          }
+        },
+        'managementInterestIncome': {
+          '$reduce': {
+            'input': '$transaction',
+            'initialValue': 0,
+            'in': {
+              '$sum': [
+                '$$value', {
+                  '$cond': [{
+                    '$eq': [
+                      '$$this.concept', 'MANAGEMENT_INTEREST_INCOME'
+                    ]
+                  }, '$$this.debit', 0]
+                }
+              ]
+            }
+          }
+        },
+        'commissionIncome': {
+          '$reduce': {
+            'input': '$transaction',
+            'initialValue': 0,
+            'in': {
+              '$sum': [
+                '$$value', {
+                  '$cond': [{
+                    '$eq': [
+                      '$$this.concept', 'COMMISION_INCOME'
+                    ]
+                  }, '$$this.debit', 0]
+                }
+              ]
+            }
+          }
+        },
+        'commissionExpense': {
+          '$reduce': {
+            'input': '$transaction',
+            'initialValue': 0,
+            'in': {
+              '$sum': [
+                '$$value', {
+                  '$cond': [{
+                    '$eq': [
+                      '$$this.concept', 'COMMISION_COST'
+                    ]
+                  }, '$$this.credit', 0]
+                }
+              ]
+            }
+          }
+        }
+      }
+    }, {
+      '$project': {
+        '_loan': 1,
+        '_investor': 1,
+        'pct': 1,
+        'borrower': 1,
+        'startDate': 1,
+        'status': 1,
+        'investment': 1,
+        'divestment': 1,
+        'capital': 1,
+        'interest': 1,
+        'feeExpenses': 1,
+        'feeIncome': 1,
+        'managementFeeExpense': 1,
+        'managementFeeIncome': 1,
+        'commissionIncome': 1,
+        'commissionExpense': 1
+      }
+    }, {
+      '$lookup': {
+        'from': 'users',
+        'localField': 'borrower',
+        'foreignField': '_id',
+        'as': 'borrower'
+      }
+    }, {
+      '$unwind': {
+        'path': '$borrower'
+      }
+    }, {
+      '$project': {
+        '_loan': 1,
+        '_investor': 1,
+        'pct': 1,
+        'firstName': '$borrower.firstName',
+        'lastName': '$borrower.lastName',
+        'status': 1,
+        'startDate': 1,
+        'investment': 1,
+        'divestment': 1,
+        'capital': 1,
+        'interest': 1,
+        'feeExpenses': 1,
+        'feeIncome': 1,
+        'managementFeeExpense': 1,
+        'managementFeeIncome': 1,
+        'commissionIncome': 1,
+        'commissionExpense': 1
+      }
+    }])
+    return iil
+  } catch (e) {
+    console.log(e)
+    // return e
+  }
+
+}
+
+
 let investorInvestmentsSummary = async (id) => {
   return await Investment.aggregate([{
     '$match': {
@@ -1096,5 +1494,7 @@ module.exports = {
   investorInvestmentDetails,
   investorPLDetails,
   investorCashMovements,
-  investorInvestmentsSummary
+  investorInvestmentsSummary,
+  investorInvestmentsList,
+  investorInvestmentsCount
 }
