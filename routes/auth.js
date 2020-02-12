@@ -40,8 +40,6 @@ router.post('/signup', (req, res, next) => {
     lastName
   } = req.body;
 
-
-
   // Check for non empty user or password
   if (!email || !password) {
     next(new Error('You must provide valid credentials'));
@@ -114,7 +112,6 @@ router.post('/confirmation', (req, res, next) => {
     .catch(e => next(e));
 })
 
-
 router.post('/login', (req, res, next) => {
   passport.authenticate('local', (err, theUser, failureDetails) => {
 
@@ -149,7 +146,6 @@ router.get('/resend-confirmation', (req, res, next) => {
         lastName
       } = user
 
-
       const templateStr = fs.readFileSync("./mail/template.hbs").toString();
       const template = hbs.compile(templateStr);
       const html = template({
@@ -180,7 +176,6 @@ router.get('/currentUser', (req, res, next) => {
   }
 })
 
-
 router.get('/logout', (req, res) => {
 
   req.session.destroy(function (err) {
@@ -191,11 +186,7 @@ router.get('/logout', (req, res) => {
   });
 });
 
-
-
-
 router.use((err, req, res, next) => {
-  console.log(err)
   res.status(500).json({
     message: err.message
   });
