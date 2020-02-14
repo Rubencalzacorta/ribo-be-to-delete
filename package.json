@@ -8,7 +8,6 @@
     "debug": "DEBUG=server:* nodemon --inspect-brk ./bin/www"
   },
   "dependencies": {
-    "axios": "^0.19.0",
     "bcrypt": "^3.0.6",
     "body-parser": "~1.18.2",
     "bull": "^3.12.1",
@@ -16,17 +15,14 @@
     "connect-mongo": "latest",
     "cookie-parser": "~1.4.3",
     "cors": "^2.8.4",
-    "cryptiles": "^4.1.2",
     "dotenv": "~4.0.0",
     "express": "~4.16.0",
     "express-session": "^1.15.6",
     "financejs": "^4.1.0",
-    "fs": "0.0.1-security",
     "googleapis": "^39.2.0",
     "handlebars": "^4.5.1",
     "hbs": "^4.0.6",
     "heroku-ssl-redirect": "0.0.4",
-    "hoek": "^5.0.4",
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
     "mongo-round": "^1.0.0",
@@ -35,15 +31,11 @@
     "morgan": "^1.9.1",
     "multer": "^1.4.1",
     "multer-storage-cloudinary": "^2.2.1",
-    "node-excel-export": "^1.4.4",
     "node-sass-middleware": "^0.11.0",
     "nodemailer": "^6.1.1",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
-    "pdfmake": "^0.1.56",
-    "serve-favicon": "~2.4.5",
-    "written-number": "^0.9.1",
-    "xoauth2": "^1.2.0"
+    "serve-favicon": "~2.4.5"
   },
   "devDependencies": {
     "nodemon": "^1.12.1"
