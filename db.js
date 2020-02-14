@@ -4,9 +4,23 @@ const {
   DBURL_DEV
 } = process.env;
 const mongoose = require('mongoose');
-require("./models/Commission")
+const dburi = DBURL ? DBURL : DBURL_DEV
+
+mongoose.connect(dburi, {
+    auto_reconnect: true,
+    useNewUrlParser: true,
+    useFindAndModify: false,
+    useUnifiedTopology: true
+  })
+  .then((r) => {
+    console.log(`Connected to Mongo on ${dburi}`)
+  })
+  .catch(err => {
+    console.error('Error connecting to mongo', err)
+  });
 
 const db = mongoose.connection;
+
 
 db.on('connecting', function () {
   console.log('Connecting to MongoDB...');
@@ -45,18 +59,3 @@ process.on('SIGINT', function () {
     process.exit(0);
   });
 });
-
-const dburi = DBURL ? DBURL : DBURL_DEV
-
-mongoose.connect(dburi, {
-    auto_reconnect: true,
-    useNewUrlParser: true,
-    useFindAndModify: false,
-    useUnifiedTopology: true
-  })
-  .then((r) => {
-    console.log(`Connected to Mongo on ${dburi}`)
-  })
-  .catch(err => {
-    console.error('Error connecting to mongo', err)
-  });
