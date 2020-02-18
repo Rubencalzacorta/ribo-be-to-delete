@@ -52,7 +52,7 @@ module.exports.paymentsByCountry = async (adminCountry) => {
             'created_at': {
                 '$dateToString': {
                     'format': "%Y-%m-%d",
-                    'date': "$date_pmt"
+                    'date': "$created_at"
                 }
             },
             'borrower': {
