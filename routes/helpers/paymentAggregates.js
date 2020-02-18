@@ -49,6 +49,12 @@ module.exports.paymentsByCountry = async (adminCountry) => {
             },
             'amount': 1,
             'paymentType': 1,
+            'created_at': {
+                '$dateToString': {
+                    'format': "%Y-%m-%d",
+                    'date': "$date_pmt"
+                }
+            },
             'borrower': {
                 '$concat': [
                     '$b.firstName', ' ', '$b.lastName'
