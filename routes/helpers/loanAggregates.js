@@ -1,6 +1,9 @@
 const mongoose = require('mongoose')
 const LoanSchedule = require('../../models/LoanSchedule')
 const Investment = require('../../models/Investment')
+const {
+  locations
+} = require('../../models/constants')
 const User = require('../../models/User')
 const Loan = require('../../models/Loan')
 const Transaction = require('../../models/Transaction')
@@ -10,6 +13,68 @@ const {
 const {
   investmentDistributor
 } = require('./investorAggregates')
+
+
+const userLocations = (location) => {
+  if (location === 'GLOBAL') {
+    return locations
+  } else {
+    return [location]
+  }
+}
+
+const getLoans = (location) => {
+
+  return Loan.aggregate([{
+    '$lookup': {
+      'from': 'users',
+      'localField': '_borrower',
+      'foreignField': '_id',
+      'as': 'b'
+    }
+  }, {
+    '$unwind': {
+      'path': '$b'
+    }
+  }, {
+    '$match': {
+      'b.country': {
+        '$in': userLocations(location)
+      }
+    }
+  }, {
+    '$project': {
+      'status': 1,
+      '_borrower': 1,
+      'collateralValue': 1,
+      'collateralType': 1,
+      'collateralDescription': 1,
+      'startDate': 1,
+      'duration': 1,
+      'capital': 1,
+      'interest': 1,
+      'loanType': 1,
+      'useOfFunds': 1,
+      'created_at': 1,
+      'totalPaid': 700,
+      'capitalRemaining': 1,
+      'currency': 1,
+      'IRR': 1,
+      'paybackPeriod': 1,
+      'interestEarned': 1,
+      'period': 1,
+      'isRestructured': 1,
+      'insurancePremium': 1,
+      'paidback': 1,
+      'country': '$b.country',
+      'name': {
+        '$concat': [
+          '$b.firstName', ' ', '$b.lastName'
+        ]
+      }
+    }
+  }])
+}
 
 const autoInvest = async (loanDetails, next) => {
   let {
@@ -349,5 +414,6 @@ module.exports = {
   transactionLoanRecorder,
   adminAccount,
   insuranceAccount,
-  createLoan
+  createLoan,
+  getLoans
 }

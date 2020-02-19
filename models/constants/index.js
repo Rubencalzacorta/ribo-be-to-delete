@@ -21,6 +21,11 @@ module.exports.currentStatus = [
     'stolen',
     'insuranceClaim'
 ]
+
+module.exports.locations = ['PERU', 'VENEZUELA', 'DOMINICAN_REPUBLIC', 'GLOBAL', 'USA']
+
+module.exports.countries = ['PERU', 'VENEZUELA', 'DOMINICAN_REPUBLIC']
+
 module.exports.useOfFunds = [
     'vehicle',
     'motorcycle',
