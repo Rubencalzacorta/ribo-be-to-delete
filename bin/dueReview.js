@@ -43,7 +43,7 @@ const dueReview = async () => {
         }
     }
 
-    mongoose.connect('mongodb://ribo-cap-admin:233586364Mgb@ds359147-a0.mlab.com:59147,ds359147-a1.mlab.com:59147/ribo?replicaSet=rs-ds359147', {
+    mongoose.connect('mongodb+srv://mgomezb89:234348775Mgb@ribo-cap-prod-db-gotl2.mongodb.net/ribo?retryWrites=true&w=majority', {
             auto_reconnect: true,
             useNewUrlParser: true
         })
