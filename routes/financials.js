@@ -70,17 +70,31 @@ const companyCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
 
-    router.get('/cash-movements/account/:account', async (req, res, next) => {
+    router.get('/cash-movements/account/:account/:total', async (req, res, next) => {
         let {
-            account
+            account,
+            total
         } = req.params
 
         Transaction.aggregate(cashAccountMovements(account))
-            .then(objList =>
-                res.status(200).json(
-                    objList
-                )
-            )
+            .then(async objList => {
+                let acc = parseFloat(total)
+                objList = await objList.map((e, i) => {
+                    if (i === 0) {
+                        console.log(e)
+                        acc = parseFloat(total)
+                    } else {
+                        acc = acc - (objList[i - 1].debit - objList[i - 1].credit);
+                    }
+                    return {
+                        ...e,
+                        total: acc
+                    }
+                })
+                // console.log(objList)
+                return objList
+            })
+            .then(objList => res.status(200).json(objList))
             .catch(e => next(e))
     })
 

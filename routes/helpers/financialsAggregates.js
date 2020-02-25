@@ -441,12 +441,10 @@ cashAccountMovements = (cashAccount) => {
         '$match': {
             'cashAccount': cashAccount,
             'concept': {
-                '$nin': ['FEE', 'MANAGEMENT_FEE']
+                '$nin': [
+                    'FEE', 'MANAGEMENT_FEE', 'MANAGEMENT_FEE_INCOME', 'MANAGEMENT_FEE_COST', 'MANAGEMENT_INTEREST_INCOME', 'MANAGEMENT_INTEREST_COST'
+                ]
             }
-        }
-    }, {
-        '$sort': {
-            'date': -1
         }
     }, {
         '$project': {
@@ -456,14 +454,16 @@ cashAccountMovements = (cashAccount) => {
             'date_pmt': 1,
             'date': 1,
             '_loan': 1,
+            '_payment': 1,
             '_loanSchedule': 1,
             '_investor': 1
         }
     }, {
         '$group': {
             '_id': {
-                '_loanSchedule': '$_loanSchedule',
+                // '_loanSchedule': '$_loanSchedule',
                 '_loan': '$loan',
+                '_payment': '$_payment',
                 'concept': '$concept',
                 'date': '$date'
             },
@@ -482,6 +482,9 @@ cashAccountMovements = (cashAccount) => {
             '_investor': {
                 '$first': '$_investor'
             },
+            '_payment': {
+                '$first': '$_payment'
+            },
             '_loan': {
                 '$first': '$_loan'
             },
@@ -492,6 +495,10 @@ cashAccountMovements = (cashAccount) => {
     }, {
         '$project': {
             '_id': 0
+        }
+    }, {
+        '$sort': {
+            'date': -1
         }
     }]
 }
