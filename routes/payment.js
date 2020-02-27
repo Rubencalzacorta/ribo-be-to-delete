@@ -30,7 +30,8 @@ const paymentCrud = (Model, extensionFn) => {
 
         let body = {
             ...req.body,
-            paymentType: "REGULAR"
+            paymentType: "REGULAR",
+            _collector: req.user._id
         }
 
         const object = _.pickBy(body, (e, k) => paths.includes(k));

@@ -594,6 +594,14 @@ const loanCrud = (Model, extensionFn) => {
             .catch(e => next(e))
     })
 
+    router.get('/schedule/:scheduleId', (req, res, next) => {
+        LoanSchedule.findById(req.params.scheduleId)
+            .then(objList =>
+                res.status(200).json(objList)
+            )
+            .catch(e => next(e))
+    })
+
     router.get('/', (req, res, next) => {
         getLoans(req.user.location)
             .then(objList =>

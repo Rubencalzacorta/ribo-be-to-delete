@@ -43,6 +43,15 @@ module.exports.useOfFunds = [
     'creditLine'
 ]
 
+module.exports.methods = [
+    "CHECK",
+    "DEPOSIT",
+    "TRANSFER",
+    "CARD",
+    "ZELLE",
+    "YAPE"
+]
+
 module.exports.txConcepts = {
     'DEPOSIT': 'DEBIT',
     'DIVESTMENT': 'DEBIT',

@@ -8,6 +8,7 @@ const {
     txPlacer,
     txDelete
 } = require("./helpers/paymentProcessor");
+const constants = require("./constants")
 const LoanSchedule = require("./LoanSchedule");
 const Investment = require("./Investment");
 
@@ -20,6 +21,10 @@ const paymentSchema = new Schema({
         type: Schema.ObjectId,
         ref: "LoanSchedule"
     },
+    _collector: {
+        type: Schema.ObjectId,
+        ref: "User"
+    },
     date_pmt: Date,
     amount: Number,
     cashAccount: {
@@ -30,6 +35,16 @@ const paymentSchema = new Schema({
         type: String,
         enum: ["REGULAR", "FULL"],
         default: "REGULAR"
+    },
+    method: {
+        type: String,
+        enum: constants.methods
+    },
+    reference: {
+        type: String
+    },
+    comment: {
+        type: String
     }
 }, {
     timestamps: {

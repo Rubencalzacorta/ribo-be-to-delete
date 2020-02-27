@@ -8,6 +8,7 @@ const Collateral = require('./Collateral.js')
 const Commission = require('./Commission.js')
 const Company = require('./Company.js')
 const User = require('./User.js')
+const Comment = require('./Comment.js')
 
 module.exports = {
     Investment,
@@ -20,5 +21,6 @@ module.exports = {
     Commission,
     Company,
     Investment,
-    User
+    User,
+    Comment
 }
