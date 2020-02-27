@@ -49,7 +49,8 @@ module.exports.methods = [
     "TRANSFER",
     "CARD",
     "ZELLE",
-    "YAPE"
+    "YAPE",
+    "CASH"
 ]
 
 module.exports.txConcepts = {
