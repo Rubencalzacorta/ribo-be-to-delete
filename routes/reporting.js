@@ -75,6 +75,7 @@ const reporting = (Model, extensionFn) => {
                 ]
             })
         })
+        console.log(structuredData)
         res.status(200).json(structuredData)
 
     })

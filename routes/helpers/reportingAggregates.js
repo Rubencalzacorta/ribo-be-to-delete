@@ -225,6 +225,7 @@ module.exports.collectionRaw = async (country, rateAdjustment) => {
                 ]
             },
             'country': '$borrower.country',
+            'cellphoneNumber': '$borrower.cellphoneNumber',
             'date': 1,
             'dayDiff': 1,
             '_id': 1,
@@ -730,6 +731,7 @@ module.exports.collectionCategorization = async (country, rateAdjustment) => {
                 ]
             },
             'country': '$borrower.country',
+            'phone': '$borrower.cellphoneNumber',
             'date': 1,
             'dayDiff': 1,
             '_id': 1,
