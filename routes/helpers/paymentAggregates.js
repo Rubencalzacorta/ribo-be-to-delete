@@ -1,5 +1,11 @@
 const Payment = require('../../models/Payment')
 
+
+module.exports.cashAccountFilter = (userLocation) => {
+    return cashAccounts.filter(e => {
+        e.location == userLocation
+    })
+}
 module.exports.paymentsByCountry = async (adminCountry) => {
 
     let countries = []
