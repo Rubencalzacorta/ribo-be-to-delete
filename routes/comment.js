@@ -85,7 +85,6 @@ const CommentCrud = (Model, extensionFn) => {
                 }
             })
             .catch(e => next(e))
-
     })
 
     router.use((err, req, res, next) => {
