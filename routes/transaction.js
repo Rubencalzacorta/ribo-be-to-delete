@@ -4,7 +4,8 @@ const router = express.Router();
 const {
   investorDetails,
   investorTransactions,
-  investorTxBook
+  investorTxBook,
+  investorAllTxBook
 } = require('./helpers/investorAggregates')
 const Transaction = require("../models/Transaction")
 const LoanSchedule = require("../models/LoanSchedule")
@@ -164,6 +165,21 @@ router.get('/list/:id', async (req, res, next) => {
   } = req.params
 
   investorDetails(id)
+    .then(result => {
+      res.status(200).json(result)
+    })
+    .catch(e => {
+      next(e)
+    })
+})
+
+
+router.get('/all/investor/:id', async (req, res, next) => {
+  let {
+    id
+  } = req.params
+
+  investorAllTxBook(id)
     .then(result => {
       res.status(200).json(result)
     })

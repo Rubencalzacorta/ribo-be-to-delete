@@ -298,6 +298,78 @@ const cashAvailableInvestor = async (id) => {
   return total
 }
 
+
+const investorAllTransactions = async (id) => {
+  try {
+    let txs = await Transaction.find({
+        '_investor': new ObjectID(id)
+      })
+      .sort({
+        date: -1
+      })
+      .populate({
+        path: '_loan',
+        select: {
+          '_id': 1,
+          '_borrower': 1
+        },
+        populate: {
+          path: '_borrower',
+          select: {
+            '_id': 1,
+            'firstName': 1,
+            'lastName': 1,
+          }
+        }
+      })
+      .populate({
+        path: '_investor',
+        select: {
+          '_id': 1,
+          'firstName': 1,
+          'lastName': 1
+        }
+      })
+    return txs
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+const investorAllTxBook = async (id, page, pageSize) => {
+
+  accountTotalAccum = await cashAccountTotalReducer(id)
+  accountTotal = accountTotalAccum[0].account_total
+  investorTxs = await investorAllTransactions(id)
+
+  newTxs = []
+
+  investorTxs.forEach((e, i) => {
+
+    let balance = 0
+    if (i == 0) {
+      balance = accountTotal
+    } else {
+      balance = rounder(newTxs[i - 1].balance) + rounder(-newTxs[i - 1].debit + newTxs[i - 1].credit)
+    }
+
+    return newTxs.push({
+      date: e.date,
+      fullName: e.concept === 'INSURANCE_PREMIUM' ? 'PRIMA' : e._loan ? e._loan._borrower.firstName + " " + e._loan._borrower.lastName : "PERSONAL",
+      concept: e.concept,
+      debit: e.debit,
+      credit: e.credit,
+      balance: balance,
+      cashAccount: e.cashAccount,
+      comment: e.comment
+    })
+
+  })
+
+  return newTxs
+
+}
+
 const investorTransactions = async (id, page, pageSize) => {
   let skip
   if (page == 1) {
@@ -1489,6 +1561,7 @@ module.exports = {
   cashAvailabilityValidator,
   investorDetails,
   investorTxBook,
+  investorAllTxBook,
   investorInvestmentsDetails,
   investorCashDetails,
   investorInvestmentDetails,
