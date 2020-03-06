@@ -352,11 +352,12 @@ const investorAllTxBook = async (id, page, pageSize) => {
     } else {
       balance = rounder(newTxs[i - 1].balance) + rounder(-newTxs[i - 1].debit + newTxs[i - 1].credit)
     }
-
+    let change = e.debit - e.credit
     return newTxs.push({
       date: e.date,
       fullName: e.concept === 'INSURANCE_PREMIUM' ? 'PRIMA' : e._loan ? e._loan._borrower.firstName + " " + e._loan._borrower.lastName : "PERSONAL",
       concept: e.concept,
+      change: change,
       debit: e.debit,
       credit: e.credit,
       balance: balance,
@@ -365,7 +366,6 @@ const investorAllTxBook = async (id, page, pageSize) => {
     })
 
   })
-
   return newTxs
 
 }
@@ -435,11 +435,12 @@ const investorTxBook = async (id, page, pageSize) => {
     } else {
       balance = rounder(newTxs[i - 1].balance) + rounder(-newTxs[i - 1].debit + newTxs[i - 1].credit)
     }
-
+    let change = e.debit - e.credit
     return newTxs.push({
       date: e.date,
       fullName: e.concept === 'INSURANCE_PREMIUM' ? 'PRIMA' : e._loan ? e._loan._borrower.firstName + " " + e._loan._borrower.lastName : "PERSONAL",
       concept: e.concept,
+      change: change,
       debit: e.debit,
       credit: e.credit,
       balance: balance,
